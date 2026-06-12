@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>书架 · 静读</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">静读</a>
+    <button id="theme-toggle" class="icon-btn" title="切换深浅色" aria-label="切换深浅色">◐</button>
+  </header>
+
+  <main class="shelf">
+    <h1 class="shelf-title">书架</h1>
+    <p class="shelf-sub">本地静态书库 · 阅读进度保存在浏览器中</p>
+    <ul id="book-list" class="book-list" aria-live="polite">
+      <li class="empty">正在加载书目……</li>
+    </ul>
+  </main>
+
+  <footer class="footer">
+    <p>纯静态站点，无外部依赖。将书籍放入 <code>books/</code> 并登记到 <code>books/manifest.json</code> 即可。</p>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/shelf.js"></script>
+</body>
+</html>

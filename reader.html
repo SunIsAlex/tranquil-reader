@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>阅读 · 静读</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="reading">
+  <div id="progress-bar" class="progress-bar" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="index.html">‹ 书架</a>
+    <span id="book-title" class="topbar-title"></span>
+    <div class="topbar-actions">
+      <button id="font-dec" class="icon-btn" title="减小字号" aria-label="减小字号">A−</button>
+      <button id="font-inc" class="icon-btn" title="增大字号" aria-label="增大字号">A+</button>
+      <button id="hl-toggle" class="icon-btn" title="开关词语标注" aria-label="开关词语标注" aria-pressed="true">标注</button>
+      <button id="toc-toggle" class="icon-btn" title="目录" aria-label="打开目录">目录</button>
+      <button id="theme-toggle" class="icon-btn" title="切换深浅色" aria-label="切换深浅色">◐</button>
+    </div>
+  </header>
+
+  <aside id="toc" class="toc" hidden>
+    <h2 class="toc-title">目录</h2>
+    <ol id="toc-list" class="toc-list"></ol>
+  </aside>
+
+  <main class="reader">
+    <h1 id="chapter-title" class="chapter-title"></h1>
+    <article id="chapter-body" class="chapter-body">
+      <p class="empty">正在加载……</p>
+    </article>
+
+    <nav class="chapter-nav">
+      <button id="prev-btn" class="nav-btn">‹ 上一章</button>
+      <button id="next-btn" class="nav-btn">下一章 ›</button>
+    </nav>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/reader.js"></script>
+</body>
+</html>
