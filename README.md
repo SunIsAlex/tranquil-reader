@@ -133,3 +133,28 @@ print(json.dumps(
 ```
 
 运行 `python3 split_book.py`，把打印出的 JSON 粘进 `manifest.json` 即可。
+
+## 无章节标记的大 TXT：按长度自动切分
+
+如果整本书没有"第X章"这类标记，用 `tools/split_by_length.py`，它会按段落边界切成 Part 1、Part 2……并**自动写入 manifest.json**：
+
+```bash
+# 在项目根目录运行
+python3 tools/split_by_length.py whole.txt --id mybook --title 书名 --author 作者
+```
+
+可选参数：
+
+```bash
+--chars 8000              # 每部分目标字数，默认 8000
+--part-label "第 {n} 部分"  # 分部标题模板，默认 "Part {n}"
+--root .                  # 项目根目录（含 books/ 的那层）
+```
+
+它处理了几个容易踩的坑：
+
+- **绝不在段落中间切断**；达到目标字数 60% 之后若遇到 `* * *` 这类场景分隔线，会优先在那里断开，断点更自然；末尾的残段太短会并入前一部分。
+- **编码自动识别**：UTF-8 / GB18030(GBK) / Big5。
+- **格式归一**：无论原文是"空行分段"还是网络 TXT 常见的"一行一段"，输出统一为空行分段——这是阅读器渲染段落的依据。
+- **幂等**：同 `--id` 重复运行会清掉旧分卷、替换 manifest 里的旧条目（并保留你手工加过的 `highlights` 等字段），不会越跑越多。
+
