@@ -88,6 +88,7 @@
 
   // ---- 状态 ----
   let current = 0;
+  let currentPara = 0;   // 当前阅读到的段落序号（章内，从 0 起）
   const saved = Store.getProgress(bookId);
   if (saved && Number.isInteger(saved.chapter) &&
       saved.chapter >= 0 && saved.chapter < book.chapters.length) {
@@ -133,9 +134,10 @@
 
   // ---- 加载章节 ----
   // 章节正文以纯文本存放（.txt），空行分段，---- 作为场景分隔
-  async function loadChapter(index, restoreScroll = false) {
+  async function loadChapter(index, restore = null) {
     index = Math.min(book.chapters.length - 1, Math.max(0, index));
     current = index;
+    currentPara = 0;
     const ch = book.chapters[index];
 
     els.body.innerHTML = `<p class="empty">正在加载……</p>`;
@@ -163,39 +165,87 @@
     [...els.tocList.querySelectorAll('a')].forEach((a, i) =>
       a.classList.toggle('current', i === index));
 
-    // 滚动定位
-    if (restoreScroll && saved && saved.chapter === index && saved.scroll) {
-      window.scrollTo(0, saved.scroll);
+    // 滚动定位：优先段落锚点，其次旧的像素位置，否则回到顶部
+    if (restore && Number.isInteger(restore.para) && restore.para > 0) {
+      scrollToPara(restore.para);
+    } else if (restore && restore.scroll) {
+      window.scrollTo({ top: restore.scroll, behavior: 'auto' });
     } else {
-      window.scrollTo(0, 0);
+      window.scrollTo({ top: 0, behavior: 'auto' });
     }
 
-    saveProgress();
+    saveProgress();   // 同时刷新 currentPara
+    syncURL();
     updateProgressBar();
   }
 
+  // 找出"正在读"的段落：阅读线（顶栏下沿）之上、最靠下的那个 <p>
+  function computeCurrentPara() {
+    const ps = els.body.querySelectorAll('p[id]');
+    if (!ps.length) return 0;
+    const line = topbarOffset();
+    let idx = 0;
+    for (let i = 0; i < ps.length; i++) {
+      if (ps[i].getBoundingClientRect().top <= line) idx = i;
+      else break;
+    }
+    return idx;
+  }
+
+  // 把某段滚到阅读线位置（瞬时，绕过 scroll-behavior: smooth）
+  function scrollToPara(i) {
+    const ps = els.body.querySelectorAll('p[id]');
+    if (!ps.length) return;
+    const el = ps[Math.min(i, ps.length - 1)];
+    const top = el.getBoundingClientRect().top + window.scrollY - topbarOffset();
+    window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+  }
+
+  // 阅读线 = 粘性顶栏下沿，留一点余量
+  function topbarOffset() {
+    const bar = document.querySelector('.topbar');
+    return (bar ? bar.offsetHeight : 56) + 8;
+  }
+
+  // 把章节 + 段落同步进地址栏：?book=…&chapter=N#pM
+  // 用 replaceState，既不污染前进/后退历史，也不会触发滚动跳转
+  function syncURL() {
+    const base = `?book=${encodeURIComponent(bookId)}&chapter=${current}`;
+    const hash = currentPara > 0 ? `#p${currentPara}` : '';
+    history.replaceState(null, '', base + hash);
+  }
+
+  function parseParaFromHash(h) {
+    const m = /^#p(\d+)$/.exec(h || '');
+    return m ? parseInt(m[1], 10) : null;
+  }
+
   // 纯文本 -> 段落 HTML。空行分段，单独一行的 --- / *** 视作场景分隔
+  // 每个段落带上 id="pN"（章内序号），供段落级进度定位与 URL 锚点使用
   function renderText(raw) {
     const blocks = raw.replace(/\r\n/g, '\n').split(/\n\s*\n/);
+    let pi = 0;
     return blocks.map(b => {
       const t = b.trim();
       if (!t) return '';
       if (/^([-*]\s*){3,}$/.test(t) || t === '---' || t === '***') return '<hr>';
       let html = escapeHTML(t);
       if (highlighter) html = highlighter(html); // 在转义后、<br> 插入前标注
-      return `<p>${html.replace(/\n/g, '<br>')}</p>`;
+      return `<p id="p${pi++}">${html.replace(/\n/g, '<br>')}</p>`;
     }).join('');
   }
 
   // ---- 进度保存 ----
   function saveProgress() {
+    currentPara = computeCurrentPara();
     Store.setProgress(bookId, {
       chapter: current,
-      scroll: window.scrollY || 0,
+      para: currentPara,
+      scroll: window.scrollY || 0,   // 旧字段保留，作为无段落数据时的兜底
       time: Date.now(),
     });
   }
-  const saveScroll = throttle(saveProgress, 800);
+  const saveScroll = throttle(() => { saveProgress(); syncURL(); }, 800);
   window.addEventListener('scroll', () => { saveScroll(); updateProgressBar(); }, { passive: true });
   // 离开页面时再保存一次，确保滚动位置最新
   window.addEventListener('beforeunload', saveProgress);
@@ -222,7 +272,17 @@
 
   // ---- 启动 ----
   buildTOC();
-  loadChapter(current, true);
+
+  // 恢复位置：URL 锚点（#pN，分享链接用）> 本地保存的段落 > 旧的像素进度 > 顶部
+  let restore = null;
+  const hashPara = parseParaFromHash(location.hash);
+  if (hashPara != null) {
+    restore = { para: hashPara };
+  } else if (saved && saved.chapter === current) {
+    if (Number.isInteger(saved.para)) restore = { para: saved.para };
+    else if (saved.scroll) restore = { scroll: saved.scroll };
+  }
+  loadChapter(current, restore);
 })();
 
 function escapeHTML(s) {
