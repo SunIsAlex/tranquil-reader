@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "cool.edgeone.zh_cn.tranquil_reader.twa",
+        "sha256_cert_fingerprints": ["33:DF:5B:1F:AB:78:31:1D:76:27:E2:5C:18:6C:D4:41:01:BC:E8:49:33:86:F2:45:75:90:E2:A6:57:73:07:00"]
+      }
+    }]
