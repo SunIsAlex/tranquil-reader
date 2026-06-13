@@ -76,3 +76,11 @@ async function fetchJSON(url) {
   if (!res.ok) throw new Error(`无法加载 ${url}（${res.status}）`);
   return res.json();
 }
+
+/* ---------- Service Worker（离线/可安装） ---------- */
+// 注册路径相对页面解析 = 站点根，作用域即整个阅读站
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => { /* 不支持或非 HTTPS，忽略 */ });
+  });
+}
