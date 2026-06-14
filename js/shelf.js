@@ -26,9 +26,12 @@
 
   listEl.innerHTML = '';
   for (const book of books) {
-    const card = document.createElement('a');
+    const card = document.createElement('li');
     card.className = 'book-card';
-    card.href = `reader.html?book=${encodeURIComponent(book.id)}`;
+
+    const link = document.createElement('a');
+    link.className = 'book-link';
+    link.href = `reader.html?book=${encodeURIComponent(book.id)}`;
 
     const progress = Store.getProgress(book.id);
     let progressHTML = '';
@@ -40,21 +43,24 @@
 
     const meta = book.chapters ? `${book.chapters.length} 章` : '';
 
-    card.innerHTML = `
+    link.innerHTML = `
       <div class="book-main">
         <h2 class="book-name">${escapeHTML(book.title)}</h2>
         <span class="book-author">${escapeHTML(book.author || '佚名')}</span>
         ${progressHTML}
-      </div>
-      <div class="book-side">
-        <span class="book-meta">${meta}</span>
       </div>`;
 
-    // 离线下载按钮（浏览器支持时才显示）
+    const side = document.createElement('div');
+    side.className = 'book-side';
+    side.innerHTML = `<span class="book-meta">${escapeHTML(meta)}</span>`;
+
+    // 离线下载按钮（浏览器支持时才显示）。按钮与链接分离，避免 <button> 嵌套在 <a> 中。
     if (Offline.supported()) {
-      card.querySelector('.book-side').appendChild(makeOfflineBtn(book));
+      side.appendChild(makeOfflineBtn(book));
     }
 
+    card.appendChild(link);
+    card.appendChild(side);
     listEl.appendChild(card);
   }
 })();
@@ -83,8 +89,7 @@ function maybeShowAppBanner() {
   shelf.insertBefore(banner, shelf.querySelector('.book-list'));
 }
 
-// 为某本书生成”离线下载/移除”按钮，自带状态机与进度显示。
-// 卡片本身是 <a>，按钮内要拦掉点击，避免触发跳转。
+// 为某本书生成“离线下载/移除”按钮，自带状态机与进度显示。
 function makeOfflineBtn(book) {
   const btn = document.createElement('button');
   btn.type = 'button';

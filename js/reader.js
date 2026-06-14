@@ -88,9 +88,14 @@
 
   // ---- 状态 ----
   let current = 0;
-  let currentPara = 0;   // 当前阅读到的段落序号（章内，从 0 起）
-  let paraChars = [];    // 各段落的文字数（章内），用于分段进度条的段宽
-  let paraSegs = [];     // 分段进度条里各段对应的 DOM 节点
+  let currentPara = 0;       // 当前阅读到的段落序号（章内，从 0 起）
+  let paraChars = [];        // 各段落的文字数（章内），用于分段进度条的段宽
+  let paraSegs = [];         // 分段进度条里各段对应的 DOM 节点
+  let paraTops = [];         // 各段落相对文档顶部的位置，用于二分查找当前段落
+  let lastProgressPara = -1; // 上次已渲染到进度条的段落，避免重复更新 DOM
+  let progressRaf = 0;
+  let lastFocusBeforeTOC = null;
+
   const saved = Store.getProgress(bookId);
   if (saved && Number.isInteger(saved.chapter) &&
       saved.chapter >= 0 && saved.chapter < book.chapters.length) {
@@ -130,6 +135,10 @@
       // 导致重排后再平滑滑到锚点，视觉上就是“跳动一下”。
       window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
     }
+    refreshParaTops();
+    saveProgress();
+    syncURL();
+    updateProgressBar(currentPara);
   }
   els.fontInc.addEventListener('click', () => changeFont(+0.06));
   els.fontDec.addEventListener('click', () => changeFont(-0.06));
@@ -143,17 +152,84 @@
       a.href = '#';
       a.textContent = ch.title;
       if (i === current) a.classList.add('current');
-      a.addEventListener('click', (e) => { e.preventDefault(); loadChapter(i); closeTOC(); });
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        loadChapter(i);
+        closeTOC(true);
+      });
       li.appendChild(a);
       els.tocList.appendChild(li);
     });
   }
-  function openTOC()  { els.toc.hidden = false; }
-  function closeTOC() { els.toc.hidden = true; }
-  els.tocToggle.addEventListener('click', () => els.toc.hidden ? openTOC() : closeTOC());
-  // 点击目录外部关闭
+
+  function setupTOCAccessibility() {
+    els.tocToggle.setAttribute('aria-controls', 'toc');
+    els.tocToggle.setAttribute('aria-expanded', String(!els.toc.hidden));
+    els.tocToggle.setAttribute('aria-label', els.toc.hidden ? '打开目录' : '关闭目录');
+    els.toc.setAttribute('role', 'dialog');
+    els.toc.setAttribute('aria-label', '目录');
+    els.toc.setAttribute('aria-hidden', String(els.toc.hidden));
+    els.toc.tabIndex = -1;
+  }
+
+  function openTOC() {
+    if (!els.toc.hidden) return;
+    lastFocusBeforeTOC = document.activeElement;
+    els.toc.hidden = false;
+    els.toc.setAttribute('aria-hidden', 'false');
+    els.tocToggle.setAttribute('aria-expanded', 'true');
+    els.tocToggle.setAttribute('aria-label', '关闭目录');
+
+    requestAnimationFrame(() => {
+      const target = els.tocList.querySelector('a.current') ||
+        els.tocList.querySelector('a') || els.toc;
+      target.focus({ preventScroll: true });
+    });
+  }
+
+  function closeTOC(restoreFocus = true) {
+    if (els.toc.hidden) return;
+    els.toc.hidden = true;
+    els.toc.setAttribute('aria-hidden', 'true');
+    els.tocToggle.setAttribute('aria-expanded', 'false');
+    els.tocToggle.setAttribute('aria-label', '打开目录');
+
+    if (restoreFocus) {
+      const target = lastFocusBeforeTOC && document.contains(lastFocusBeforeTOC)
+        ? lastFocusBeforeTOC
+        : els.tocToggle;
+      target.focus({ preventScroll: true });
+    }
+    lastFocusBeforeTOC = null;
+  }
+
+  function trapTOCFocus(e) {
+    if (els.toc.hidden || e.key !== 'Tab') return;
+    const focusables = [...els.toc.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+      .filter(el => !el.hidden && el.offsetParent !== null);
+    if (!focusables.length) {
+      e.preventDefault();
+      els.toc.focus({ preventScroll: true });
+      return;
+    }
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus({ preventScroll: true });
+    }
+  }
+
+  setupTOCAccessibility();
+  els.tocToggle.addEventListener('click', () => els.toc.hidden ? openTOC() : closeTOC(true));
+  document.addEventListener('keydown', trapTOCFocus);
+  // 点击目录外部关闭。这里不强行归还焦点，避免打断用户点击页面其他控件。
   document.addEventListener('click', (e) => {
-    if (!els.toc.hidden && !els.toc.contains(e.target) && e.target !== els.tocToggle) closeTOC();
+    if (!els.toc.hidden && !els.toc.contains(e.target) && e.target !== els.tocToggle) closeTOC(false);
   });
 
   // ---- 加载章节 ----
@@ -162,6 +238,7 @@
     index = Math.min(book.chapters.length - 1, Math.max(0, index));
     current = index;
     currentPara = 0;
+    lastProgressPara = -1;
     const ch = book.chapters[index];
 
     els.body.innerHTML = `<p class="empty">正在加载……</p>`;
@@ -178,6 +255,7 @@
     }
 
     els.body.innerHTML = renderText(text);
+    refreshParaTops();
     buildProgressSegments();   // 按本章段落字数重建分段进度条
     els.chapTitle.textContent = ch.title;
     document.title = `${ch.title} · ${book.title}`;
@@ -199,20 +277,36 @@
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
 
+    refreshParaTops();
     saveProgress();   // 同时刷新 currentPara
     syncURL();
-    updateProgressBar();
+    updateProgressBar(currentPara);
   }
 
-  // 找出"正在读"的段落：阅读线（顶栏下沿）之上、最靠下的那个 <p>
+  function refreshParaTops() {
+    paraTops = [...els.body.querySelectorAll('p[id]')]
+      .map(el => el.getBoundingClientRect().top + window.scrollY);
+  }
+
+  // 找出“正在读”的段落：阅读线（顶栏下沿）之上、最靠下的那个 <p>
+  // 用段落 top 坐标二分，避免滚动时反复遍历所有段落。
   function computeCurrentPara() {
-    const ps = els.body.querySelectorAll('p[id]');
-    if (!ps.length) return 0;
-    const line = topbarOffset();
+    if (!paraTops.length) refreshParaTops();
+    if (!paraTops.length) return 0;
+
+    const lineY = window.scrollY + topbarOffset();
+    let lo = 0;
+    let hi = paraTops.length - 1;
     let idx = 0;
-    for (let i = 0; i < ps.length; i++) {
-      if (ps[i].getBoundingClientRect().top <= line) idx = i;
-      else break;
+
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (paraTops[mid] <= lineY) {
+        idx = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
     }
     return idx;
   }
@@ -265,6 +359,7 @@
   // ---- 进度保存 ----
   function saveProgress() {
     currentPara = computeCurrentPara();
+    updateProgressBar(currentPara);
     Store.setProgress(bookId, {
       chapter: current,
       para: currentPara,
@@ -273,7 +368,19 @@
     });
   }
   const saveScroll = throttle(() => { saveProgress(); syncURL(); }, 800);
-  window.addEventListener('scroll', () => { saveScroll(); updateProgressBar(); }, { passive: true });
+
+  function requestProgressUpdate() {
+    if (progressRaf) return;
+    progressRaf = requestAnimationFrame(() => {
+      progressRaf = 0;
+      updateProgressBar();
+    });
+  }
+
+  window.addEventListener('scroll', () => {
+    saveScroll();
+    requestProgressUpdate();
+  }, { passive: true });
   // 离开页面时再保存一次，确保滚动位置最新
   window.addEventListener('beforeunload', saveProgress);
   document.addEventListener('visibilitychange', () => { if (document.hidden) saveProgress(); });
@@ -290,21 +397,33 @@
       els.progress.appendChild(seg);
       return seg;
     });
+    lastProgressPara = -1;
     updateProgressBar();
   }
-  function updateProgressBar() {
-    const cur = computeCurrentPara();
+
+  function updateProgressBar(cur = computeCurrentPara()) {
+    currentPara = cur;
+    if (cur === lastProgressPara) return;
+
     for (let i = 0; i < paraSegs.length; i++) {
       paraSegs[i].classList.toggle('read', i <= cur);
     }
+    lastProgressPara = cur;
   }
 
   // ---- 翻章 ----
   els.prev.addEventListener('click', () => loadChapter(current - 1));
   els.next.addEventListener('click', () => loadChapter(current + 1));
 
-  // 键盘左右翻章
+  // 键盘左右翻章；目录打开时只处理 Esc，避免焦点在目录中误触翻章。
   document.addEventListener('keydown', (e) => {
+    if (!els.toc.hidden) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeTOC(true);
+      }
+      return;
+    }
     if (e.target.matches('input, textarea')) return;
     if (e.key === 'ArrowLeft' && current > 0) loadChapter(current - 1);
     if (e.key === 'ArrowRight' && current < book.chapters.length - 1) loadChapter(current + 1);
@@ -315,9 +434,14 @@
 
   // 让浏览器原生的锚点跳转（#pN 分享链接 / 刷新恢复）也停在顶栏下方，
   // 否则 #pN 会被滚到视口最顶端、被 sticky 顶栏遮住。取值与阅读线一致。
-  document.documentElement.style.scrollPaddingTop = topbarOffset() + 'px';
-  window.addEventListener('resize', () => {
+  function refreshLayoutState() {
     document.documentElement.style.scrollPaddingTop = topbarOffset() + 'px';
+    refreshParaTops();
+    updateProgressBar();
+  }
+  refreshLayoutState();
+  window.addEventListener('resize', () => {
+    requestAnimationFrame(refreshLayoutState);
   });
 
   // 恢复位置：URL 锚点（#pN，分享链接用）> 本地保存的段落 > 旧的像素进度 > 顶部

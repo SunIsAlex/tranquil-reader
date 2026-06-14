@@ -144,17 +144,23 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  text-decoration: none;
   color: inherit;
   transition: transform .18s ease, border-color .18s ease;
 }
 .book-card:hover { transform: translateY(-2px); border-color: var(--accent-soft); }
-.book-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.book-main { flex: 1; min-width: 0; }
+.book-link {
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 8px;
+}
+.book-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.book-main { min-width: 0; }
 .book-name { font-family: var(--serif); font-size: 1.2rem; font-weight: 600; margin: 0 0 .2rem; }
 .book-author { color: var(--text-soft); font-size: .9rem; }
 .book-meta { color: var(--text-dim); font-size: .8rem; white-space: nowrap; }
-.book-side { display: flex; flex-direction: column; align-items: flex-end; gap: .55rem; }
+.book-side { display: flex; flex-direction: column; align-items: flex-end; gap: .55rem; flex-shrink: 0; }
 .offline-btn {
   appearance: none; font-family: inherit; font-size: .75rem;
   color: var(--text-soft); background: var(--surface-2);
@@ -350,7 +356,9 @@ body.no-hl mark.hl {
   transition: background .12s ease, color .12s ease;
 }
 .toc-list a:hover { background: var(--surface-2); color: var(--text); }
+.toc-list a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .toc-list a.current { color: var(--accent); background: var(--accent-soft); }
+.toc:focus { outline: none; }
 
 /* ---------- 页脚 ---------- */
 .footer {
