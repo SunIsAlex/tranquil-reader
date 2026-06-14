@@ -6,6 +6,9 @@
 (async function () {
   const listEl = document.getElementById('book-list');
 
+  // 安卓浏览器访客：在书架顶部推荐下载 App（与书目加载相互独立）
+  maybeShowAppBanner();
+
   let manifest;
   try {
     manifest = await fetchJSON('books/manifest.json');
@@ -56,7 +59,31 @@
   }
 })();
 
-// 为某本书生成“离线下载/移除”按钮，自带状态机与进度显示。
+// 安卓浏览器（非 App 内）访客：在书架顶部插入一张可关闭的下载 App 推荐卡。
+function maybeShowAppBanner() {
+  if (!AppPromo.shouldSuggest()) return;
+  const shelf = document.querySelector('.shelf');
+  if (!shelf) return;
+
+  const banner = document.createElement('section');
+  banner.className = 'app-banner';
+  banner.innerHTML = `
+    <button class='app-banner-x' type='button' aria-label='关闭'>✕</button>
+    <div class='app-banner-text'>
+      <strong>📱 在 Android 上获得更好体验</strong>
+      <span>安装「静读」App，全屏阅读、桌面图标</span>
+    </div>
+    <a class='app-banner-get' href='${AppPromo.APK_URL}' download>下载 App</a>`;
+
+  banner.querySelector('.app-banner-x').addEventListener('click', () => {
+    AppPromo.dismiss();
+    banner.remove();
+  });
+
+  shelf.insertBefore(banner, shelf.querySelector('.book-list'));
+}
+
+// 为某本书生成”离线下载/移除”按钮，自带状态机与进度显示。
 // 卡片本身是 <a>，按钮内要拦掉点击，避免触发跳转。
 function makeOfflineBtn(book) {
   const btn = document.createElement('button');

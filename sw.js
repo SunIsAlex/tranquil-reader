@@ -54,6 +54,9 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return; // 跨域请求不拦截
 
+  // 0) APK 安装包：直连下载，别把 ~2MB 二进制塞进运行时缓存
+  if (url.pathname.endsWith('.apk')) return;
+
   // 1) 页面导航：联网优先，离线时回退到缓存的外壳（忽略 ?book= 等查询串）
   if (req.mode === 'navigate') {
     e.respondWith((async () => {
