@@ -26,6 +26,57 @@ const Store = {
   setFontSize(rem) { localStorage.setItem(this.fontKey, String(rem)); },
 };
 
+/* ---------- 离线下载 ---------- */
+// 把整本书（清单 + 各章正文）写入持久缓存 tranquil-books，
+// sw.js 经 caches.match 读取，无网络时也能完整阅读。
+const Offline = {
+  CACHE: 'tranquil-books',
+
+  // 浏览器是否支持（需 Cache API；非安全上下文下 caches 不可用）
+  supported() { return typeof caches !== 'undefined'; },
+
+  // 该书需要离线的全部 URL：共享的书目清单 + 每一章正文
+  urls(book) {
+    const list = ['books/manifest.json'];
+    for (const ch of (book.chapters || [])) list.push(`books/${book.id}/${ch.file}`);
+    return list;
+  },
+
+  // 是否已完整缓存（清单与每一章都在）
+  async isDownloaded(book) {
+    if (!this.supported()) return false;
+    try {
+      const cache = await caches.open(this.CACHE);
+      for (const u of this.urls(book)) {
+        if (!(await cache.match(u))) return false;
+      }
+      return true;
+    } catch { return false; }
+  },
+
+  // 逐个抓取并写入缓存；onProgress(done, total) 用于显示进度
+  async download(book, onProgress) {
+    const cache = await caches.open(this.CACHE);
+    const urls = this.urls(book);
+    let done = 0;
+    for (const u of urls) {
+      const res = await fetch(u, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`${u}（${res.status}）`);
+      await cache.put(u, res);
+      if (onProgress) onProgress(++done, urls.length);
+    }
+  },
+
+  // 移除本书章节缓存。清单是多本书共享的，留着不删。
+  async remove(book) {
+    if (!this.supported()) return;
+    const cache = await caches.open(this.CACHE);
+    for (const ch of (book.chapters || [])) {
+      await cache.delete(`books/${book.id}/${ch.file}`);
+    }
+  },
+};
+
 /* ---------- 主题 ---------- */
 const Theme = {
   init() {

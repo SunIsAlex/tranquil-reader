@@ -7,6 +7,9 @@
 const VERSION = 'v1';
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
+// 用户主动“离线下载”的书放这里：不带版本号，跨 shell 升级保留，
+// 直到用户手动移除。书架页通过 Cache API 写入，本 SW 经 caches.match 读到。
+const BOOKS_CACHE = 'tranquil-books';
 
 // 应用外壳：装好就能离线打开页面（书目/正文按读到的再运行时缓存）
 const SHELL = [
@@ -37,7 +40,7 @@ self.addEventListener('activate', (e) => {
   e.waitUntil((async () => {
     const keys = await caches.keys();
     await Promise.all(
-      keys.filter((k) => k !== SHELL_CACHE && k !== RUNTIME_CACHE)
+      keys.filter((k) => k !== SHELL_CACHE && k !== RUNTIME_CACHE && k !== BOOKS_CACHE)
           .map((k) => caches.delete(k))
     );
     await self.clients.claim();
@@ -78,7 +81,8 @@ self.addEventListener('fetch', (e) => {
 
 async function staleWhileRevalidate(req, cacheName) {
   const cache = await caches.open(cacheName);
-  const cached = await caches.match(req);   // 命中任意缓存（含预缓存的外壳）
+  // caches.match 跨所有缓存查找：既命中预缓存的外壳，也命中“离线下载”的书
+  const cached = await caches.match(req);
   const network = fetch(req).then((res) => {
     if (res && res.ok) cache.put(req, res.clone());
     return res;

@@ -154,6 +154,20 @@ body {
 .book-name { font-family: var(--serif); font-size: 1.2rem; font-weight: 600; margin: 0 0 .2rem; }
 .book-author { color: var(--text-soft); font-size: .9rem; }
 .book-meta { color: var(--text-dim); font-size: .8rem; white-space: nowrap; }
+.book-side { display: flex; flex-direction: column; align-items: flex-end; gap: .55rem; }
+.offline-btn {
+  appearance: none; font-family: inherit; font-size: .75rem;
+  color: var(--text-soft); background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: .26rem .62rem; cursor: pointer; white-space: nowrap;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.offline-btn:hover { border-color: var(--accent-soft); color: var(--text); }
+.offline-btn:disabled { cursor: default; opacity: .75; }
+.offline-btn[data-state="downloaded"] {
+  color: var(--accent); border-color: var(--accent-soft); background: transparent;
+}
+.offline-btn[data-state="error"] { color: var(--accent); border-color: var(--accent); }
 .book-progress {
   margin-top: .55rem; font-size: .78rem; color: var(--accent);
   display: inline-flex; align-items: center; gap: .35rem;
