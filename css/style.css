@@ -161,10 +161,16 @@ body {
 
 /* ---------- 阅读进度条 ---------- */
 .progress-bar {
-  position: fixed; top: 0; left: 0; height: 3px; width: 0%;
-  background: var(--accent); z-index: 30;
-  transition: width .1s linear;
+  position: fixed; top: 0; left: 0; height: 3px; width: 100%;
+  display: flex; align-items: stretch; gap: 1px; z-index: 30;
 }
+.progress-seg {
+  /* 高度交给 align-items: stretch 撑满容器的 3px——
+     不用 height:100%，避免 flex 项百分比高度解析失败而塌成 0 高 */
+  background: var(--border);              /* 未读 */
+  transition: background .15s linear;
+}
+.progress-seg.read { background: var(--accent); }  /* 已读 */
 
 /* ---------- 阅读区 ---------- */
 .reader {

@@ -89,6 +89,8 @@
   // ---- 状态 ----
   let current = 0;
   let currentPara = 0;   // 当前阅读到的段落序号（章内，从 0 起）
+  let paraChars = [];    // 各段落的文字数（章内），用于分段进度条的段宽
+  let paraSegs = [];     // 分段进度条里各段对应的 DOM 节点
   const saved = Store.getProgress(bookId);
   if (saved && Number.isInteger(saved.chapter) &&
       saved.chapter >= 0 && saved.chapter < book.chapters.length) {
@@ -107,8 +109,30 @@
     Store.setFontSize(rem);
   }
   applyFont(Store.getFontSize());
-  els.fontInc.addEventListener('click', () => applyFont(Store.getFontSize() + 0.06));
-  els.fontDec.addEventListener('click', () => applyFont(Store.getFontSize() - 0.06));
+  // 改字号会让正文重新排版、高度变化，若只改 CSS 不动滚动位置，原来的像素位置
+  // 会对应到别的段落。这里记下阅读线落在“哪一段、段内高度的百分之几”，重排后
+  // 按新高度把同一点还原到阅读线——段内位置也一并保留，进度不会偏移。
+  function changeFont(delta) {
+    const ps = els.body.querySelectorAll('p[id]');
+    const line = topbarOffset();
+    let anchor = null;
+    if (ps.length) {
+      const el = ps[Math.min(computeCurrentPara(), ps.length - 1)];
+      const r = el.getBoundingClientRect();
+      const frac = r.height > 0 ? (line - r.top) / r.height : 0;
+      anchor = { el, frac: Math.max(0, Math.min(1, frac)) };
+    }
+    applyFont(Store.getFontSize() + delta);
+    if (anchor) {
+      const r = anchor.el.getBoundingClientRect();           // 重排后的新位置/高度
+      const top = r.top + window.scrollY - line + anchor.frac * r.height;
+      // 'instant' 才真正瞬时；'auto' 会沿用 html 的 scroll-behavior: smooth，
+      // 导致重排后再平滑滑到锚点，视觉上就是“跳动一下”。
+      window.scrollTo({ top: Math.max(0, top), behavior: 'instant' });
+    }
+  }
+  els.fontInc.addEventListener('click', () => changeFont(+0.06));
+  els.fontDec.addEventListener('click', () => changeFont(-0.06));
 
   // ---- 目录 ----
   function buildTOC() {
@@ -154,6 +178,7 @@
     }
 
     els.body.innerHTML = renderText(text);
+    buildProgressSegments();   // 按本章段落字数重建分段进度条
     els.chapTitle.textContent = ch.title;
     document.title = `${ch.title} · ${book.title}`;
 
@@ -225,12 +250,14 @@
   function renderText(raw) {
     const blocks = raw.replace(/\r\n/g, '\n').split(/\n\s*\n/);
     let pi = 0;
+    paraChars = [];
     return blocks.map(b => {
       const t = b.trim();
       if (!t) return '';
       if (/^([-*]\s*){3,}$/.test(t) || t === '---' || t === '***') return '<hr>';
       let html = escapeHTML(t);
       if (highlighter) html = highlighter(html); // 在转义后、<br> 插入前标注
+      paraChars[pi] = t.length;                  // 原始文字数（与字号无关）
       return `<p id="p${pi++}">${html.replace(/\n/g, '<br>')}</p>`;
     }).join('');
   }
@@ -251,12 +278,25 @@
   window.addEventListener('beforeunload', saveProgress);
   document.addEventListener('visibilitychange', () => { if (document.hidden) saveProgress(); });
 
-  // ---- 顶部进度条 ----
+  // ---- 顶部进度条（bilibili 式分段）----
+  // 每个段落一段，段宽（flex-grow）正比于段落字数。进度以“当前所在段落序号”
+  // 离散推进：读到第 N 段就点亮前 N 段。字数与字号无关，所以调字号时不漂移。
+  function buildProgressSegments() {
+    els.progress.innerHTML = '';
+    paraSegs = paraChars.map(n => {
+      const seg = document.createElement('span');
+      seg.className = 'progress-seg';
+      seg.style.flex = `${Math.max(1, n)} 0 0`;   // 段宽正比于字数
+      els.progress.appendChild(seg);
+      return seg;
+    });
+    updateProgressBar();
+  }
   function updateProgressBar() {
-    const h = document.documentElement;
-    const max = h.scrollHeight - h.clientHeight;
-    const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
-    els.progress.style.width = pct + '%';
+    const cur = computeCurrentPara();
+    for (let i = 0; i < paraSegs.length; i++) {
+      paraSegs[i].classList.toggle('read', i <= cur);
+    }
   }
 
   // ---- 翻章 ----
@@ -272,6 +312,13 @@
 
   // ---- 启动 ----
   buildTOC();
+
+  // 让浏览器原生的锚点跳转（#pN 分享链接 / 刷新恢复）也停在顶栏下方，
+  // 否则 #pN 会被滚到视口最顶端、被 sticky 顶栏遮住。取值与阅读线一致。
+  document.documentElement.style.scrollPaddingTop = topbarOffset() + 'px';
+  window.addEventListener('resize', () => {
+    document.documentElement.style.scrollPaddingTop = topbarOffset() + 'px';
+  });
 
   // 恢复位置：URL 锚点（#pN，分享链接用）> 本地保存的段落 > 旧的像素进度 > 顶部
   let restore = null;
