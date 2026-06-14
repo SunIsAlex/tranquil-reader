@@ -1,4 +1,4 @@
-/* ============================================================
+-/* ============================================================
    reader.js · 阅读页
    加载某本书的某一章，处理目录、翻章、字号、进度保存与恢复
    ============================================================ */
@@ -95,6 +95,7 @@
   let lastProgressPara = -1; // 上次已渲染到进度条的段落，避免重复更新 DOM
   let progressRaf = 0;
   let lastFocusBeforeTOC = null;
+  const prefetchedChapters = new Set();
 
   const saved = Store.getProgress(bookId);
   if (saved && Number.isInteger(saved.chapter) &&
@@ -232,6 +233,51 @@
     if (!els.toc.hidden && !els.toc.contains(e.target) && e.target !== els.tocToggle) closeTOC(false);
   });
 
+  // ---- 章节预取 ----
+  // 当前章渲染完成后，浏览器空闲时静默请求下一章。
+  // 在 Service Worker 存在时，这会让下一章进入 runtime cache；
+  // 没有 Service Worker 时，也能利用浏览器 HTTP cache。
+  function chapterURL(index) {
+    const ch = book.chapters[index];
+    return `books/${book.id}/${ch.file}`;
+  }
+
+  function shouldPrefetch() {
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    return !(conn && conn.saveData);
+  }
+
+  function scheduleIdleTask(fn) {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(fn, { timeout: 1600 });
+    } else {
+      setTimeout(fn, 300);
+    }
+  }
+
+  function prefetchChapter(index) {
+    if (!shouldPrefetch()) return;
+    if (index < 0 || index >= book.chapters.length) return;
+    if (prefetchedChapters.has(index)) return;
+
+    prefetchedChapters.add(index);
+    const url = chapterURL(index);
+
+    scheduleIdleTask(async () => {
+      try {
+        const res = await fetch(url, { cache: 'force-cache' });
+        if (!res.ok) throw new Error(String(res.status));
+      } catch {
+        // 预取失败不影响阅读；移出集合，之后进入前一章时可以再试。
+        prefetchedChapters.delete(index);
+      }
+    });
+  }
+
+  function prefetchNextChapter() {
+    prefetchChapter(current + 1);
+  }
+
   // ---- 加载章节 ----
   // 章节正文以纯文本存放（.txt），空行分段，---- 作为场景分隔
   async function loadChapter(index, restore = null) {
@@ -246,11 +292,11 @@
 
     let text;
     try {
-      const res = await fetch(`books/${book.id}/${ch.file}`, { cache: 'no-cache' });
+      const res = await fetch(chapterURL(index));
       if (!res.ok) throw new Error(res.status);
       text = await res.text();
     } catch {
-      els.body.innerHTML = `<p class="empty">这一章读取失败（books/${book.id}/${ch.file}）。</p>`;
+      els.body.innerHTML = `<p class="empty">这一章读取失败（${chapterURL(index)}）。</p>`;
       return;
     }
 
@@ -281,6 +327,7 @@
     saveProgress();   // 同时刷新 currentPara
     syncURL();
     updateProgressBar(currentPara);
+    prefetchNextChapter();
   }
 
   function refreshParaTops() {
