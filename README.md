@@ -6,27 +6,32 @@
 
 ```
 novel-reader/
-├── index.html          书架首页
-├── reader.html         阅读页
+├── index.html              书架首页
+├── reader.html             阅读页
+├── sw.js                   Service Worker（离线缓存）
+├── manifest.webmanifest    PWA 清单（可安装）
 ├── css/
-│   └── style.css       全部样式（含深浅色、响应式）
+│   └── style.css           全部样式（含深浅色、响应式）
 ├── js/
-│   ├── common.js       主题切换 + localStorage 封装（两页共用）
-│   ├── shelf.js        书架逻辑
-│   └── reader.js       阅读器逻辑
+│   ├── common.js           主题、localStorage、离线下载封装（两页共用）
+│   ├── shelf.js            书架逻辑
+│   └── reader.js           阅读器逻辑
+├── icons/                  PWA 图标
 └── books/
-    ├── manifest.json   书目清单（在这里登记每本书）
-    └── demo/           示例书（每章一个 .txt）
+    ├── manifest.json       书目清单（在这里登记每本书）
+    └── demo/               示例书（每章一个 .txt）
         ├── ch1.txt
         └── ch2.txt
 ```
 
 ## 特性
 
-- **零外部依赖**：没有引入任何 CDN、字体库或框架，纯 HTML/CSS/原生 JS，可离线运行。
-- **阅读进度**：用 `localStorage` 记住每本书读到第几章、滚动到哪、字号、主题。换章节自动定位。
-- **较新的 Web 特性**：`backdrop-filter` 毛玻璃顶栏、`color-mix()`、`100dvh`、`prefers-color-scheme`、`prefers-reduced-motion`、`scroll-behavior`。
-- **简约交互**：目录抽屉、字号调节、深浅色切换、键盘左右翻章、顶部阅读进度条。
+- **零外部依赖**：没有引入任何 CDN、字体库或框架，纯 HTML/CSS/原生 JS。
+- **阅读进度**：用 `localStorage` 记住每本书读到第几章、读到哪一段、字号、主题。换章节、调字号都会自动定位，进度不漂移。
+- **分段进度条（bilibili 式）**：顶部进度条按章内段落分段，每段宽度正比于该段文字数，读到第几段就点亮到第几段。进度以段落为单位、与字号无关，调字号时不会跳动。
+- **离线下载**：可把整本书缓存到本地，无网络也能完整阅读（见下文「离线下载」，需安全上下文）。
+- **较新的 Web 特性**：`backdrop-filter` 毛玻璃顶栏、`color-mix()`、`100dvh`、`prefers-color-scheme`、`prefers-reduced-motion`、`scroll-behavior`、Service Worker + Cache API。
+- **简约交互**：目录抽屉、字号调节、深浅色切换、键盘左右翻章。
 
 ## 运行
 
@@ -39,6 +44,33 @@ python3 -m http.server 8000
 ```
 
 部署时把整个文件夹丢到任何静态托管（GitHub Pages / Vercel / Nginx / 自己的服务器）即可。
+
+## 离线下载
+
+站点是一个 PWA：`sw.js` 会预缓存应用外壳，读过的书目/正文也会被运行时缓存。在此基础上，书架每张书卡都有一个**离线按钮**，可把整本书（书目清单 + 全部章节）一次性下载到本地的持久缓存，之后**断网也能完整阅读**，而不必先逐章读过。
+
+- 按钮状态：`⬇ 离线` → `下载中 X%` → `✓ 已离线`（再次点击可移除该书缓存）。
+- 下载的内容存在一个独立的持久缓存里，**不随版本升级被清掉**，直到你手动移除。
+- 与运行时缓存解耦：移除某本书的下载不会影响其它书，共享的书目清单也会保留。
+
+### 须知：需要「安全上下文」
+
+离线相关能力（Service Worker、Cache API）**只有在安全上下文（secure context）下才可用**。不满足时，离线按钮会**自动隐藏**（`Offline.supported()` 返回 `false`）。安全上下文指：
+
+| 访问方式 | 安全上下文？ | 离线下载 |
+|---|---|---|
+| `https://你的域名`（线上 / GitHub Pages 等） | ✅ | 可用 |
+| `http://localhost` / `127.0.0.1` / `[::1]` | ✅ | 可用 |
+| `http://192.168.x.x:8000`（局域网 IP） | ❌ | 不可用 |
+| `file:///…/index.html`（直接双击打开） | ❌ | 不可用 |
+
+也就是说：
+
+- **本机调试**请用 `http://localhost:8000`，而不是局域网 IP。
+- **手机调试**：手机访问电脑只能走局域网 IP，对手机不是安全上下文。可用 Chrome 的 USB 端口转发（`chrome://inspect` → Port forwarding，让手机用 `http://localhost:8000` 访问），或用 `ngrok` / `cloudflared` 之类隧道拿到 `https://` 地址。
+- **正式部署是 HTTPS，功能本就正常**——本地明文 IP 下不可用属预期，并非 bug。
+
+> 改动了应用外壳（HTML/CSS/JS）后，把 `sw.js` 里的 `VERSION` 加一，即可让旧的外壳缓存失效；用户已离线下载的书不受影响。
 
 ## 如何添加一本书
 

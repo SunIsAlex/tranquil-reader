@@ -43,10 +43,64 @@
         <span class="book-author">${escapeHTML(book.author || '佚名')}</span>
         ${progressHTML}
       </div>
-      <span class="book-meta">${meta}</span>`;
+      <div class="book-side">
+        <span class="book-meta">${meta}</span>
+      </div>`;
+
+    // 离线下载按钮（浏览器支持时才显示）
+    if (Offline.supported()) {
+      card.querySelector('.book-side').appendChild(makeOfflineBtn(book));
+    }
+
     listEl.appendChild(card);
   }
 })();
+
+// 为某本书生成“离线下载/移除”按钮，自带状态机与进度显示。
+// 卡片本身是 <a>，按钮内要拦掉点击，避免触发跳转。
+function makeOfflineBtn(book) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'offline-btn';
+
+  function setState(state, extra) {
+    btn.dataset.state = state;
+    btn.disabled = (state === 'checking' || state === 'downloading');
+    switch (state) {
+      case 'checking':    btn.textContent = '…'; break;
+      case 'idle':        btn.textContent = '⬇ 离线'; btn.title = '下载到本地，无网络也能读'; break;
+      case 'downloading': btn.textContent = `下载中 ${extra}%`; break;
+      case 'downloaded':  btn.textContent = '✓ 已离线'; btn.title = '已缓存，点击移除'; break;
+      case 'error':       btn.textContent = '重试'; btn.title = extra || '下载失败'; break;
+    }
+  }
+
+  btn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const state = btn.dataset.state;
+    if (state === 'checking' || state === 'downloading') return;
+
+    if (state === 'downloaded') {
+      await Offline.remove(book);
+      setState('idle');
+      return;
+    }
+    try {
+      setState('downloading', 0);
+      await Offline.download(book, (done, total) =>
+        setState('downloading', Math.round((done / total) * 100)));
+      setState('downloaded');
+    } catch (err) {
+      setState('error', String(err && err.message || err));
+    }
+  });
+
+  // 初始状态异步探测：是否已经缓存过
+  setState('checking');
+  Offline.isDownloaded(book).then(d => setState(d ? 'downloaded' : 'idle'));
+  return btn;
+}
 
 function escapeHTML(s) {
   return String(s).replace(/[&<>"']/g, c => (
