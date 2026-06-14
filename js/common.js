@@ -77,6 +77,33 @@ const Offline = {
   },
 };
 
+/* ---------- Android App 推荐 ---------- */
+// 安卓浏览器访客（且不在已安装的 App / 独立窗口里）推荐下载 TWA 安装包。
+const AppPromo = {
+  DISMISS_KEY: 'reader.apkBannerDismissed',
+  APK_URL: 'app/latest.apk',
+
+  // 是否应推荐：安卓浏览器 + 不在 standalone/TWA 中 + 未被关闭过
+  shouldSuggest() {
+    try {
+      if (!/Android/i.test(navigator.userAgent)) return false;
+      // 已安装的 PWA / TWA 都跑在 standalone 显示模式，App 内不再推荐
+      const standalone =
+        (matchMedia && matchMedia('(display-mode: standalone)').matches) ||
+        navigator.standalone === true ||
+        (document.referrer || '').startsWith('android-app://');
+      if (standalone) return false;
+      return localStorage.getItem(this.DISMISS_KEY) !== '1';
+    } catch { return false; }
+  },
+
+  // 记住"不再提示"
+  dismiss() {
+    try { localStorage.setItem(this.DISMISS_KEY, '1'); }
+    catch { /* 隐私模式或配额满，静默失败 */ }
+  },
+};
+
 /* ---------- 主题 ---------- */
 const Theme = {
   init() {

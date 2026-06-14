@@ -72,6 +72,10 @@ python3 -m http.server 8000
 
 > 改动了应用外壳（HTML/CSS/JS）后，把 `sw.js` 里的 `VERSION` 加一，即可让旧的外壳缓存失效；用户已离线下载的书不受影响。
 
+### Android App（TWA）
+
+仓库内附带一个 TWA 安卓应用安装包 `app/latest.apk`（Digital Asset Links 见 `.well-known/assetlinks.json`）。当访客用**安卓浏览器**打开书架、且不在已安装的 App / 独立窗口内时，页面顶部会出现一张可关闭的推荐卡，点击即可下载该 APK；关闭后记在 `localStorage`，不再打扰。判断逻辑在 `common.js` 的 `AppPromo`。
+
 ## 如何添加一本书
 
 两步：
