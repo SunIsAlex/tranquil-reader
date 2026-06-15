@@ -1,4 +1,4 @@
--/* ============================================================
+/* ============================================================
    reader.js · 阅读页
    加载某本书的某一章，处理目录、翻章、字号、进度保存与恢复
    ============================================================ */
@@ -14,6 +14,10 @@
     tocList:    document.getElementById('toc-list'),
     toc:        document.getElementById('toc'),
     tocToggle:  document.getElementById('toc-toggle'),
+    bookmarkToggle: document.getElementById('bookmark-toggle'),
+    bookmarks:  document.getElementById('bookmarks'),
+    bookmarkAdd: document.getElementById('bookmark-add'),
+    bookmarkList: document.getElementById('bookmark-list'),
     prev:       document.getElementById('prev-btn'),
     next:       document.getElementById('next-btn'),
     fontInc:    document.getElementById('font-inc'),
@@ -95,6 +99,8 @@
   let lastProgressPara = -1; // 上次已渲染到进度条的段落，避免重复更新 DOM
   let progressRaf = 0;
   let lastFocusBeforeTOC = null;
+  let lastFocusBeforeBookmarks = null;
+  let bookmarks = loadBookmarks();
   const prefetchedChapters = new Set();
 
   const saved = Store.getProgress(bookId);
@@ -226,12 +232,254 @@
   }
 
   setupTOCAccessibility();
+  setupBookmarkPanelAccessibility();
   els.tocToggle.addEventListener('click', () => els.toc.hidden ? openTOC() : closeTOC(true));
-  document.addEventListener('keydown', trapTOCFocus);
+  document.addEventListener('keydown', (e) => {
+    trapTOCFocus(e);
+    trapPanelFocus(els.bookmarks, e);
+  });
+  els.bookmarkToggle.addEventListener('click', () => els.bookmarks.hidden ? openBookmarks() : closeBookmarks(true));
+  els.bookmarkAdd.addEventListener('click', addBookmarkAtCurrentPara);
   // 点击目录外部关闭。这里不强行归还焦点，避免打断用户点击页面其他控件。
   document.addEventListener('click', (e) => {
     if (!els.toc.hidden && !els.toc.contains(e.target) && e.target !== els.tocToggle) closeTOC(false);
+    if (!els.bookmarks.hidden && !els.bookmarks.contains(e.target) && e.target !== els.bookmarkToggle) closeBookmarks(false);
   });
+
+  // ---- 书签 / 笔记 ----
+  function bookmarkKey() {
+    return `reader.bookmarks.${bookId}`;
+  }
+
+  function loadBookmarks() {
+    try {
+      const data = JSON.parse(localStorage.getItem(`reader.bookmarks.${bookId}`));
+      if (!Array.isArray(data)) return [];
+      return data
+        .filter(b => b && Number.isInteger(b.chapter) && Number.isInteger(b.para))
+        .map(b => ({
+          id: String(b.id || makeBookmarkId(b.chapter, b.para)),
+          chapter: b.chapter,
+          para: b.para,
+          note: String(b.note || ''),
+          excerpt: String(b.excerpt || ''),
+          createdAt: Number.isFinite(b.createdAt) ? b.createdAt : Date.now(),
+          updatedAt: Number.isFinite(b.updatedAt) ? b.updatedAt : null,
+        }))
+        .filter(b => b.chapter >= 0 && b.chapter < book.chapters.length && b.para >= 0);
+    } catch {
+      return [];
+    }
+  }
+
+  function saveBookmarks() {
+    try { localStorage.setItem(bookmarkKey(), JSON.stringify(bookmarks)); }
+    catch { /* 隐私模式或配额满，静默失败 */ }
+  }
+
+  function makeBookmarkId(chapter, para) {
+    return `${chapter}:${para}`;
+  }
+
+  function sortedBookmarks() {
+    return [...bookmarks].sort((a, b) =>
+      a.chapter - b.chapter || a.para - b.para || a.createdAt - b.createdAt);
+  }
+
+  function getBookmark(chapter, para) {
+    return bookmarks.find(b => b.chapter === chapter && b.para === para) || null;
+  }
+
+  function currentParaElement() {
+    const ps = els.body.querySelectorAll('p[id]');
+    if (!ps.length) return null;
+    return ps[Math.min(computeCurrentPara(), ps.length - 1)] || null;
+  }
+
+  function applyBookmarkMarks() {
+    const marked = new Set(bookmarks
+      .filter(b => b.chapter === current)
+      .map(b => b.para));
+
+    els.body.querySelectorAll('p[id]').forEach((p, i) => {
+      p.classList.toggle('bookmarked', marked.has(i));
+    });
+    updateBookmarkButtonState(currentPara);
+  }
+
+  function updateBookmarkButtonState(cur = currentPara) {
+    if (!els.bookmarkToggle) return;
+    const marked = Boolean(getBookmark(current, cur));
+    els.bookmarkToggle.classList.toggle('active', marked);
+    els.bookmarkToggle.setAttribute('aria-pressed', String(marked));
+    els.bookmarkToggle.title = marked ? '当前段落已加书签' : '书签和笔记';
+  }
+
+  function setupBookmarkPanelAccessibility() {
+    els.bookmarkToggle.setAttribute('aria-controls', 'bookmarks');
+    els.bookmarkToggle.setAttribute('aria-expanded', String(!els.bookmarks.hidden));
+    els.bookmarkToggle.setAttribute('aria-label', els.bookmarks.hidden ? '打开书签和笔记' : '关闭书签和笔记');
+    els.bookmarkToggle.setAttribute('aria-pressed', 'false');
+    els.bookmarks.setAttribute('role', 'dialog');
+    els.bookmarks.setAttribute('aria-label', '书签和笔记');
+    els.bookmarks.setAttribute('aria-hidden', String(els.bookmarks.hidden));
+    els.bookmarks.tabIndex = -1;
+  }
+
+  function openBookmarks() {
+    if (!els.bookmarks.hidden) return;
+    closeTOC(false);
+    lastFocusBeforeBookmarks = document.activeElement;
+    renderBookmarks();
+    els.bookmarks.hidden = false;
+    els.bookmarks.setAttribute('aria-hidden', 'false');
+    els.bookmarkToggle.setAttribute('aria-expanded', 'true');
+    els.bookmarkToggle.setAttribute('aria-label', '关闭书签和笔记');
+
+    requestAnimationFrame(() => {
+      const target = els.bookmarkAdd || els.bookmarkList.querySelector('button') || els.bookmarks;
+      target.focus({ preventScroll: true });
+    });
+  }
+
+  function closeBookmarks(restoreFocus = true) {
+    if (els.bookmarks.hidden) return;
+    els.bookmarks.hidden = true;
+    els.bookmarks.setAttribute('aria-hidden', 'true');
+    els.bookmarkToggle.setAttribute('aria-expanded', 'false');
+    els.bookmarkToggle.setAttribute('aria-label', '打开书签和笔记');
+
+    if (restoreFocus) {
+      const target = lastFocusBeforeBookmarks && document.contains(lastFocusBeforeBookmarks)
+        ? lastFocusBeforeBookmarks
+        : els.bookmarkToggle;
+      target.focus({ preventScroll: true });
+    }
+    lastFocusBeforeBookmarks = null;
+  }
+
+  function trapPanelFocus(panel, e) {
+    if (panel.hidden || e.key !== 'Tab') return;
+    const focusables = [...panel.querySelectorAll('a[href], button:not([disabled]), textarea, input, [tabindex]:not([tabindex="-1"])')]
+      .filter(el => !el.hidden && el.offsetParent !== null);
+    if (!focusables.length) {
+      e.preventDefault();
+      panel.focus({ preventScroll: true });
+      return;
+    }
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus({ preventScroll: true });
+    }
+  }
+
+  function addBookmarkAtCurrentPara() {
+    const para = computeCurrentPara();
+    const p = currentParaElement();
+    if (!p) return;
+
+    const existing = getBookmark(current, para);
+    const oldNote = existing ? existing.note : '';
+    const note = prompt(
+      existing ? '编辑这个书签的备注（可留空）：' : '为当前段落添加书签备注（可留空）：',
+      oldNote
+    );
+    if (note === null) return;
+
+    const excerpt = shortenText(p.textContent || '', 80);
+    const now = Date.now();
+    if (existing) {
+      existing.note = note.trim();
+      existing.excerpt = excerpt;
+      existing.updatedAt = now;
+    } else {
+      bookmarks.push({
+        id: makeBookmarkId(current, para),
+        chapter: current,
+        para,
+        note: note.trim(),
+        excerpt,
+        createdAt: now,
+        updatedAt: null,
+      });
+    }
+
+    saveBookmarks();
+    applyBookmarkMarks();
+    renderBookmarks();
+  }
+
+  function deleteBookmark(id) {
+    bookmarks = bookmarks.filter(b => b.id !== id);
+    saveBookmarks();
+    applyBookmarkMarks();
+    renderBookmarks();
+  }
+
+  async function jumpToBookmark(id) {
+    const bm = bookmarks.find(b => b.id === id);
+    if (!bm) return;
+    closeBookmarks(false);
+    if (bm.chapter === current) {
+      scrollToPara(bm.para);
+      saveProgress();
+      syncURL();
+      updateProgressBar(bm.para);
+      return;
+    }
+    await loadChapter(bm.chapter, { para: bm.para });
+  }
+
+  function renderBookmarks() {
+    const list = sortedBookmarks();
+    els.bookmarkList.innerHTML = '';
+
+    if (!list.length) {
+      const li = document.createElement('li');
+      li.className = 'bookmark-empty';
+      li.textContent = '还没有书签。滚到想保存的段落后，点“＋ 当前段落”。';
+      els.bookmarkList.appendChild(li);
+      return;
+    }
+
+    for (const bm of list) {
+      const li = document.createElement('li');
+      li.className = 'bookmark-item';
+      li.dataset.id = bm.id;
+
+      const jump = document.createElement('button');
+      jump.type = 'button';
+      jump.className = 'bookmark-jump';
+      jump.innerHTML = `
+        <span class="bookmark-title">${escapeHTML(book.chapters[bm.chapter]?.title || '未知章节')}</span>
+        <span class="bookmark-meta">第 ${bm.chapter + 1} 章 · 段落 ${bm.para + 1}</span>
+        <span class="bookmark-excerpt">${escapeHTML(bm.excerpt || '（无摘录）')}</span>
+        ${bm.note ? `<span class="bookmark-note">${escapeHTML(bm.note)}</span>` : ''}
+      `;
+      jump.addEventListener('click', () => jumpToBookmark(bm.id));
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'bookmark-delete';
+      del.textContent = '删除';
+      del.addEventListener('click', () => deleteBookmark(bm.id));
+
+      li.appendChild(jump);
+      li.appendChild(del);
+      els.bookmarkList.appendChild(li);
+    }
+  }
+
+  function shortenText(text, max) {
+    const s = String(text || '').replace(/\s+/g, ' ').trim();
+    return s.length > max ? s.slice(0, max - 1) + '…' : s;
+  }
 
   // ---- 章节预取 ----
   // 当前章渲染完成后，浏览器空闲时静默请求下一章。
@@ -327,6 +575,7 @@
     saveProgress();   // 同时刷新 currentPara
     syncURL();
     updateProgressBar(currentPara);
+    applyBookmarkMarks();
     prefetchNextChapter();
   }
 
@@ -455,6 +704,7 @@
     for (let i = 0; i < paraSegs.length; i++) {
       paraSegs[i].classList.toggle('read', i <= cur);
     }
+    updateBookmarkButtonState(cur);
     lastProgressPara = cur;
   }
 
@@ -462,12 +712,13 @@
   els.prev.addEventListener('click', () => loadChapter(current - 1));
   els.next.addEventListener('click', () => loadChapter(current + 1));
 
-  // 键盘左右翻章；目录打开时只处理 Esc，避免焦点在目录中误触翻章。
+  // 键盘左右翻章；抽屉打开时只处理 Esc，避免焦点在抽屉中误触翻章。
   document.addEventListener('keydown', (e) => {
-    if (!els.toc.hidden) {
+    if (!els.toc.hidden || !els.bookmarks.hidden) {
       if (e.key === 'Escape') {
         e.preventDefault();
         closeTOC(true);
+        closeBookmarks(true);
       }
       return;
     }
@@ -478,6 +729,7 @@
 
   // ---- 启动 ----
   buildTOC();
+  renderBookmarks();
 
   // 让浏览器原生的锚点跳转（#pN 分享链接 / 刷新恢复）也停在顶栏下方，
   // 否则 #pN 会被滚到视口最顶端、被 sticky 顶栏遮住。取值与阅读线一致。

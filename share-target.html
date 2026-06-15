@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="favicon.png" type="image/png">
+  <title>正在打开 · 静读</title>
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- PWA：可安装 + 离线 + 系统分享目标 -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#faf9f5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1f1e1c" media="(prefers-color-scheme: dark)">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="静读">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">静读</a>
+    <button id="theme-toggle" class="icon-btn" title="切换深浅色" aria-label="切换深浅色">◐</button>
+  </header>
+
+  <main class="shelf">
+    <h1 class="shelf-title">正在打开分享内容</h1>
+    <p id="share-status" class="shelf-sub">正在识别分享的链接、书名或 TXT 文件……</p>
+
+    <ul id="share-result" class="book-list" aria-live="polite">
+      <li class="empty">请稍候。</li>
+    </ul>
+  </main>
+
+  <script src="js/common.js"></script>
+  <script src="js/share-target.js"></script>
+</body>
+</html>
