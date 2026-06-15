@@ -27,6 +27,7 @@
       <button id="font-dec" class="icon-btn" title="减小字号" aria-label="减小字号">A−</button>
       <button id="font-inc" class="icon-btn" title="增大字号" aria-label="增大字号">A+</button>
       <button id="hl-toggle" class="icon-btn" title="开关词语标注" aria-label="开关词语标注" aria-pressed="true">标注</button>
+      <button id="bookmark-toggle" class="icon-btn" title="书签和笔记" aria-label="打开书签和笔记" aria-pressed="false">书签</button>
       <button id="toc-toggle" class="icon-btn" title="目录" aria-label="打开目录">目录</button>
       <button id="theme-toggle" class="icon-btn" title="切换深浅色" aria-label="切换深浅色">◐</button>
     </div>
@@ -35,6 +36,14 @@
   <aside id="toc" class="toc" hidden>
     <h2 class="toc-title">目录</h2>
     <ol id="toc-list" class="toc-list"></ol>
+  </aside>
+
+  <aside id="bookmarks" class="bookmarks-panel" hidden>
+    <div class="bookmarks-head">
+      <h2 class="bookmarks-title">书签和笔记</h2>
+      <button id="bookmark-add" class="bookmark-add" type="button">＋ 当前段落</button>
+    </div>
+    <ol id="bookmark-list" class="bookmark-list"></ol>
   </aside>
 
   <main class="reader">

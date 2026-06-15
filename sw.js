@@ -4,7 +4,7 @@
    改动了 shell 文件后，把 VERSION 加一即可让旧缓存失效。
    ============================================================ */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
 // 用户主动“离线下载”的书放这里：不带版本号，跨 shell 升级保留，

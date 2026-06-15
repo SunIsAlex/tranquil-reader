@@ -369,3 +369,145 @@ body.no-hl mark.hl {
   background: var(--surface-2); padding: .1em .4em; border-radius: 5px;
   font-size: .9em; color: var(--text-soft);
 }
+/* ---------- 书签和笔记 ---------- */
+.icon-btn.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.chapter-body p.bookmarked {
+  border-left: 3px solid var(--accent);
+  padding-left: .8em;
+  margin-left: -.95em;
+  border-radius: 4px;
+}
+
+.bookmarks-panel {
+  position: fixed; top: 0; right: 0; z-index: 42;
+  width: min(24rem, 88vw); height: 100dvh;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 32px rgba(0,0,0,.12);
+  padding: 1.4rem 1.2rem;
+  overflow-y: auto;
+  transform: translateX(0);
+  transition: transform .22s ease;
+}
+.bookmarks-panel[hidden] { display: block; transform: translateX(100%); pointer-events: none; }
+.bookmarks-panel:focus { outline: none; }
+
+.bookmarks-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  margin: .2rem 0 1rem;
+}
+.bookmarks-title {
+  font-size: 1rem;
+  margin: 0;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+.bookmark-add {
+  appearance: none;
+  flex-shrink: 0;
+  font-family: inherit;
+  font-size: .82rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: .42rem .72rem;
+  cursor: pointer;
+}
+.bookmark-add:hover { filter: brightness(1.04); }
+.bookmark-add:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.bookmark-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: .7rem;
+}
+.bookmark-empty {
+  color: var(--text-dim);
+  font-size: .9rem;
+  line-height: 1.7;
+  padding: .8rem .2rem;
+}
+.bookmark-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: .5rem;
+  align-items: start;
+  padding: .75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.bookmark-jump {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+  min-width: 0;
+}
+.bookmark-jump:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 6px; }
+.bookmark-title,
+.bookmark-meta,
+.bookmark-excerpt,
+.bookmark-note {
+  display: block;
+}
+.bookmark-title {
+  color: var(--text);
+  font-size: .92rem;
+  font-weight: 600;
+  margin-bottom: .15rem;
+}
+.bookmark-meta {
+  color: var(--text-dim);
+  font-size: .75rem;
+  margin-bottom: .38rem;
+}
+.bookmark-excerpt {
+  color: var(--text-soft);
+  font-family: var(--serif);
+  font-size: .88rem;
+  line-height: 1.65;
+}
+.bookmark-note {
+  color: var(--accent);
+  font-size: .82rem;
+  line-height: 1.55;
+  margin-top: .42rem;
+  padding-left: .65rem;
+  border-left: 2px solid var(--accent-soft);
+}
+.bookmark-delete {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: .75rem;
+  border-radius: 999px;
+  padding: .25rem .55rem;
+  cursor: pointer;
+}
+.bookmark-delete:hover { color: var(--accent); border-color: var(--accent-soft); }
+.bookmark-delete:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (max-width: 520px) {
+  .topbar { gap: .45rem; padding: .62rem .75rem; }
+  .topbar-title { display: none; }
+  .topbar-actions { gap: .25rem; overflow-x: auto; scrollbar-width: none; }
+  .topbar-actions::-webkit-scrollbar { display: none; }
+  .icon-btn { font-size: .78rem; padding: .34rem .46rem; }
+}
