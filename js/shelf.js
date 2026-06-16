@@ -27,7 +27,8 @@
   listEl.innerHTML = '';
   for (const book of books) {
     const card = document.createElement('li');
-    card.className = 'book-card';
+    const hasCover = typeof book.cover === 'string' && book.cover.trim();
+    card.className = hasCover ? 'book-card has-cover' : 'book-card';
 
     const link = document.createElement('a');
     link.className = 'book-link';
@@ -59,6 +60,10 @@
       side.appendChild(makeOfflineBtn(book));
     }
 
+    // 封面与阅读链接分离：
+    // - 点击封面：新标签页打开封面图
+    // - 点击标题/书卡文字区域：进入阅读器
+    card.appendChild(renderBookCover(book));
     card.appendChild(link);
     card.appendChild(side);
     listEl.appendChild(card);
@@ -132,6 +137,53 @@ function makeOfflineBtn(book) {
   setState('checking');
   Offline.isDownloaded(book).then(d => setState(d ? 'downloaded' : 'idle'));
   return btn;
+}
+
+function renderBookCover(book) {
+  const cover = typeof book.cover === 'string' ? book.cover.trim() : '';
+
+  if (!cover) {
+    const el = document.createElement('div');
+    el.className = 'book-cover book-cover-placeholder';
+    el.setAttribute('aria-hidden', 'true');
+
+    const span = document.createElement('span');
+    span.textContent = String(book.title || '书').trim().slice(0, 1) || '书';
+    el.appendChild(span);
+
+    return el;
+  }
+
+  const src = resolveBookAsset(book, cover);
+
+  const a = document.createElement('a');
+  a.className = 'book-cover book-cover-link';
+  a.href = src;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.title = `在新标签页打开《${book.title || '书籍'}》封面`;
+  a.setAttribute('aria-label', `在新标签页打开《${book.title || '书籍'}》封面`);
+
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = `${book.title || '书籍'}封面`;
+  img.loading = 'lazy';
+  img.decoding = 'async';
+
+  a.appendChild(img);
+  return a;
+}
+
+function resolveBookAsset(book, file) {
+  const s = String(file || '').trim();
+  if (!s) return '';
+  if (/^(?:https?:)?\/\//i.test(s) || s.startsWith('/') || s.startsWith('data:') || s.startsWith('blob:')) {
+    return s;
+  }
+
+  // Encode each segment so Chinese names/spaces work safely in URLs.
+  const encoded = s.split('/').map(part => encodeURIComponent(part)).join('/');
+  return `books/${encodeURIComponent(book.id)}/${encoded}`;
 }
 
 function escapeHTML(s) {
