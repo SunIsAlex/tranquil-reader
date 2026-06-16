@@ -35,10 +35,23 @@ const Offline = {
   // 浏览器是否支持（需 Cache API；非安全上下文下 caches 不可用）
   supported() { return typeof caches !== 'undefined'; },
 
-  // 该书需要离线的全部 URL：共享的书目清单 + 每一章正文
+  // 该书需要离线的全部 URL：共享的书目清单 + 高亮文件 + 每一章正文
   urls(book) {
     const list = ['books/manifest.json'];
-    for (const ch of (book.chapters || [])) list.push(`books/${book.id}/${ch.file}`);
+
+    const highlightsFile =
+      typeof book.highlightsFile === 'string' ? book.highlightsFile :
+      typeof book.highlights === 'string' ? book.highlights :
+      '';
+
+    if (highlightsFile) {
+      list.push(`books/${book.id}/${highlightsFile}`);
+    }
+
+    for (const ch of (book.chapters || [])) {
+      list.push(`books/${book.id}/${ch.file}`);
+    }
+
     return list;
   },
 
@@ -67,10 +80,20 @@ const Offline = {
     }
   },
 
-  // 移除本书章节缓存。清单是多本书共享的，留着不删。
+  // 移除本书章节缓存和该书高亮缓存。清单是多本书共享的，留着不删。
   async remove(book) {
     if (!this.supported()) return;
     const cache = await caches.open(this.CACHE);
+
+    const highlightsFile =
+      typeof book.highlightsFile === 'string' ? book.highlightsFile :
+      typeof book.highlights === 'string' ? book.highlights :
+      '';
+
+    if (highlightsFile) {
+      await cache.delete(`books/${book.id}/${highlightsFile}`);
+    }
+
     for (const ch of (book.chapters || [])) {
       await cache.delete(`books/${book.id}/${ch.file}`);
     }

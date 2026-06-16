@@ -43,9 +43,15 @@
   document.title = `${book.title} · 静读`;
 
   // ---- 词语标注（高亮） ----
-  // manifest 中的 highlights 形如 { "人名": ["滑膛"], "专有名词": ["第一地球"] }
-  // 类别按声明顺序循环使用 5 种标注样式（hl-0 ~ hl-4）
-  const highlighter = buildHighlighter(book.highlights);
+  // 推荐新结构：
+  // books/<book.id>/highlights.json
+  // {
+  //   "highlights": { "人名": ["..."] },
+  //   "perChapter": { "001_xxx.txt": { "专有名词": ["..."] } }
+  // }
+  // 仍兼容旧结构：manifest 内联 highlights。
+  const highlightData = await loadBookHighlights(book);
+  let activeHighlighter = null;
 
   function buildHighlighter(highlights) {
     if (!highlights || typeof highlights !== 'object') return null;
@@ -77,6 +83,106 @@
     });
   }
 
+  async function loadBookHighlights(book) {
+    // Backward compatibility: old manifest style:
+    // "highlights": { "人名": ["..."] }
+    if (book.highlights && typeof book.highlights === 'object' && !Array.isArray(book.highlights)) {
+      return {
+        highlights: book.highlights,
+        perChapter: book.perChapter || book.perChapterHighlights || {}
+      };
+    }
+
+    // New style:
+    // "highlightsFile": "highlights.json"
+    // Also support "highlights": "highlights.json" for convenience.
+    const file =
+      typeof book.highlightsFile === 'string' ? book.highlightsFile :
+      typeof book.highlights === 'string' ? book.highlights :
+      '';
+
+    if (!file) {
+      return { highlights: null, perChapter: {} };
+    }
+
+    try {
+      const res = await fetch(`books/${book.id}/${file}`, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(res.status);
+
+      const data = await res.json();
+
+      // Preferred format:
+      // { "highlights": {...}, "perChapter": {...} }
+      if (data && (data.highlights || data.perChapter || data.perChapterHighlights)) {
+        return {
+          highlights: data.highlights || null,
+          perChapter: data.perChapter || data.perChapterHighlights || {}
+        };
+      }
+
+      // Fallback: if the JSON itself is a category map, treat it as global highlights.
+      return { highlights: data, perChapter: {} };
+    } catch (err) {
+      console.warn(`Failed to load highlights for ${book.id}:`, err);
+      return { highlights: null, perChapter: {} };
+    }
+  }
+
+  function hasHighlights(data) {
+    if (!data) return false;
+
+    if (data.highlights && Object.values(data.highlights).some(v => Array.isArray(v) && v.length)) {
+      return true;
+    }
+
+    const perChapter = data.perChapter || {};
+    return Object.values(perChapter).some(group =>
+      group && typeof group === 'object' &&
+      Object.values(group).some(v => Array.isArray(v) && v.length)
+    );
+  }
+
+  function getChapterHighlights(ch) {
+    const perChapter = highlightData.perChapter || {};
+
+    // Filename is preferred because it is stable even if the chapter title changes.
+    return perChapter[ch.file] || perChapter[ch.title] || null;
+  }
+
+  function mergeHighlights(...sources) {
+    const out = {};
+
+    for (const src of sources) {
+      if (!src || typeof src !== 'object') continue;
+
+      for (const [cat, terms] of Object.entries(src)) {
+        if (!Array.isArray(terms)) continue;
+        if (!out[cat]) out[cat] = [];
+
+        const seen = new Set(out[cat]);
+
+        for (const raw of terms) {
+          const term = String(raw || '').trim();
+          if (!term || seen.has(term)) continue;
+
+          out[cat].push(term);
+          seen.add(term);
+        }
+      }
+    }
+
+    return out;
+  }
+
+  function refreshChapterHighlighter(ch) {
+    activeHighlighter = buildHighlighter(
+      mergeHighlights(
+        highlightData.highlights,
+        getChapterHighlights(ch)
+      )
+    );
+  }
+
   // 开关（默认开启，状态持久化）
   const HL_KEY = 'reader.highlight';
   const hlBtn = document.getElementById('hl-toggle');
@@ -88,7 +194,7 @@
   applyHL(localStorage.getItem(HL_KEY) !== '0');
   hlBtn.addEventListener('click', () =>
     applyHL(document.body.classList.contains('no-hl')));
-  if (!highlighter) hlBtn.hidden = true; // 这本书没配词表就不显示开关
+  if (!hasHighlights(highlightData)) hlBtn.hidden = true; // 这本书没配词表就不显示开关
 
   // ---- 状态 ----
   let current = 0;
@@ -534,6 +640,7 @@
     currentPara = 0;
     lastProgressPara = -1;
     const ch = book.chapters[index];
+    refreshChapterHighlighter(ch);
 
     els.body.innerHTML = `<p class="empty">正在加载……</p>`;
     els.chapTitle.textContent = ch.title;
@@ -646,7 +753,7 @@
       if (!t) return '';
       if (/^([-*]\s*){3,}$/.test(t) || t === '---' || t === '***') return '<hr>';
       let html = escapeHTML(t);
-      if (highlighter) html = highlighter(html); // 在转义后、<br> 插入前标注
+      if (activeHighlighter) html = activeHighlighter(html); // 在转义后、<br> 插入前标注
       paraChars[pi] = t.length;                  // 原始文字数（与字号无关）
       return `<p id="p${pi++}">${html.replace(/\n/g, '<br>')}</p>`;
     }).join('');
