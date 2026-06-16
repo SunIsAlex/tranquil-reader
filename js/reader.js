@@ -672,7 +672,7 @@
     // 滚动定位：优先段落锚点，其次旧的像素位置，否则回到顶部
     if (restore && Number.isInteger(restore.para) && restore.para > 0) {
       scrollToPara(restore.para);
-    } else if (restore && restore.scroll) {
+    } else if (restore && Number.isFinite(restore.scroll) && restore.scroll > 0) {
       window.scrollTo({ top: restore.scroll, behavior: 'auto' });
     } else {
       window.scrollTo({ top: 0, behavior: 'auto' });
@@ -742,19 +742,76 @@
     return m ? parseInt(m[1], 10) : null;
   }
 
-  // 纯文本 -> 段落 HTML。空行分段，单独一行的 --- / *** 视作场景分隔
-  // 每个段落带上 id="pN"（章内序号），供段落级进度定位与 URL 锚点使用
+  function isDividerBlock(t) {
+    return /^([-*]\s*){3,}$/.test(t) || t === '---' || t === '***';
+  }
+
+  function looksLikeIndentedParagraph(line) {
+    // 有些 TXT（如《超新星纪元》）用“每段一行、行首两个全角空格”，
+    // 但段落之间没有空行。原来的空行分段会把整章合成一个 <p>，
+    // 导致顶部进度条只剩一个长段，进度恢复也只能回到第 0 段。
+    return /^[\u3000]{2,}\S/.test(line) || /^[ \t]{2,}\S/.test(line);
+  }
+
+  function splitTextBlocks(raw) {
+    const coarseBlocks = raw
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n')
+      .split(/\n\s*\n/);
+
+    const blocks = [];
+
+    for (const block of coarseBlocks) {
+      const t = block.trim();
+      if (!t) continue;
+
+      if (isDividerBlock(t)) {
+        blocks.push(t);
+        continue;
+      }
+
+      const lines = block
+        .split('\n')
+        .map(line => line.replace(/[ \t\u3000]+$/g, ''))
+        .filter(line => line.trim());
+
+      // 如果一个空行块里出现多条缩进正文行，就按缩进行拆成多个段落。
+      // 若不是这种格式，则保持原来的换行，用 <br> 展示。
+      if (lines.length > 1 && lines.slice(1).some(looksLikeIndentedParagraph)) {
+        let currentLines = [];
+
+        for (const line of lines) {
+          if (looksLikeIndentedParagraph(line) && currentLines.length) {
+            blocks.push(currentLines.join('\n').trim());
+            currentLines = [];
+          }
+          currentLines.push(line.trim());
+        }
+
+        if (currentLines.length) {
+          blocks.push(currentLines.join('\n').trim());
+        }
+      } else {
+        blocks.push(t);
+      }
+    }
+
+    return blocks;
+  }
+
+  // 纯文本 -> 段落 HTML。空行分段；兼容“每段一行但段间无空行”的 TXT。
+  // 每个段落带上 id="pN"（章内序号），供段落级进度定位与 URL 锚点使用。
   function renderText(raw) {
-    const blocks = raw.replace(/\r\n/g, '\n').split(/\n\s*\n/);
+    const blocks = splitTextBlocks(raw);
     let pi = 0;
     paraChars = [];
     return blocks.map(b => {
       const t = b.trim();
       if (!t) return '';
-      if (/^([-*]\s*){3,}$/.test(t) || t === '---' || t === '***') return '<hr>';
+      if (isDividerBlock(t)) return '<hr>';
       let html = escapeHTML(t);
       if (activeHighlighter) html = activeHighlighter(html); // 在转义后、<br> 插入前标注
-      paraChars[pi] = t.length;                  // 原始文字数（与字号无关）
+      paraChars[pi] = t.replace(/\s+/g, '').length;       // 原始文字数（与字号无关）
       return `<p id="p${pi++}">${html.replace(/\n/g, '<br>')}</p>`;
     }).join('');
   }
@@ -856,8 +913,11 @@
   if (hashPara != null) {
     restore = { para: hashPara };
   } else if (saved && saved.chapter === current) {
-    if (Number.isInteger(saved.para)) restore = { para: saved.para };
-    else if (saved.scroll) restore = { scroll: saved.scroll };
+    if (Number.isInteger(saved.para) && saved.para > 0) {
+      restore = { para: saved.para, scroll: saved.scroll };
+    } else if (Number.isFinite(saved.scroll) && saved.scroll > 0) {
+      restore = { scroll: saved.scroll };
+    }
   }
   loadChapter(current, restore);
 })();
