@@ -40,8 +40,13 @@ const Offline = {
     const list = ['books/manifest.json'];
 
     const coverFile = typeof book.cover === 'string' ? book.cover : '';
-    if (coverFile && !isExternalURL(coverFile)) {
-      list.push(`books/${book.id}/${coverFile}`);
+    const coverThumbFile = typeof book.coverThumb === 'string' ? book.coverThumb : '';
+    const shelfCoverFile = coverThumbFile || coverFile;
+
+    // Cache the small shelf thumbnail. The full cover still opens on demand,
+    // but is not downloaded automatically when a thumbnail exists.
+    if (shelfCoverFile && !isExternalURL(shelfCoverFile)) {
+      list.push(`books/${book.id}/${shelfCoverFile}`);
     }
 
     const highlightsFile =
@@ -91,8 +96,13 @@ const Offline = {
     const cache = await caches.open(this.CACHE);
 
     const coverFile = typeof book.cover === 'string' ? book.cover : '';
+    const coverThumbFile = typeof book.coverThumb === 'string' ? book.coverThumb : '';
+
     if (coverFile && !isExternalURL(coverFile)) {
       await cache.delete(`books/${book.id}/${coverFile}`);
+    }
+    if (coverThumbFile && !isExternalURL(coverThumbFile)) {
+      await cache.delete(`books/${book.id}/${coverThumbFile}`);
     }
 
     const highlightsFile =
