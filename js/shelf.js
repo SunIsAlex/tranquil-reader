@@ -154,18 +154,20 @@ function renderBookCover(book) {
     return el;
   }
 
-  const src = resolveBookAsset(book, cover);
+  const fullSrc = resolveBookAsset(book, cover);
+  const thumb = typeof book.coverThumb === 'string' ? book.coverThumb.trim() : '';
+  const displaySrc = thumb ? resolveBookAsset(book, thumb) : fullSrc;
 
   const a = document.createElement('a');
   a.className = 'book-cover book-cover-link';
-  a.href = src;
+  a.href = fullSrc;
   a.target = '_blank';
   a.rel = 'noopener';
   a.title = `在新标签页打开《${book.title || '书籍'}》封面`;
   a.setAttribute('aria-label', `在新标签页打开《${book.title || '书籍'}》封面`);
 
   const img = document.createElement('img');
-  img.src = src;
+  img.src = displaySrc;
   img.alt = `${book.title || '书籍'}封面`;
   img.loading = 'lazy';
   img.decoding = 'async';

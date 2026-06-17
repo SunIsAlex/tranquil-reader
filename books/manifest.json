@@ -20,6 +20,7 @@
       "title": "赡养人类",
       "author": "刘慈欣",
       "cover": "cover.png",
+      "coverThumb": "cover-thumb.webp",
       "chapters": [
         {
           "title": "Part 1",
@@ -45,6 +46,7 @@
       "title": "中国2185",
       "author": "刘慈欣",
       "cover": "cover.png",
+      "coverThumb": "cover-thumb.webp",
       "chapters": [
         {
           "title": "零 引子",
@@ -236,7 +238,8 @@
           "file": "031_创世纪 - 六、创世纪.txt"
         }
       ],
-      "cover": "cover.png"
+      "cover": "cover.png",
+      "coverThumb": "cover-thumb.webp"
     }
   ]
 }
