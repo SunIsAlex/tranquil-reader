@@ -209,6 +209,10 @@
   let bookmarks = loadBookmarks();
   const prefetchedChapters = new Set();
 
+  let activeOverlayHistory = null;
+  let ignoreNextPopState = false;
+  let tocSwipeStart = null;
+
   const saved = Store.getProgress(bookId);
   if (saved && Number.isInteger(saved.chapter) &&
       saved.chapter >= 0 && saved.chapter < book.chapters.length) {
@@ -267,8 +271,8 @@
       if (i === current) a.classList.add('current');
       a.addEventListener('click', (e) => {
         e.preventDefault();
+        closeTOC(true, { keepHistory: true });
         loadChapter(i);
-        closeTOC(true);
       });
       li.appendChild(a);
       els.tocList.appendChild(li);
@@ -285,13 +289,35 @@
     els.toc.tabIndex = -1;
   }
 
+  function pushOverlayHistory(type) {
+    if (activeOverlayHistory === type) return;
+
+    try {
+      history.pushState({ ...(history.state || {}), readerOverlay: type }, '', location.href);
+      activeOverlayHistory = type;
+    } catch {
+      activeOverlayHistory = null;
+    }
+  }
+
+  function consumeOverlayHistory(type) {
+    if (activeOverlayHistory !== type) return;
+
+    activeOverlayHistory = null;
+    ignoreNextPopState = true;
+    try { history.back(); }
+    catch { ignoreNextPopState = false; }
+  }
+
   function openTOC() {
     if (!els.toc.hidden) return;
+    closeBookmarks(false, { keepHistory: true });
     lastFocusBeforeTOC = document.activeElement;
     els.toc.hidden = false;
     els.toc.setAttribute('aria-hidden', 'false');
     els.tocToggle.setAttribute('aria-expanded', 'true');
     els.tocToggle.setAttribute('aria-label', '关闭目录');
+    pushOverlayHistory('toc');
 
     requestAnimationFrame(() => {
       const target = els.tocList.querySelector('a.current') ||
@@ -300,7 +326,7 @@
     });
   }
 
-  function closeTOC(restoreFocus = true) {
+  function closeTOC(restoreFocus = true, options = {}) {
     if (els.toc.hidden) return;
     els.toc.hidden = true;
     els.toc.setAttribute('aria-hidden', 'true');
@@ -314,6 +340,10 @@
       target.focus({ preventScroll: true });
     }
     lastFocusBeforeTOC = null;
+
+    if (!options.fromHistory && !options.keepHistory) {
+      consumeOverlayHistory('toc');
+    }
   }
 
   function trapTOCFocus(e) {
@@ -351,6 +381,72 @@
     if (!els.toc.hidden && !els.toc.contains(e.target) && e.target !== els.tocToggle) closeTOC(false);
     if (!els.bookmarks.hidden && !els.bookmarks.contains(e.target) && e.target !== els.bookmarkToggle) closeBookmarks(false);
   });
+  function setupTOCSwipeClose() {
+    els.toc.addEventListener('touchstart', (e) => {
+      if (els.toc.hidden || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      tocSwipeStart = {
+        x: t.clientX,
+        y: t.clientY,
+        time: Date.now(),
+      };
+    }, { passive: true });
+
+    els.toc.addEventListener('touchmove', (e) => {
+      if (!tocSwipeStart || els.toc.hidden || e.touches.length !== 1) return;
+      const t = e.touches[0];
+      const dx = t.clientX - tocSwipeStart.x;
+      const dy = t.clientY - tocSwipeStart.y;
+
+      // 只在明确横向右滑时阻止页面/抽屉滚动；纵向滑动仍用于滚目录。
+      if (dx > 24 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    els.toc.addEventListener('touchend', (e) => {
+      if (!tocSwipeStart || els.toc.hidden) return;
+      const t = e.changedTouches && e.changedTouches[0];
+      if (!t) {
+        tocSwipeStart = null;
+        return;
+      }
+
+      const dx = t.clientX - tocSwipeStart.x;
+      const dy = t.clientY - tocSwipeStart.y;
+      const dt = Date.now() - tocSwipeStart.time;
+      tocSwipeStart = null;
+
+      if (dx > 72 && Math.abs(dx) > Math.abs(dy) * 1.35 && dt < 700) {
+        closeTOC(false);
+      }
+    }, { passive: true });
+
+    els.toc.addEventListener('touchcancel', () => {
+      tocSwipeStart = null;
+    }, { passive: true });
+  }
+
+  setupTOCSwipeClose();
+
+  window.addEventListener('popstate', () => {
+    if (ignoreNextPopState) {
+      ignoreNextPopState = false;
+      return;
+    }
+
+    if (!els.toc.hidden) {
+      activeOverlayHistory = null;
+      closeTOC(true, { fromHistory: true });
+      return;
+    }
+
+    if (!els.bookmarks.hidden) {
+      activeOverlayHistory = null;
+      closeBookmarks(true, { fromHistory: true });
+    }
+  });
+
 
   // ---- 书签 / 笔记 ----
   function bookmarkKey() {
@@ -434,13 +530,14 @@
 
   function openBookmarks() {
     if (!els.bookmarks.hidden) return;
-    closeTOC(false);
+    closeTOC(false, { keepHistory: true });
     lastFocusBeforeBookmarks = document.activeElement;
     renderBookmarks();
     els.bookmarks.hidden = false;
     els.bookmarks.setAttribute('aria-hidden', 'false');
     els.bookmarkToggle.setAttribute('aria-expanded', 'true');
     els.bookmarkToggle.setAttribute('aria-label', '关闭书签和笔记');
+    pushOverlayHistory('bookmarks');
 
     requestAnimationFrame(() => {
       const target = els.bookmarkAdd || els.bookmarkList.querySelector('button') || els.bookmarks;
@@ -448,7 +545,7 @@
     });
   }
 
-  function closeBookmarks(restoreFocus = true) {
+  function closeBookmarks(restoreFocus = true, options = {}) {
     if (els.bookmarks.hidden) return;
     els.bookmarks.hidden = true;
     els.bookmarks.setAttribute('aria-hidden', 'true');
@@ -462,6 +559,10 @@
       target.focus({ preventScroll: true });
     }
     lastFocusBeforeBookmarks = null;
+
+    if (!options.fromHistory && !options.keepHistory) {
+      consumeOverlayHistory('bookmarks');
+    }
   }
 
   function trapPanelFocus(panel, e) {
