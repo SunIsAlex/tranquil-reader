@@ -5,18 +5,41 @@
 
 const Store = {
   THEME_KEY: 'reader.theme',
+  LAST_KEY: 'reader.lastProgress',
   fontKey: 'reader.fontSize',
 
-  // 进度键：每本书一份。结构 { chapter: number, scroll: number, time: number }
+  // 进度键：每本书一份。结构 { chapter: number, para: number, scroll: number, time: number }
   progressKey(bookId) { return `reader.progress.${bookId}`; },
 
   getProgress(bookId) {
     try { return JSON.parse(localStorage.getItem(this.progressKey(bookId))) || null; }
     catch { return null; }
   },
+  getLastProgress() {
+    try { return JSON.parse(localStorage.getItem(this.LAST_KEY)) || null; }
+    catch { return null; }
+  },
   setProgress(bookId, data) {
-    try { localStorage.setItem(this.progressKey(bookId), JSON.stringify(data)); }
-    catch { /* 隐私模式或配额满，静默失败 */ }
+    try {
+      const normalized = {
+        chapter: Number.isInteger(data.chapter) ? data.chapter : 0,
+        para: Number.isInteger(data.para) ? data.para : 0,
+        scroll: Number.isFinite(data.scroll) ? data.scroll : 0,
+        time: Number.isFinite(data.time) ? data.time : Date.now(),
+      };
+
+      localStorage.setItem(this.progressKey(bookId), JSON.stringify(normalized));
+      localStorage.setItem(this.LAST_KEY, JSON.stringify({
+        book: bookId,
+        ...normalized,
+      }));
+    } catch { /* 隐私模式或配额满，静默失败 */ }
+  },
+  readerURL(bookId, progress = null) {
+    const p = progress || this.getProgress(bookId) || {};
+    const chapter = Number.isInteger(p.chapter) ? p.chapter : 0;
+    const para = Number.isInteger(p.para) && p.para > 0 ? `#p${p.para}` : '';
+    return `reader.html?book=${encodeURIComponent(bookId)}&chapter=${chapter}${para}`;
   },
 
   getFontSize() {
@@ -120,6 +143,19 @@ const Offline = {
   },
 };
 
+
+function isStandaloneApp() {
+  try {
+    return (
+      (matchMedia && matchMedia('(display-mode: standalone)').matches) ||
+      navigator.standalone === true ||
+      (document.referrer || '').startsWith('android-app://')
+    );
+  } catch {
+    return false;
+  }
+}
+
 /* ---------- Android App 推荐 ---------- */
 // 安卓浏览器访客（且不在已安装的 App / 独立窗口里）推荐下载 TWA 安装包。
 const AppPromo = {
@@ -131,11 +167,7 @@ const AppPromo = {
     try {
       if (!/Android/i.test(navigator.userAgent)) return false;
       // 已安装的 PWA / TWA 都跑在 standalone 显示模式，App 内不再推荐
-      const standalone =
-        (matchMedia && matchMedia('(display-mode: standalone)').matches) ||
-        navigator.standalone === true ||
-        (document.referrer || '').startsWith('android-app://');
-      if (standalone) return false;
+      if (isStandaloneApp()) return false;
       return localStorage.getItem(this.DISMISS_KEY) !== '1';
     } catch { return false; }
   },

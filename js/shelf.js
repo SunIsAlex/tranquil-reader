@@ -4,6 +4,8 @@
    ============================================================ */
 
 (async function () {
+  if (maybeResumeLastReadOnAppLaunch()) return;
+
   const listEl = document.getElementById('book-list');
 
   // 安卓浏览器访客：在书架顶部推荐下载 App（与书目加载相互独立）
@@ -69,6 +71,29 @@
     listEl.appendChild(card);
   }
 })();
+
+
+// TWA / PWA 从图标冷启动时，start_url 会先打开书架。
+// 这里在独立窗口模式下自动跳回上次阅读位置；同一个 app session 只执行一次，
+// 因此用户返回书架后不会被立刻再次送回阅读页。
+function maybeResumeLastReadOnAppLaunch() {
+  try {
+    const params = new URLSearchParams(location.search);
+    if (params.has('noresume')) return false;
+    if (!isStandaloneApp()) return false;
+    if (sessionStorage.getItem('reader.resumeChecked') === '1') return false;
+
+    sessionStorage.setItem('reader.resumeChecked', '1');
+
+    const last = Store.getLastProgress();
+    if (!last || !last.book || !Number.isInteger(last.chapter)) return false;
+
+    location.replace(Store.readerURL(last.book, last));
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // 安卓浏览器（非 App 内）访客：在书架顶部插入一张可关闭的下载 App 推荐卡。
 function maybeShowAppBanner() {

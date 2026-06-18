@@ -55,7 +55,11 @@
 
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  max-width: 100%;
+  overflow-x: hidden;
+}
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
@@ -63,6 +67,8 @@ html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
@@ -383,23 +389,41 @@ body.no-hl mark.hl {
 
 /* ---------- 目录抽屉 ---------- */
 .toc {
-  position: fixed; top: 0; right: 0; z-index: 40;
-  width: min(20rem, 82vw); height: 100dvh;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: auto;
+  z-index: 40;
+  width: min(22rem, calc(100vw - 1rem));
+  max-width: calc(100vw - 1rem);
+  height: 100dvh;
+  max-height: 100dvh;
   background: var(--surface);
   border-left: 1px solid var(--border);
   box-shadow: -8px 0 32px rgba(0,0,0,.12);
   padding: 1.4rem 1.2rem;
   overflow-y: auto;
-  transform: translateX(0);
-  transition: transform .22s ease;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  contain: paint;
+  transform: translate3d(0, 0, 0);
+  transition: transform .22s ease, visibility .22s ease;
 }
-.toc[hidden] { display: block; transform: translateX(100%); pointer-events: none; }
+.toc[hidden] {
+  display: block;
+  visibility: hidden;
+  transform: translate3d(calc(100% + 2px), 0, 0);
+  pointer-events: none;
+}
 .toc-title { font-size: 1rem; margin: .2rem 0 1rem; color: var(--text-soft); font-weight: 600; }
 .toc-list { list-style: none; margin: 0; padding: 0; counter-reset: ch; }
 .toc-list li { margin: 0; }
 .toc-list a {
   display: block; padding: .55rem .7rem; border-radius: 8px;
   color: var(--text-soft); text-decoration: none; font-size: .92rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   transition: background .12s ease, color .12s ease;
 }
 .toc-list a:hover { background: var(--surface-2); color: var(--text); }
@@ -430,17 +454,32 @@ body.no-hl mark.hl {
 }
 
 .bookmarks-panel {
-  position: fixed; top: 0; right: 0; z-index: 42;
-  width: min(24rem, 88vw); height: 100dvh;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: auto;
+  z-index: 42;
+  width: min(24rem, calc(100vw - 1rem));
+  max-width: calc(100vw - 1rem);
+  height: 100dvh;
+  max-height: 100dvh;
   background: var(--surface);
   border-left: 1px solid var(--border);
   box-shadow: -8px 0 32px rgba(0,0,0,.12);
   padding: 1.4rem 1.2rem;
   overflow-y: auto;
-  transform: translateX(0);
-  transition: transform .22s ease;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  contain: paint;
+  transform: translate3d(0, 0, 0);
+  transition: transform .22s ease, visibility .22s ease;
 }
-.bookmarks-panel[hidden] { display: block; transform: translateX(100%); pointer-events: none; }
+.bookmarks-panel[hidden] {
+  display: block;
+  visibility: hidden;
+  transform: translate3d(calc(100% + 2px), 0, 0);
+  pointer-events: none;
+}
 .bookmarks-panel:focus { outline: none; }
 
 .bookmarks-head {
@@ -572,6 +611,15 @@ body.no-hl mark.hl {
 
 @media (max-width: 380px) {
   .book-card.has-cover { --cover-w: 4.9rem; }
+}
+
+@media (max-width: 520px) {
+  .toc,
+  .bookmarks-panel {
+    width: min(22rem, calc(100vw - .75rem));
+    max-width: calc(100vw - .75rem);
+    padding: 1.15rem 1rem;
+  }
 }
 
 @media (max-width: 520px) {
