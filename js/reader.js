@@ -213,6 +213,15 @@
   let ignoreNextPopState = false;
   let tocSwipeStart = null;
 
+  let topbarHidden = false;
+  let topbarAutoHideReady = false;
+  let lastTopbarScrollY = getScrollY();
+  let topbarDownDistance = 0;
+  let topbarUpDistance = 0;
+  let topbarTouchStartY = 0;
+  let topbarTouchLastY = 0;
+  let topbarTouchDistance = 0;
+
   const saved = Store.getProgress(bookId);
   if (saved && Number.isInteger(saved.chapter) &&
       saved.chapter >= 0 && saved.chapter < book.chapters.length) {
@@ -311,6 +320,7 @@
 
   function openTOC() {
     if (!els.toc.hidden) return;
+    setTopbarHidden(false);
     closeBookmarks(false, { keepHistory: true });
     lastFocusBeforeTOC = document.activeElement;
     els.toc.hidden = false;
@@ -381,6 +391,61 @@
     if (!els.toc.hidden && !els.toc.contains(e.target) && e.target !== els.tocToggle) closeTOC(false);
     if (!els.bookmarks.hidden && !els.bookmarks.contains(e.target) && e.target !== els.bookmarkToggle) closeBookmarks(false);
   });
+  document.querySelector('.topbar')?.addEventListener('focusin', () => {
+    setTopbarHidden(false);
+  });
+
+  function setupTopbarSwipeAutoHide() {
+    document.addEventListener('touchstart', (e) => {
+      if (!topbarAutoHideReady || e.touches.length !== 1) return;
+      if (!els.toc.hidden || !els.bookmarks.hidden) return;
+
+      const t = e.touches[0];
+      topbarTouchStartY = t.clientY;
+      topbarTouchLastY = t.clientY;
+      topbarTouchDistance = 0;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!topbarAutoHideReady || e.touches.length !== 1) return;
+      if (!els.toc.hidden || !els.bookmarks.hidden) {
+        setTopbarHidden(false);
+        return;
+      }
+
+      const t = e.touches[0];
+      const dy = t.clientY - topbarTouchLastY;
+      topbarTouchLastY = t.clientY;
+
+      // 手指上划：dy < 0，页面通常向下滚动，收起顶栏。
+      // 手指下划：dy > 0，页面通常向上滚动，显示顶栏。
+      if (Math.abs(dy) < 1.5) return;
+
+      topbarTouchDistance += dy;
+
+      if (topbarTouchDistance < -22) {
+        setTopbarHidden(true);
+        topbarTouchDistance = 0;
+      } else if (topbarTouchDistance > 12) {
+        setTopbarHidden(false);
+        topbarTouchDistance = 0;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => {
+      topbarTouchStartY = 0;
+      topbarTouchLastY = 0;
+      topbarTouchDistance = 0;
+    }, { passive: true });
+
+    document.addEventListener('touchcancel', () => {
+      topbarTouchStartY = 0;
+      topbarTouchLastY = 0;
+      topbarTouchDistance = 0;
+    }, { passive: true });
+  }
+
+  setupTopbarSwipeAutoHide();
   function setupTOCSwipeClose() {
     els.toc.addEventListener('touchstart', (e) => {
       if (els.toc.hidden || e.touches.length !== 1) return;
@@ -530,6 +595,7 @@
 
   function openBookmarks() {
     if (!els.bookmarks.hidden) return;
+    setTopbarHidden(false);
     closeTOC(false, { keepHistory: true });
     lastFocusBeforeBookmarks = document.activeElement;
     renderBookmarks();
@@ -830,6 +896,78 @@
     return (bar ? bar.offsetHeight : 56) + 8;
   }
 
+  function getScrollY() {
+    const el = document.scrollingElement || document.documentElement;
+    return Math.max(0, window.scrollY || el.scrollTop || 0);
+  }
+
+  function setTopbarHidden(hidden) {
+    // 顶部、目录/书签打开时强制显示。
+    if (
+      hidden &&
+      (getScrollY() < 80 ||
+        !els.toc.hidden ||
+        !els.bookmarks.hidden)
+    ) {
+      hidden = false;
+    }
+
+    // 移动端点击过顶部按钮后，按钮可能长期保持 focus；
+    // 如果不 blur，:focus-within / activeElement 会让顶栏看起来“永远隐藏不了”。
+    if (hidden) {
+      const bar = document.querySelector('.topbar');
+      if (bar && bar.contains(document.activeElement) && document.activeElement.blur) {
+        document.activeElement.blur();
+      }
+    }
+
+    if (topbarHidden === hidden) return;
+    topbarHidden = hidden;
+    document.body.classList.toggle('reader-topbar-hidden', hidden);
+  }
+
+  function handleTopbarAutoHide() {
+    if (!topbarAutoHideReady) return;
+
+    const y = getScrollY();
+    const dy = y - lastTopbarScrollY;
+
+    if (Math.abs(dy) < 2) return;
+
+    // 回到页面顶部时总是显示。
+    if (y < 80) {
+      topbarDownDistance = 0;
+      topbarUpDistance = 0;
+      setTopbarHidden(false);
+      lastTopbarScrollY = y;
+      return;
+    }
+
+    // 页面向下滚动 = 手指上划：收起顶部菜单。
+    if (dy > 0) {
+      topbarDownDistance += dy;
+      topbarUpDistance = 0;
+
+      if (topbarDownDistance > 44) {
+        setTopbarHidden(true);
+        topbarDownDistance = 0;
+      }
+    }
+
+    // 页面向上滚动 = 手指下划：弹出顶部菜单。
+    if (dy < 0) {
+      topbarUpDistance += -dy;
+      topbarDownDistance = 0;
+
+      if (topbarUpDistance > 18) {
+        setTopbarHidden(false);
+        topbarUpDistance = 0;
+      }
+    }
+
+    lastTopbarScrollY = y;
+  }
+
   // 把章节 + 段落同步进地址栏：?book=…&chapter=N#pM
   // 用 replaceState，既不污染前进/后退历史，也不会触发滚动跳转
   function syncURL() {
@@ -941,6 +1079,7 @@
   window.addEventListener('scroll', () => {
     saveScroll();
     requestProgressUpdate();
+    handleTopbarAutoHide();
   }, { passive: true });
   // 离开页面时再保存一次，确保滚动位置最新
   window.addEventListener('beforeunload', saveProgress);
@@ -1021,6 +1160,12 @@
     }
   }
   loadChapter(current, restore);
+
+  // 避免启动恢复阅读位置时的程序化滚动立刻触发“收起顶部栏”。
+  window.setTimeout(() => {
+    lastTopbarScrollY = getScrollY();
+    topbarAutoHideReady = true;
+  }, 600);
 })();
 
 function escapeHTML(s) {
