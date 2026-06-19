@@ -201,6 +201,7 @@
   let currentPara = 0;       // 当前阅读到的段落序号（章内，从 0 起）
   let paraChars = [];        // 各段落的文字数（章内），用于分段进度条的段宽
   let paraSegs = [];         // 分段进度条里各段对应的 DOM 节点
+  let paraEls = [];          // Cache rendered paragraph nodes for scroll/progress work.
   let paraTops = [];         // 各段落相对文档顶部的位置，用于二分查找当前段落
   let lastProgressPara = -1; // 上次已渲染到进度条的段落，避免重复更新 DOM
   let progressRaf = 0;
@@ -221,6 +222,9 @@
   let topbarTouchStartY = 0;
   let topbarTouchLastY = 0;
   let topbarTouchDistance = 0;
+  const topbar = document.querySelector('.topbar');
+  let topbarOffsetValue = 64;
+  let tocLinks = [];
 
   const saved = Store.getProgress(bookId);
   if (saved && Number.isInteger(saved.chapter) &&
@@ -244,11 +248,10 @@
   // 会对应到别的段落。这里记下阅读线落在“哪一段、段内高度的百分之几”，重排后
   // 按新高度把同一点还原到阅读线——段内位置也一并保留，进度不会偏移。
   function changeFont(delta) {
-    const ps = els.body.querySelectorAll('p[id]');
     const line = topbarOffset();
     let anchor = null;
-    if (ps.length) {
-      const el = ps[Math.min(computeCurrentPara(), ps.length - 1)];
+    if (paraEls.length) {
+      const el = paraEls[Math.min(computeCurrentPara(), paraEls.length - 1)];
       const r = el.getBoundingClientRect();
       const frac = r.height > 0 ? (line - r.top) / r.height : 0;
       anchor = { el, frac: Math.max(0, Math.min(1, frac)) };
@@ -272,6 +275,8 @@
   // ---- 目录 ----
   function buildTOC() {
     els.tocList.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    tocLinks = [];
     book.chapters.forEach((ch, i) => {
       const li = document.createElement('li');
       const a = document.createElement('a');
@@ -284,8 +289,10 @@
         loadChapter(i);
       });
       li.appendChild(a);
-      els.tocList.appendChild(li);
+      frag.appendChild(li);
+      tocLinks.push(a);
     });
+    els.tocList.appendChild(frag);
   }
 
   function setupTOCAccessibility() {
@@ -558,9 +565,8 @@
   }
 
   function currentParaElement() {
-    const ps = els.body.querySelectorAll('p[id]');
-    if (!ps.length) return null;
-    return ps[Math.min(computeCurrentPara(), ps.length - 1)] || null;
+    if (!paraEls.length) return null;
+    return paraEls[Math.min(computeCurrentPara(), paraEls.length - 1)] || null;
   }
 
   function applyBookmarkMarks() {
@@ -568,7 +574,7 @@
       .filter(b => b.chapter === current)
       .map(b => b.para));
 
-    els.body.querySelectorAll('p[id]').forEach((p, i) => {
+    paraEls.forEach((p, i) => {
       p.classList.toggle('bookmarked', marked.has(i));
     });
     updateBookmarkButtonState(currentPara);
@@ -810,6 +816,11 @@
     refreshChapterHighlighter(ch);
 
     els.body.innerHTML = `<p class="empty">正在加载……</p>`;
+    paraEls = [];
+    paraChars = [];
+    paraSegs = [];
+    paraTops = [];
+    els.progress.innerHTML = '';
     els.chapTitle.textContent = ch.title;
 
     let text;
@@ -823,6 +834,7 @@
     }
 
     els.body.innerHTML = renderText(text);
+    paraEls = Array.from(els.body.querySelectorAll('p[id]'));
     refreshParaTops();
     buildProgressSegments();   // 按本章段落字数重建分段进度条
     els.chapTitle.textContent = ch.title;
@@ -833,7 +845,7 @@
     els.next.disabled = index === book.chapters.length - 1;
 
     // 高亮当前目录项
-    [...els.tocList.querySelectorAll('a')].forEach((a, i) =>
+    tocLinks.forEach((a, i) =>
       a.classList.toggle('current', i === index));
 
     // 滚动定位：优先段落锚点，其次旧的像素位置，否则回到顶部
@@ -854,8 +866,11 @@
   }
 
   function refreshParaTops() {
-    paraTops = [...els.body.querySelectorAll('p[id]')]
-      .map(el => el.getBoundingClientRect().top + window.scrollY);
+    if (!paraEls.length) {
+      paraEls = Array.from(els.body.querySelectorAll('p[id]'));
+    }
+    const scrollY = window.scrollY;
+    paraTops = paraEls.map(el => el.getBoundingClientRect().top + scrollY);
   }
 
   // 找出“正在读”的段落：阅读线（顶栏下沿）之上、最靠下的那个 <p>
@@ -883,17 +898,19 @@
 
   // 把某段滚到阅读线位置（瞬时，绕过 scroll-behavior: smooth）
   function scrollToPara(i) {
-    const ps = els.body.querySelectorAll('p[id]');
-    if (!ps.length) return;
-    const el = ps[Math.min(i, ps.length - 1)];
+    if (!paraEls.length) return;
+    const el = paraEls[Math.min(i, paraEls.length - 1)];
     const top = el.getBoundingClientRect().top + window.scrollY - topbarOffset();
     window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
   }
 
   // 阅读线 = 粘性顶栏下沿，留一点余量
   function topbarOffset() {
-    const bar = document.querySelector('.topbar');
-    return (bar ? bar.offsetHeight : 56) + 8;
+    return topbarOffsetValue;
+  }
+
+  function refreshTopbarOffset() {
+    topbarOffsetValue = (topbar ? topbar.offsetHeight : 56) + 8;
   }
 
   function getScrollY() {
@@ -915,8 +932,7 @@
     // 移动端点击过顶部按钮后，按钮可能长期保持 focus；
     // 如果不 blur，:focus-within / activeElement 会让顶栏看起来“永远隐藏不了”。
     if (hidden) {
-      const bar = document.querySelector('.topbar');
-      if (bar && bar.contains(document.activeElement) && document.activeElement.blur) {
+      if (topbar && topbar.contains(document.activeElement) && document.activeElement.blur) {
         document.activeElement.blur();
       }
     }
@@ -1044,15 +1060,22 @@
     const blocks = splitTextBlocks(raw);
     let pi = 0;
     paraChars = [];
-    return blocks.map(b => {
+    const htmlParts = [];
+
+    for (const b of blocks) {
       const t = b.trim();
-      if (!t) return '';
-      if (isDividerBlock(t)) return '<hr>';
+      if (!t) continue;
+      if (isDividerBlock(t)) {
+        htmlParts.push('<hr>');
+        continue;
+      }
       let html = escapeHTML(t);
       if (activeHighlighter) html = activeHighlighter(html); // 在转义后、<br> 插入前标注
       paraChars[pi] = t.replace(/\s+/g, '').length;       // 原始文字数（与字号无关）
-      return `<p id="p${pi++}">${html.replace(/\n/g, '<br>')}</p>`;
-    }).join('');
+      htmlParts.push(`<p id="p${pi++}">${html.replace(/\n/g, '<br>')}</p>`);
+    }
+
+    return htmlParts.join('');
   }
 
   // ---- 进度保存 ----
@@ -1090,24 +1113,45 @@
   // 离散推进：读到第 N 段就点亮前 N 段。字数与字号无关，所以调字号时不漂移。
   function buildProgressSegments() {
     els.progress.innerHTML = '';
+    const frag = document.createDocumentFragment();
     paraSegs = paraChars.map(n => {
       const seg = document.createElement('span');
       seg.className = 'progress-seg';
       seg.style.flex = `${Math.max(1, n)} 0 0`;   // 段宽正比于字数
-      els.progress.appendChild(seg);
+      frag.appendChild(seg);
       return seg;
     });
+    els.progress.appendChild(frag);
     lastProgressPara = -1;
     updateProgressBar();
   }
 
   function updateProgressBar(cur = computeCurrentPara()) {
+    if (paraSegs.length) {
+      cur = Math.max(0, Math.min(cur, paraSegs.length - 1));
+    } else {
+      cur = 0;
+    }
+
     currentPara = cur;
     if (cur === lastProgressPara) return;
 
-    for (let i = 0; i < paraSegs.length; i++) {
-      paraSegs[i].classList.toggle('read', i <= cur);
+    const prev = Math.max(-1, Math.min(lastProgressPara, paraSegs.length - 1));
+
+    if (prev < 0) {
+      for (let i = 0; i < paraSegs.length; i++) {
+        paraSegs[i].classList.toggle('read', i <= cur);
+      }
+    } else if (cur > prev) {
+      for (let i = prev + 1; i <= cur; i++) {
+        paraSegs[i].classList.add('read');
+      }
+    } else {
+      for (let i = cur + 1; i <= prev; i++) {
+        paraSegs[i].classList.remove('read');
+      }
     }
+
     updateBookmarkButtonState(cur);
     lastProgressPara = cur;
   }
@@ -1138,6 +1182,7 @@
   // 让浏览器原生的锚点跳转（#pN 分享链接 / 刷新恢复）也停在顶栏下方，
   // 否则 #pN 会被滚到视口最顶端、被 sticky 顶栏遮住。取值与阅读线一致。
   function refreshLayoutState() {
+    refreshTopbarOffset();
     document.documentElement.style.scrollPaddingTop = topbarOffset() + 'px';
     refreshParaTops();
     updateProgressBar();
