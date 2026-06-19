@@ -27,6 +27,7 @@
   }
 
   listEl.innerHTML = '';
+  const frag = document.createDocumentFragment();
   for (const book of books) {
     const card = document.createElement('li');
     const hasCover = typeof book.cover === 'string' && book.cover.trim();
@@ -68,8 +69,9 @@
     card.appendChild(renderBookCover(book));
     card.appendChild(link);
     card.appendChild(side);
-    listEl.appendChild(card);
+    frag.appendChild(card);
   }
+  listEl.appendChild(frag);
 })();
 
 
@@ -160,8 +162,18 @@ function makeOfflineBtn(book) {
 
   // 初始状态异步探测：是否已经缓存过
   setState('checking');
-  Offline.isDownloaded(book).then(d => setState(d ? 'downloaded' : 'idle'));
+  scheduleShelfIdleTask(() => {
+    Offline.isDownloaded(book).then(d => setState(d ? 'downloaded' : 'idle'));
+  });
   return btn;
+}
+
+function scheduleShelfIdleTask(fn) {
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(fn, { timeout: 1200 });
+  } else {
+    setTimeout(fn, 150);
+  }
 }
 
 function renderBookCover(book) {
