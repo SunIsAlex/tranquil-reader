@@ -1,92 +1,76 @@
-Tranquil Reader / 静读
+# Tranquil Reader / 静读
 
-A lightweight, offline-first novel reader built with plain HTML, CSS and JavaScript.
+一个轻量、离线优先、移动端友好的静态小说阅读器。
 
-It is designed for long-form Chinese novel reading, with a mobile-first interface, PWA/TWA support, offline reading, book covers, reading progress restoration, bookmarks, notes, and AI-assisted highlight generation tools.
+项目使用原生 HTML / CSS / JavaScript 实现，不需要构建工具，适合部署到 GitHub Pages、Cloudflare Pages、静态服务器，或打包成 Android TWA。
 
-No build system is required.
+## 主要特性
 
----
+### 书架
 
-Features
+- 通过 `books/manifest.json` 动态加载书籍
+- 支持书名、作者、章节列表、封面、缩略封面、高亮文件
+- 书架显示阅读进度
+- 支持书籍封面：
+  - 书架使用轻量 `coverThumb`
+  - 点击封面会在新标签页打开完整 `cover`
+  - 点击书名 / 文本区域进入阅读器
+- Android 浏览器内可显示 App 下载提示
+- TWA / PWA 内自动隐藏 App 下载提示
 
-Bookshelf
+### 阅读器
 
-- Dynamic bookshelf powered by "books/manifest.json"
-- Per-book metadata:
-  - title
-  - author
-  - chapter list
-  - cover image
-  - lightweight cover thumbnail
-  - external highlight file path
-- Book cover support:
-  - shelf displays lightweight thumbnail
-  - tapping the cover opens the full cover image in a new tab
-  - tapping the book title/text area opens the reader
-- Reading progress shown on the bookshelf
-- Android App / TWA recommendation banner for browser users
+- 按章节阅读
+- 自动保存阅读进度
+- 支持章节、段落、滚动位置恢复
+- TWA / PWA 冷启动时自动回到上次阅读位置
+- 支持上一章 / 下一章
+- 顶部进度条
+- 段落级阅读进度
+- 支持两类 TXT 段落格式：
+  - 空行分段
+  - 中文缩进分段但无空行
+- 顶部菜单固定在浏览器 / TWA 视口顶部
+- 顶部菜单自动隐藏：
+  - 上划 / 向下滚动时隐藏
+  - 下划 / 向上滚动时显示
+- 移动端布局针对 Android Chrome / WebView 优化
 
----
+### 目录
 
-Reader
+- 右侧滑出式目录
+- 当前章节高亮
+- 支持键盘和无障碍焦点管理
+- `Escape` 关闭目录
+- Android / 浏览器返回键优先关闭目录，而不是直接退出阅读页
+- 移动端右滑关闭目录
+- 长章节标题自动换行
+- 抽屉宽度限制在视口内，避免撑宽页面
 
-- Chapter-based reading
-- Per-book reading progress persistence
-- Paragraph-aware reading progress
-- Resume reading position after reload
-- Resume last reading session on TWA/PWA cold start
-- Previous / next chapter navigation
-- Top progress indicator
-- Paragraph-based progress tracking
-- Supports TXT files with:
-  - blank-line separated paragraphs
-  - indented paragraphs without blank lines
-- Fixed top toolbar attached to the browser/TWA viewport
-- Auto-hide top toolbar while reading:
-  - scroll down / swipe up: hide toolbar
-  - scroll up / swipe down: show toolbar
-- Mobile-friendly layout
+### 书签和笔记
 
----
+- 支持添加书签
+- 每本书独立保存书签
+- 书签抽屉
+- 点击书签快速跳转到对应段落
+- 返回键优先关闭书签抽屉
+- 数据存储在本地浏览器中
 
-Table of Contents
+### 高亮系统
 
-- Slide-in TOC drawer
-- Current chapter highlighting
-- Keyboard and accessibility support
-- Focus management
-- "Escape" closes TOC
-- Android/browser back button closes TOC before leaving reader
-- Swipe right to close TOC on mobile
-- Long chapter titles wrap safely
-- Drawer width is constrained to the viewport to avoid horizontal overflow
+高亮数据不再直接写进 `books/manifest.json`。
 
----
+每本书可以在自己的目录下放置独立的 `highlights.json`：
 
-Bookmarks and Notes
-
-- Add bookmarks while reading
-- Store bookmarks locally per book
-- Bookmark drawer
-- Quick jump to bookmarked paragraph
-- Notes-ready bookmark structure
-- Back button closes bookmark drawer before leaving reader
-
----
-
-Highlight System
-
-Highlights are no longer stored directly inside "books/manifest.json".
-
-Each book can define an external highlight file inside its own folder:
-
+```text
 books/
   <book-id>/
     highlights.json
+```
 
-Recommended manifest entry:
+推荐在 `manifest.json` 中这样引用：
 
+```json
 {
   "id": "chaoxinxingjiyuan",
   "title": "超新星纪元",
@@ -101,9 +85,11 @@ Recommended manifest entry:
     }
   ]
 }
+```
 
-Recommended "highlights.json" format:
+推荐的 `highlights.json` 格式：
 
+```json
 {
   "highlights": {
     "人名": [],
@@ -124,20 +110,19 @@ Recommended "highlights.json" format:
     }
   }
 }
+```
 
-Meaning:
+说明：
 
-- "highlights": global terms used across the whole book
-- "perChapter": chapter-specific terms
-- keys inside "perChapter" should preferably use chapter filenames
-- the reader merges global and per-chapter highlights while rendering
+- `highlights`：全书通用高亮词
+- `perChapter`：章节专属高亮词
+- `perChapter` 的 key 推荐使用章节文件名
+- 阅读器渲染时会自动合并全书高亮和当前章节高亮
+- 旧版 manifest 内联高亮仍可兼容，但新书建议统一使用外部 `highlights.json`
 
-The old inline manifest style is still backward-compatible, but new books should use external "highlights.json".
+## 项目结构
 
----
-
-Project Structure
-
+```text
 novel-reader/
 ├── index.html
 ├── reader.html
@@ -190,21 +175,22 @@ novel-reader/
 │   ├── split_by_index.py
 │   ├── split_book_deepseek.py
 │   ├── generate_highlights_deepseek.py
-│   └── make_cover_thumb.py
+│   ├── make_cover_thumb.py
+│   └── import_liucixin_collection.py
 │
 └── app/
     └── latest.apk
+```
 
----
+## 书籍清单格式
 
-Book Manifest
+`books/manifest.json` 是书架索引文件。
 
-"books/manifest.json" is the bookshelf index.
+它只应该保存书籍基本信息和章节列表。封面、高亮、正文等资源应放在对应书籍目录中。
 
-It should contain book metadata and chapter lists only. Large or book-specific auxiliary data should stay inside each book folder.
+示例：
 
-Example:
-
+```json
 {
   "books": [
     {
@@ -227,71 +213,51 @@ Example:
     }
   ]
 }
+```
 
-Field meanings:
+字段说明：
 
-Field| Meaning
-"id"| Book folder name under "books/"
-"title"| Display title
-"author"| Display author
-"cover"| Full-resolution cover image
-"coverThumb"| Lightweight shelf thumbnail
-"highlightsFile"| External highlight JSON file
-"chapters"| Ordered chapter list
+| 字段 | 说明 |
+| --- | --- |
+| `id` | 书籍目录名，对应 `books/<id>/` |
+| `title` | 书名 |
+| `author` | 作者 |
+| `cover` | 完整封面图 |
+| `coverThumb` | 书架缩略封面 |
+| `highlightsFile` | 外部高亮 JSON 文件 |
+| `chapters` | 章节列表 |
 
----
+## 添加一本新书
 
-Cover Images
+1. 创建书籍目录：
 
-Recommended layout:
-
+```text
 books/<book-id>/
-  cover.png
-  cover-thumb.webp
+```
 
-Recommended manifest fields:
+2. 放入章节文件：
 
-{
-  "cover": "cover.png",
-  "coverThumb": "cover-thumb.webp"
-}
-
-The shelf uses "coverThumb" for performance.
-
-The full "cover" image is opened only when the user taps the cover.
-
-Generate a thumbnail:
-
-python tools/make_cover_thumb.py books/<book-id>/cover.png
-
-Default output:
-
-books/<book-id>/cover-thumb.webp
-
----
-
-Adding a New Book
-
-1. Create a folder:
-
-books/<book-id>/
-
-2. Put chapter files inside it:
-
+```text
 books/<book-id>/001_第一章.txt
 books/<book-id>/002_第二章.txt
+```
 
-3. Add cover files:
+3. 可选：放入封面：
 
+```text
 books/<book-id>/cover.png
 books/<book-id>/cover-thumb.webp
+```
 
-4. Add optional highlights:
+4. 可选：放入高亮文件：
 
+```text
 books/<book-id>/highlights.json
+```
 
-5. Register the book in "books/manifest.json":
+5. 在 `books/manifest.json` 中注册：
 
+```json
 {
   "id": "book-id",
   "title": "书名",
@@ -306,68 +272,111 @@ books/<book-id>/highlights.json
     }
   ]
 }
+```
 
----
+如果没有封面或高亮，可以省略对应字段。
 
-Offline Support
+## 封面和缩略图
 
-The Service Worker handles offline reading.
+推荐每本书使用：
 
-Caching strategy:
+```text
+books/<book-id>/
+  cover.png
+  cover-thumb.webp
+```
 
-Resource| Strategy
-App shell| precache
-"books/*.json"| network-first
-chapter ".txt" files| stale-while-revalidate
-cover thumbnails| cached for offline reading
-manually downloaded books| stored in persistent book cache
+对应 manifest 字段：
 
-Book JSON files use network-first so bookshelf metadata and highlights update reliably.
+```json
+{
+  "cover": "cover.png",
+  "coverThumb": "cover-thumb.webp"
+}
+```
 
-Chapter text uses stale-while-revalidate so previously read chapters remain available offline.
+书架只加载 `coverThumb`，减少流量和首屏压力。
 
----
+完整封面只会在用户点击封面时打开。
 
-TWA / PWA Behavior
+生成缩略图：
 
-The project supports installation as a PWA and packaging as a TWA.
+```bash
+python tools/make_cover_thumb.py books/<book-id>/cover.png
+```
 
-Current behavior:
+默认输出：
 
-- standalone/TWA detection
-- app banner hidden inside installed app
-- cold start auto-resumes the last reading session
-- Android back button closes TOC/bookmark panels first
-- Service Worker keeps reading assets available offline
+```text
+books/<book-id>/cover-thumb.webp
+```
 
----
+## 离线支持
 
-Local Development
+Service Worker 提供离线阅读能力。
 
-Start a local static server:
+缓存策略：
 
+| 资源 | 策略 |
+| --- | --- |
+| App shell | 预缓存 |
+| `books/*.json` | network-first |
+| 章节 `.txt` | stale-while-revalidate |
+| 封面缩略图 | 离线下载时缓存 |
+| 手动离线下载的书 | 独立书籍缓存 |
+
+说明：
+
+- 书籍 JSON 使用 network-first，避免书架和高亮长期显示旧数据
+- 章节正文使用 stale-while-revalidate，读过的章节可以离线重读
+- 手动离线下载的书保存在独立缓存中，版本升级时不会被清除
+
+## PWA / TWA 行为
+
+项目支持作为 PWA 安装，也支持作为 Android TWA 打包。
+
+当前行为：
+
+- 检测 standalone / TWA 运行环境
+- App 内隐藏下载 App 横幅
+- 冷启动时自动恢复上次阅读位置
+- Android 返回键优先关闭目录 / 书签面板
+- Service Worker 提供离线缓存
+- 顶部菜单固定在 TWA 视口顶部
+
+## 本地开发
+
+启动本地静态服务器：
+
+```bash
 python -m http.server 8000
+```
 
-Then open:
+然后打开：
 
+```text
 http://localhost:8000/
+```
 
-Avoid opening "index.html" directly from the file system, because fetch and Service Worker behavior require HTTP/HTTPS.
+不要直接双击打开 `index.html`，因为 `fetch`、Service Worker 和部分浏览器 API 需要 HTTP / HTTPS 环境。
 
----
+## 工具脚本
 
-Tools
+### 按长度拆分 TXT
 
-Split TXT by simple length
-
+```bash
 python tools/split_by_length.py
+```
 
-Split TXT by detected index
+### 按目录索引拆分 TXT
 
+```bash
 python tools/split_by_index.py
+```
 
-Split a book with DeepSeek assistance
+### 使用 DeepSeek 辅助拆分章节
 
+```bash
 export DEEPSEEK_API_KEY="sk-..."
 
 python tools/split_book_deepseek.py \
@@ -377,94 +386,113 @@ python tools/split_book_deepseek.py \
   --author "作者" \
   --out-dir books/example-book \
   --manifest-snippet books/example-book/manifest.snippet.json
+```
 
-Generate highlights with DeepSeek
+### 使用 DeepSeek 生成高亮
 
+```bash
 export DEEPSEEK_API_KEY="sk-..."
 
 python tools/generate_highlights_deepseek.py \
   --book-dir books/chaoxinxingjiyuan
+```
 
-Default output:
+默认输出：
 
+```text
 books/chaoxinxingjiyuan/highlights.json
+```
 
-The DeepSeek script uses OpenAI-compatible API format, but directly calls the REST endpoint without requiring the OpenAI Python SDK.
+该脚本直接调用 OpenAI-compatible REST API，不依赖 OpenAI Python SDK。
 
-Thinking mode is explicitly disabled in the request.
+DeepSeek thinking mode 会在请求中显式关闭。
 
-Generate cover thumbnail
+### 生成封面缩略图
 
+```bash
 python tools/make_cover_thumb.py books/<book-id>/cover.png
+```
 
----
+### 从本地刘慈欣小说合集导入
 
-Storage
+先 clone 小说合集到本地，然后运行：
 
-The app uses "localStorage" for lightweight state:
+```bash
+python tools/import_liucixin_collection.py \
+  --source "../ScienceFictionCollection/001 - 刘慈欣(Cixin Liu)" \
+  --books-dir books \
+  --manifest books/manifest.json
+```
 
-Data| Purpose
-"reader.progress.<bookId>"| per-book reading progress
-"reader.lastProgress"| last active reading session
-"reader.fontSize"| font size preference
-"reader.theme"| theme preference
-bookmark keys| per-book bookmarks and notes
+该工具会：
 
-Book content and offline assets are handled through the Cache API.
+- 读取本地 `.txt`
+- 自动拆分章节
+- 创建 `books/<book-id>/`
+- 更新 `books/manifest.json`
+- 默认跳过 manifest 中已经存在的同名书籍
 
----
+不会生成封面或高亮。
 
-Browser Support
+## 本地存储
 
-Recommended:
+浏览器本地使用 `localStorage` 保存轻量状态：
+
+| 数据 | 用途 |
+| --- | --- |
+| `reader.progress.<bookId>` | 每本书的阅读进度 |
+| `reader.lastProgress` | 最近一次阅读位置 |
+| `reader.fontSize` | 字号偏好 |
+| `reader.theme` | 主题偏好 |
+| 书签数据 | 每本书的书签和笔记 |
+
+正文、封面缩略图、离线书籍等资源使用 Cache API 保存。
+
+## 浏览器支持
+
+推荐环境：
 
 - Android Chrome
 - Chromium-based browsers
-- TWA shell
-- modern desktop browsers
+- Android TWA
+- 现代桌面浏览器
 
-The reader relies on:
+项目依赖：
 
 - Fetch API
 - Cache API
 - Service Worker
 - LocalStorage
 - History API
-- modern CSS features
+- modern CSS
 
----
+## 设计原则
 
-Design Philosophy
+> 阅读时界面应该消失，需要时又能立即回来。
 
-This reader is designed around one principle:
+因此项目倾向于：
 
-«The interface should disappear while reading, but instantly return when needed.»
+- 静态架构
+- 无构建步骤
+- 本地优先
+- 离线可用
+- 移动端手势优先
+- 快速恢复阅读
+- 书籍资源外置
+- 每本书独立扩展
 
-That leads to the current design:
+## 未来计划
 
-- lightweight static architecture
-- no build step
-- local-first data
-- offline reading
-- mobile-first gestures
-- fast resume
-- external book assets
-- per-book extensibility
+可能的后续方向：
 
----
-
-Roadmap Ideas
-
-Potential future improvements:
-
-- full-book search
-- search result highlighting and jump
-- AI chapter summary
-- character / concept cards
-- timeline view
-- reading statistics
-- multi-device sync
-- EPUB import
-- TTS / read-aloud mode
-- user-created highlights
-- cloud backup for bookmarks and notes
+- 全书搜索
+- 搜索结果高亮与跳转
+- AI 章节总结
+- 人物 / 概念卡片
+- 时间线视图
+- 阅读统计
+- 多设备同步
+- EPUB 导入
+- TTS 听书模式
+- 用户自定义高亮
+- 书签和笔记备份
