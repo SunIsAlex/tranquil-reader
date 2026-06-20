@@ -27,6 +27,7 @@
       <button id="font-dec" class="icon-btn" title="减小字号" aria-label="减小字号">A−</button>
       <button id="font-inc" class="icon-btn" title="增大字号" aria-label="增大字号">A+</button>
       <button id="hl-toggle" class="icon-btn" title="开关词语标注" aria-label="开关词语标注" aria-pressed="true">标注</button>
+      <button id="search-toggle" class="icon-btn" title="全书搜索" aria-label="打开全书搜索">搜索</button>
       <button id="bookmark-toggle" class="icon-btn" title="书签和笔记" aria-label="打开书签和笔记" aria-pressed="false">书签</button>
       <button id="toc-toggle" class="icon-btn" title="目录" aria-label="打开目录">目录</button>
       <button id="theme-toggle" class="icon-btn" title="切换深浅色" aria-label="切换深浅色">◐</button>
@@ -36,6 +37,20 @@
   <aside id="toc" class="toc" hidden>
     <h2 class="toc-title">目录</h2>
     <ol id="toc-list" class="toc-list"></ol>
+  </aside>
+
+  <aside id="search-panel" class="search-panel" hidden>
+    <div class="search-head">
+      <h2 class="search-title">全书搜索</h2>
+      <span class="search-shortcut">Ctrl / ⌘ + F</span>
+    </div>
+    <form id="search-form" class="search-form" role="search">
+      <label class="sr-only" for="search-input">搜索当前书籍</label>
+      <input id="search-input" class="search-input" type="search" inputmode="search" autocomplete="off" placeholder="搜索人物、地点、概念或原文片段">
+      <button id="search-submit" class="search-submit" type="submit">搜索</button>
+    </form>
+    <p id="search-status" class="search-status">输入关键词后，将搜索当前书籍的全部章节。</p>
+    <ol id="search-results" class="search-results"></ol>
   </aside>
 
   <aside id="bookmarks" class="bookmarks-panel" hidden>

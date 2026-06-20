@@ -14,6 +14,12 @@
     tocList:    document.getElementById('toc-list'),
     toc:        document.getElementById('toc'),
     tocToggle:  document.getElementById('toc-toggle'),
+    searchToggle: document.getElementById('search-toggle'),
+    searchPanel:  document.getElementById('search-panel'),
+    searchForm:   document.getElementById('search-form'),
+    searchInput:  document.getElementById('search-input'),
+    searchStatus: document.getElementById('search-status'),
+    searchResults: document.getElementById('search-results'),
     bookmarkToggle: document.getElementById('bookmark-toggle'),
     bookmarks:  document.getElementById('bookmarks'),
     bookmarkAdd: document.getElementById('bookmark-add'),
@@ -206,9 +212,14 @@
   let lastProgressPara = -1; // 上次已渲染到进度条的段落，避免重复更新 DOM
   let progressRaf = 0;
   let lastFocusBeforeTOC = null;
+  let lastFocusBeforeSearch = null;
   let lastFocusBeforeBookmarks = null;
   let bookmarks = loadBookmarks();
   const prefetchedChapters = new Set();
+
+  const searchCache = new Map();
+  let searchRunId = 0;
+  let pendingSearchTarget = null;
 
   let activeOverlayHistory = null;
   let ignoreNextPopState = false;
@@ -305,6 +316,16 @@
     els.toc.tabIndex = -1;
   }
 
+  function setupSearchAccessibility() {
+    els.searchToggle.setAttribute('aria-controls', 'search-panel');
+    els.searchToggle.setAttribute('aria-expanded', String(!els.searchPanel.hidden));
+    els.searchToggle.setAttribute('aria-label', els.searchPanel.hidden ? '打开全书搜索' : '关闭全书搜索');
+    els.searchPanel.setAttribute('role', 'dialog');
+    els.searchPanel.setAttribute('aria-label', '全书搜索');
+    els.searchPanel.setAttribute('aria-hidden', String(els.searchPanel.hidden));
+    els.searchPanel.tabIndex = -1;
+  }
+
   function pushOverlayHistory(type) {
     if (activeOverlayHistory === type) return;
 
@@ -328,6 +349,7 @@
   function openTOC() {
     if (!els.toc.hidden) return;
     setTopbarHidden(false);
+    closeSearch(false, { keepHistory: true });
     closeBookmarks(false, { keepHistory: true });
     lastFocusBeforeTOC = document.activeElement;
     els.toc.hidden = false;
@@ -363,6 +385,47 @@
     }
   }
 
+  function openSearch() {
+    if (!els.searchPanel.hidden) {
+      requestAnimationFrame(() => els.searchInput.focus({ preventScroll: true }));
+      return;
+    }
+    setTopbarHidden(false);
+    closeTOC(false, { keepHistory: true });
+    closeBookmarks(false, { keepHistory: true });
+    lastFocusBeforeSearch = document.activeElement;
+    els.searchPanel.hidden = false;
+    els.searchPanel.setAttribute('aria-hidden', 'false');
+    els.searchToggle.setAttribute('aria-expanded', 'true');
+    els.searchToggle.setAttribute('aria-label', '关闭全书搜索');
+    pushOverlayHistory('search');
+
+    requestAnimationFrame(() => {
+      els.searchInput.focus({ preventScroll: true });
+      els.searchInput.select();
+    });
+  }
+
+  function closeSearch(restoreFocus = true, options = {}) {
+    if (els.searchPanel.hidden) return;
+    els.searchPanel.hidden = true;
+    els.searchPanel.setAttribute('aria-hidden', 'true');
+    els.searchToggle.setAttribute('aria-expanded', 'false');
+    els.searchToggle.setAttribute('aria-label', '打开全书搜索');
+
+    if (restoreFocus) {
+      const target = lastFocusBeforeSearch && document.contains(lastFocusBeforeSearch)
+        ? lastFocusBeforeSearch
+        : els.searchToggle;
+      target.focus({ preventScroll: true });
+    }
+    lastFocusBeforeSearch = null;
+
+    if (!options.fromHistory && !options.keepHistory) {
+      consumeOverlayHistory('search');
+    }
+  }
+
   function trapTOCFocus(e) {
     if (els.toc.hidden || e.key !== 'Tab') return;
     const focusables = [...els.toc.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')]
@@ -385,10 +448,20 @@
   }
 
   setupTOCAccessibility();
+  setupSearchAccessibility();
   setupBookmarkPanelAccessibility();
   els.tocToggle.addEventListener('click', () => els.toc.hidden ? openTOC() : closeTOC(true));
+  els.searchToggle.addEventListener('click', () => els.searchPanel.hidden ? openSearch() : closeSearch(true));
+  els.searchForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    runBookSearch(els.searchInput.value);
+  });
+  els.searchInput.addEventListener('input', () => {
+    if (!els.searchInput.value.trim()) resetSearchPanel();
+  });
   document.addEventListener('keydown', (e) => {
     trapTOCFocus(e);
+    trapPanelFocus(els.searchPanel, e);
     trapPanelFocus(els.bookmarks, e);
   });
   els.bookmarkToggle.addEventListener('click', () => els.bookmarks.hidden ? openBookmarks() : closeBookmarks(true));
@@ -396,6 +469,7 @@
   // 点击目录外部关闭。这里不强行归还焦点，避免打断用户点击页面其他控件。
   document.addEventListener('click', (e) => {
     if (!els.toc.hidden && !els.toc.contains(e.target) && e.target !== els.tocToggle) closeTOC(false);
+    if (!els.searchPanel.hidden && !els.searchPanel.contains(e.target) && e.target !== els.searchToggle) closeSearch(false);
     if (!els.bookmarks.hidden && !els.bookmarks.contains(e.target) && e.target !== els.bookmarkToggle) closeBookmarks(false);
   });
   document.querySelector('.topbar')?.addEventListener('focusin', () => {
@@ -405,7 +479,7 @@
   function setupTopbarSwipeAutoHide() {
     document.addEventListener('touchstart', (e) => {
       if (!topbarAutoHideReady || e.touches.length !== 1) return;
-      if (!els.toc.hidden || !els.bookmarks.hidden) return;
+      if (!els.toc.hidden || !els.searchPanel.hidden || !els.bookmarks.hidden) return;
 
       const t = e.touches[0];
       topbarTouchStartY = t.clientY;
@@ -415,7 +489,7 @@
 
     document.addEventListener('touchmove', (e) => {
       if (!topbarAutoHideReady || e.touches.length !== 1) return;
-      if (!els.toc.hidden || !els.bookmarks.hidden) {
+      if (!els.toc.hidden || !els.searchPanel.hidden || !els.bookmarks.hidden) {
         setTopbarHidden(false);
         return;
       }
@@ -513,12 +587,208 @@
       return;
     }
 
+    if (!els.searchPanel.hidden) {
+      activeOverlayHistory = null;
+      closeSearch(true, { fromHistory: true });
+      return;
+    }
+
     if (!els.bookmarks.hidden) {
       activeOverlayHistory = null;
       closeBookmarks(true, { fromHistory: true });
     }
   });
 
+
+  // ---- 全书搜索 ----
+  function resetSearchPanel() {
+    searchRunId++;
+    els.searchStatus.textContent = '输入关键词后，将搜索当前书籍的全部章节。';
+    els.searchResults.innerHTML = '';
+  }
+
+  function normalizeSearchText(text) {
+    return String(text || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function searchHaystack(text) {
+    return normalizeSearchText(text).toLocaleLowerCase();
+  }
+
+  function searchNeedle(query) {
+    return normalizeSearchText(query).toLocaleLowerCase();
+  }
+
+  function highlightSnippet(snippet, query) {
+    const safe = escapeHTML(snippet);
+    const q = escapeHTML(normalizeSearchText(query));
+    if (!q) return safe;
+    const pattern = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return safe.replace(new RegExp(pattern, 'gi'), m => `<mark class="search-mark">${m}</mark>`);
+  }
+
+  function makeSearchSnippet(text, query, radius = 48) {
+    const clean = normalizeSearchText(text);
+    const hay = clean.toLocaleLowerCase();
+    const needle = searchNeedle(query);
+    const idx = hay.indexOf(needle);
+    if (idx < 0) return shortenText(clean, radius * 2);
+
+    const start = Math.max(0, idx - radius);
+    const end = Math.min(clean.length, idx + needle.length + radius);
+    return `${start > 0 ? '…' : ''}${clean.slice(start, end)}${end < clean.length ? '…' : ''}`;
+  }
+
+  async function getSearchChapter(index) {
+    if (searchCache.has(index)) return searchCache.get(index);
+
+    const ch = book.chapters[index];
+    const res = await fetch(chapterURL(index));
+    if (!res.ok) throw new Error(`${ch.title}（${res.status}）`);
+
+    const raw = await res.text();
+    const blocks = splitTextBlocks(raw);
+    const paragraphs = [];
+
+    for (const block of blocks) {
+      const t = block.trim();
+      if (!t || isDividerBlock(t)) continue;
+      paragraphs.push(normalizeSearchText(t));
+    }
+
+    const data = { chapter: index, title: ch.title, paragraphs };
+    searchCache.set(index, data);
+    return data;
+  }
+
+  async function runBookSearch(rawQuery) {
+    const query = normalizeSearchText(rawQuery);
+    const needle = searchNeedle(query);
+    const runId = ++searchRunId;
+
+    els.searchResults.innerHTML = '';
+
+    if (!needle) {
+      resetSearchPanel();
+      return;
+    }
+
+    els.searchStatus.textContent = `正在搜索《${book.title}》…`;
+
+    const results = [];
+    const maxVisible = 200;
+
+    for (let i = 0; i < book.chapters.length; i++) {
+      if (runId !== searchRunId) return;
+
+      try {
+        const chapter = await getSearchChapter(i);
+        chapter.paragraphs.forEach((text, para) => {
+          if (searchHaystack(text).includes(needle)) {
+            results.push({
+              chapter: i,
+              para,
+              title: chapter.title,
+              excerpt: makeSearchSnippet(text, query),
+            });
+          }
+        });
+      } catch (err) {
+        results.push({
+          chapter: i,
+          para: 0,
+          title: book.chapters[i]?.title || `第 ${i + 1} 章`,
+          excerpt: `这一章搜索失败：${err.message}`,
+          error: true,
+        });
+      }
+
+      if (i === 0 || i === book.chapters.length - 1 || (i + 1) % 5 === 0) {
+        els.searchStatus.textContent = `正在搜索 ${i + 1} / ${book.chapters.length} 章… 已找到 ${results.filter(r => !r.error).length} 条`;
+      }
+    }
+
+    if (runId !== searchRunId) return;
+
+    renderSearchResults(results, query, maxVisible);
+  }
+
+  function renderSearchResults(results, query, maxVisible) {
+    const matches = results.filter(r => !r.error);
+    const errors = results.filter(r => r.error);
+    const visible = matches.slice(0, maxVisible);
+
+    els.searchResults.innerHTML = '';
+
+    if (!matches.length && !errors.length) {
+      const li = document.createElement('li');
+      li.className = 'search-empty';
+      li.textContent = '没有找到匹配内容。';
+      els.searchResults.appendChild(li);
+      els.searchStatus.textContent = `未找到“${query}”。`;
+      return;
+    }
+
+    els.searchStatus.textContent = matches.length > maxVisible
+      ? `找到 ${matches.length} 条，显示前 ${maxVisible} 条。`
+      : `找到 ${matches.length} 条。`;
+
+    const frag = document.createDocumentFragment();
+    for (const item of visible) {
+      const li = document.createElement('li');
+      li.className = 'search-item';
+
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'search-result';
+      btn.innerHTML = `
+        <span class="search-result-title">${escapeHTML(item.title)}</span>
+        <span class="search-result-meta">第 ${item.chapter + 1} 章 · 段落 ${item.para + 1}</span>
+        <span class="search-result-excerpt">${highlightSnippet(item.excerpt, query)}</span>
+      `;
+      btn.addEventListener('click', () => jumpToSearchResult(item.chapter, item.para));
+
+      li.appendChild(btn);
+      frag.appendChild(li);
+    }
+
+    if (errors.length) {
+      const li = document.createElement('li');
+      li.className = 'search-empty';
+      li.textContent = `${errors.length} 个章节搜索失败，可稍后重试。`;
+      frag.appendChild(li);
+    }
+
+    els.searchResults.appendChild(frag);
+  }
+
+  async function jumpToSearchResult(chapter, para) {
+    closeSearch(false);
+    pendingSearchTarget = { chapter, para };
+
+    if (chapter === current) {
+      scrollToPara(para);
+      flashSearchTarget(para);
+      saveProgress();
+      syncURL();
+      updateProgressBar(para);
+      pendingSearchTarget = null;
+      return;
+    }
+
+    await loadChapter(chapter, { para });
+  }
+
+  function flashSearchTarget(para) {
+    paraEls.forEach(el => el.classList.remove('search-target'));
+    const el = paraEls[Math.min(para, paraEls.length - 1)];
+    if (!el) return;
+
+    el.classList.add('search-target');
+    window.setTimeout(() => {
+      el.classList.remove('search-target');
+    }, 2400);
+  }
 
   // ---- 书签 / 笔记 ----
   function bookmarkKey() {
@@ -603,6 +873,7 @@
     if (!els.bookmarks.hidden) return;
     setTopbarHidden(false);
     closeTOC(false, { keepHistory: true });
+    closeSearch(false, { keepHistory: true });
     lastFocusBeforeBookmarks = document.activeElement;
     renderBookmarks();
     els.bookmarks.hidden = false;
@@ -862,6 +1133,10 @@
     syncURL();
     updateProgressBar(currentPara);
     applyBookmarkMarks();
+    if (pendingSearchTarget && pendingSearchTarget.chapter === current) {
+      flashSearchTarget(pendingSearchTarget.para);
+      pendingSearchTarget = null;
+    }
     prefetchNextChapter();
   }
 
@@ -924,6 +1199,7 @@
       hidden &&
       (getScrollY() < 80 ||
         !els.toc.hidden ||
+        !els.searchPanel.hidden ||
         !els.bookmarks.hidden)
     ) {
       hidden = false;
@@ -1162,10 +1438,17 @@
 
   // 键盘左右翻章；抽屉打开时只处理 Esc，避免焦点在抽屉中误触翻章。
   document.addEventListener('keydown', (e) => {
-    if (!els.toc.hidden || !els.bookmarks.hidden) {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
+      e.preventDefault();
+      openSearch();
+      return;
+    }
+
+    if (!els.toc.hidden || !els.searchPanel.hidden || !els.bookmarks.hidden) {
       if (e.key === 'Escape') {
         e.preventDefault();
         closeTOC(true);
+        closeSearch(true);
         closeBookmarks(true);
       }
       return;
