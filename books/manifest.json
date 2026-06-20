@@ -4,6 +4,8 @@
       "id": "santi-1",
       "title": "三体",
       "author": "刘慈欣",
+      "cover": "cover.png",
+      "coverThumb": "cover-thumb.webp",
       "chapters": [
         {
           "title": "1. 疯狂年代",
