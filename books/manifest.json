@@ -379,6 +379,8 @@
       "id": "santi-2",
       "title": "三体2-黑暗森林",
       "author": "刘慈欣",
+      "cover": "cover.png",
+      "coverThumb": "cover-thumb.webp",
       "chapters": [
         {
           "title": "Part 1",
