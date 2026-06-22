@@ -661,6 +661,16 @@
     return data;
   }
 
+  function yieldToBrowser() {
+    return new Promise(resolve => {
+      if (typeof requestAnimationFrame === 'function') {
+        requestAnimationFrame(() => resolve());
+      } else {
+        setTimeout(resolve, 0);
+      }
+    });
+  }
+
   async function runBookSearch(rawQuery) {
     const query = normalizeSearchText(rawQuery);
     const needle = searchNeedle(query);
@@ -673,70 +683,133 @@
       return;
     }
 
-    els.searchStatus.textContent = `正在搜索《${book.title}》…`;
+    els.searchStatus.textContent = `正在搜索《${book.title}》… 结果会边搜边显示。`;
 
-    const results = [];
     const maxVisible = 200;
+    const total = book.chapters.length;
+    let matchCount = 0;
+    let renderedCount = 0;
+    let errorCount = 0;
 
-    for (let i = 0; i < book.chapters.length; i++) {
+    for (let i = 0; i < total; i++) {
       if (runId !== searchRunId) return;
+
+      const visibleBatch = [];
 
       try {
         const chapter = await getSearchChapter(i);
         chapter.paragraphs.forEach((text, para) => {
-          if (searchHaystack(text).includes(needle)) {
-            results.push({
-              chapter: i,
-              para,
-              title: chapter.title,
-              excerpt: makeSearchSnippet(text, query),
-            });
-          }
+          if (!searchHaystack(text).includes(needle)) return;
+
+          matchCount++;
+
+          if (renderedCount + visibleBatch.length >= maxVisible) return;
+
+          visibleBatch.push({
+            chapter: i,
+            para,
+            title: chapter.title,
+            excerpt: makeSearchSnippet(text, query),
+          });
         });
       } catch (err) {
-        results.push({
-          chapter: i,
-          para: 0,
-          title: book.chapters[i]?.title || `第 ${i + 1} 章`,
-          excerpt: `这一章搜索失败：${err.message}`,
-          error: true,
-        });
+        errorCount++;
       }
 
-      if (i === 0 || i === book.chapters.length - 1 || (i + 1) % 5 === 0) {
-        els.searchStatus.textContent = `正在搜索 ${i + 1} / ${book.chapters.length} 章… 已找到 ${results.filter(r => !r.error).length} 条`;
+      if (runId !== searchRunId) return;
+
+      if (visibleBatch.length) {
+        appendSearchResults(visibleBatch, query, renderedCount);
+        renderedCount += visibleBatch.length;
+        await yieldToBrowser();
+      } else if (i % 3 === 0) {
+        await yieldToBrowser();
       }
+
+      updateStreamingSearchStatus({
+        scanned: i + 1,
+        total,
+        matchCount,
+        renderedCount,
+        maxVisible,
+        errorCount,
+        done: false,
+        query,
+      });
     }
 
     if (runId !== searchRunId) return;
 
-    renderSearchResults(results, query, maxVisible);
-  }
-
-  function renderSearchResults(results, query, maxVisible) {
-    const matches = results.filter(r => !r.error);
-    const errors = results.filter(r => r.error);
-    const visible = matches.slice(0, maxVisible);
-
-    els.searchResults.innerHTML = '';
-
-    if (!matches.length && !errors.length) {
+    if (!matchCount && !errorCount) {
       const li = document.createElement('li');
       li.className = 'search-empty';
       li.textContent = '没有找到匹配内容。';
       els.searchResults.appendChild(li);
-      els.searchStatus.textContent = `未找到“${query}”。`;
+    }
+
+    if (errorCount) {
+      const li = document.createElement('li');
+      li.className = 'search-empty';
+      li.textContent = `${errorCount} 个章节搜索失败，可稍后重试。`;
+      els.searchResults.appendChild(li);
+    }
+
+    updateStreamingSearchStatus({
+      scanned: total,
+      total,
+      matchCount,
+      renderedCount,
+      maxVisible,
+      errorCount,
+      done: true,
+      query,
+    });
+  }
+
+  function updateStreamingSearchStatus({
+    scanned,
+    total,
+    matchCount,
+    renderedCount,
+    maxVisible,
+    errorCount,
+    done,
+    query,
+  }) {
+    if (done) {
+      if (!matchCount) {
+        els.searchStatus.textContent = errorCount
+          ? `未找到“${query}”。${errorCount} 个章节搜索失败。`
+          : `未找到“${query}”。`;
+        return;
+      }
+
+      const limitText = matchCount > maxVisible
+        ? `，显示前 ${maxVisible} 条`
+        : '';
+
+      els.searchStatus.textContent = errorCount
+        ? `搜索完成，找到 ${matchCount} 条${limitText}；${errorCount} 个章节失败。`
+        : `搜索完成，找到 ${matchCount} 条${limitText}。`;
       return;
     }
 
-    els.searchStatus.textContent = matches.length > maxVisible
-      ? `找到 ${matches.length} 条，显示前 ${maxVisible} 条。`
-      : `找到 ${matches.length} 条。`;
+    const limitText = matchCount > maxVisible
+      ? `，已显示前 ${maxVisible} 条`
+      : renderedCount < matchCount
+        ? `，已显示 ${renderedCount} 条`
+        : '';
 
+    els.searchStatus.textContent = `正在搜索 ${scanned} / ${total} 章… 已找到 ${matchCount} 条${limitText}`;
+  }
+
+  function appendSearchResults(items, query, offset = 0) {
     const frag = document.createDocumentFragment();
-    for (const item of visible) {
+
+    items.forEach((item, index) => {
       const li = document.createElement('li');
-      li.className = 'search-item';
+      li.className = 'search-item search-item-streaming';
+      li.style.animationDelay = `${Math.min((offset + index) % 8, 7) * 35}ms`;
 
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -750,14 +823,7 @@
 
       li.appendChild(btn);
       frag.appendChild(li);
-    }
-
-    if (errors.length) {
-      const li = document.createElement('li');
-      li.className = 'search-empty';
-      li.textContent = `${errors.length} 个章节搜索失败，可稍后重试。`;
-      frag.appendChild(li);
-    }
+    });
 
     els.searchResults.appendChild(frag);
   }

@@ -711,6 +711,21 @@ body.no-hl mark.hl {
   border-radius: 12px;
   background: var(--bg);
 }
+.search-item-streaming {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: searchResultAppear .42s ease forwards;
+}
+@keyframes searchResultAppear {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 .search-item:hover { background: var(--surface-2); }
 .search-result {
   appearance: none;
@@ -806,5 +821,10 @@ body.no-hl mark.hl {
 @media (prefers-reduced-motion: reduce) {
   .topbar {
     transition: none;
+  }
+  .search-item-streaming {
+    opacity: 1;
+    transform: none;
+    animation: none;
   }
 }
