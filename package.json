@@ -1,0 +1,13 @@
+{
+  "name": "tranquil-reader",
+  "private": true,
+  "scripts": {
+    "build": "python tools/build_release.py",
+    "validate": "python tools/build_release.py --validate-only"
+  },
+  "devDependencies": {
+    "clean-css": "^5.3.3",
+    "html-minifier-terser": "^7.2.0",
+    "terser": "^5.48.0"
+  }
+}
