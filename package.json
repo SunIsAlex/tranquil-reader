@@ -2,8 +2,8 @@
   "name": "tranquil-reader",
   "private": true,
   "scripts": {
-    "build": "python tools/build_release.py",
-    "validate": "python tools/build_release.py --validate-only"
+    "build": "python3 tools/build_release.py",
+    "validate": "python3 tools/build_release.py --validate-only"
   },
   "devDependencies": {
     "clean-css": "^5.3.3",
