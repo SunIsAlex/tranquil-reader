@@ -360,6 +360,62 @@ http://localhost:8000/
 
 不要直接双击打开 `index.html`，因为 `fetch`、Service Worker 和部分浏览器 API 需要 HTTP / HTTPS 环境。
 
+## 发布构建
+
+源码保持无构建步骤，方便直接调试。发布时可以生成压缩后的静态目录：
+
+```bash
+npm install
+python tools/build_release.py
+```
+
+也可以使用 npm 脚本：
+
+```bash
+npm run build
+```
+
+默认输出：
+
+```text
+dist/
+```
+
+构建脚本会：
+
+- 校验 `books/manifest.json` 中引用的书籍目录、章节、封面和高亮文件
+- 校验 `manifest.webmanifest` 图标和 `sw.js` 预缓存资源是否存在
+- 复制可部署资源到 `dist/`
+- 使用 `html-minifier-terser` 压缩 HTML 并删除注释
+- 使用 `clean-css` 压缩 CSS 并删除注释
+- 使用 `terser` 压缩 JavaScript、删除注释、压缩表达式并缩短局部变量名
+- 使用 Node.js 检查生成后的 JavaScript 语法
+- 根据发布目录中的应用外壳文件内容，为 `dist/sw.js` 自动生成缓存版本号
+
+说明：页面脚本分多个 `<script>` 加载，共享 `Store`、`Offline`、`Theme` 等全局对象。构建脚本会保留这些跨文件全局名称，只压缩局部变量；独立运行的 `sw.js` 会使用更激进的顶层变量压缩。
+
+只做校验、不生成 `dist/`：
+
+```bash
+python tools/build_release.py --validate-only
+```
+
+### Service Worker 缓存版本
+
+开发版 `sw.js` 里有手动版本号：
+
+```js
+const VERSION = 'v18';
+```
+
+发布构建不会修改源码里的这个值，而是只改写 `dist/sw.js`。脚本会读取 `sw.js` 里的 `SHELL` 列表，把发布目录中这些文件的内容一起计算成短哈希，例如：
+
+```js
+const VERSION = 'v3722a203d648';
+```
+
+构建后该常量可能会被 Terser 进一步压缩成短变量名，但版本字符串仍会进入 `tranquil-shell-<version>` 和 `tranquil-runtime-<version>` 缓存名。浏览器安装新 Service Worker 后，会打开新的 shell/runtime 缓存；`activate` 阶段会删除旧版本 shell/runtime 缓存，但保留不带版本号的 `tranquil-books`，因此用户手动离线下载的书不会因为应用升级被清掉。
+
 ## 工具脚本
 
 ### 按长度拆分 TXT
