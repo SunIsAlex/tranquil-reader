@@ -173,10 +173,12 @@ novel-reader/
 ├── tools/
 │   ├── split_by_length.py
 │   ├── split_by_index.py
-│   ├── split_book_deepseek.py
+│   ├── split_by_deepseek.py
 │   ├── generate_highlights_deepseek.py
 │   ├── make_cover_thumb.py
-│   └── import_liucixin_collection.py
+│   ├── import_hongloumeng_wikisource.py
+│   ├── convert_book_to_simplified.py
+│   └── build_release.py
 │
 └── app/
     └── latest.apk
@@ -302,7 +304,7 @@ books/<book-id>/
 生成缩略图：
 
 ```bash
-python tools/make_cover_thumb.py books/<book-id>/cover.png
+python3 tools/make_cover_thumb.py books/<book-id>/cover.png
 ```
 
 默认输出：
@@ -366,7 +368,7 @@ http://localhost:8000/
 
 ```bash
 npm install
-python tools/build_release.py
+python3 tools/build_release.py
 ```
 
 也可以使用 npm 脚本：
@@ -397,7 +399,7 @@ dist/
 只做校验、不生成 `dist/`：
 
 ```bash
-python tools/build_release.py --validate-only
+python3 tools/build_release.py --validate-only
 ```
 
 ### Service Worker 缓存版本
@@ -421,13 +423,13 @@ const VERSION = 'v3722a203d648';
 ### 按长度拆分 TXT
 
 ```bash
-python tools/split_by_length.py
+python3 tools/split_by_length.py
 ```
 
 ### 按目录索引拆分 TXT
 
 ```bash
-python tools/split_by_index.py
+python3 tools/split_by_index.py
 ```
 
 ### 使用 DeepSeek 辅助拆分章节
@@ -435,7 +437,7 @@ python tools/split_by_index.py
 ```bash
 export DEEPSEEK_API_KEY="sk-..."
 
-python tools/split_book_deepseek.py \
+python3 tools/split_by_deepseek.py \
   --input raw_books/example.txt \
   --id example-book \
   --title "示例书" \
@@ -449,7 +451,7 @@ python tools/split_book_deepseek.py \
 ```bash
 export DEEPSEEK_API_KEY="sk-..."
 
-python tools/generate_highlights_deepseek.py \
+python3 tools/generate_highlights_deepseek.py \
   --book-dir books/chaoxinxingjiyuan
 ```
 
@@ -466,29 +468,40 @@ DeepSeek thinking mode 会在请求中显式关闭。
 ### 生成封面缩略图
 
 ```bash
-python tools/make_cover_thumb.py books/<book-id>/cover.png
+python3 tools/make_cover_thumb.py books/<book-id>/cover.png
 ```
 
-### 从本地刘慈欣小说合集导入
+### 从维基文库导入《红楼梦》
 
-先 clone 小说合集到本地，然后运行：
+该工具会从维基文库抓取《红楼梦》120 回，写入 `books/<id>/`，并更新 `books/manifest.json`。
 
 ```bash
-python tools/import_liucixin_collection.py \
-  --source "../ScienceFictionCollection/001 - 刘慈欣(Cixin Liu)" \
-  --books-dir books \
-  --manifest books/manifest.json
+python3 tools/import_hongloumeng_wikisource.py \
+  --id hongloumeng \
+  --delay 0.5
 ```
 
-该工具会：
+可选：将指定书籍正文和目录标题转换为简体中文：
 
-- 读取本地 `.txt`
-- 自动拆分章节
-- 创建 `books/<book-id>/`
-- 更新 `books/manifest.json`
-- 默认跳过 manifest 中已经存在的同名书籍
+```bash
+python3 tools/convert_book_to_simplified.py hongloumeng
+```
 
-不会生成封面或高亮。
+导入或转换书籍前，请确认文本来源和使用方式符合对应来源的授权条款。
+
+## 许可和内容来源
+
+项目代码、构建脚本、样式和页面结构按 `LICENSE` 中的 MIT License 授权。
+
+书籍正文、封面图片、生成的高亮数据、`app/latest.apk` 以及从第三方来源导入的内容不自动包含在代码许可中。添加或发布书籍资源时，应在对应书籍目录或提交说明中保留来源、作者、授权方式和必要的署名信息。
+
+建议每本书至少记录：
+
+- 正文来源 URL 或本地来源说明
+- 作者、译者、整理者等署名信息
+- 授权许可或公有领域状态
+- 封面图片来源和授权
+- 导入或转换脚本及处理日期
 
 ## 本地存储
 
@@ -541,8 +554,7 @@ python tools/import_liucixin_collection.py \
 
 可能的后续方向：
 
-- 全书搜索
-- 搜索结果高亮与跳转
+- 预生成搜索索引
 - AI 章节总结
 - 人物 / 概念卡片
 - 时间线视图
