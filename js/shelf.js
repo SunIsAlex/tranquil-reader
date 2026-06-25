@@ -127,6 +127,11 @@ function makeOfflineBtn(book) {
   btn.type = 'button';
   btn.className = 'offline-btn';
 
+  function progressPercent(done, total) {
+    if (!total) return 0;
+    return Math.max(0, Math.min(100, Math.round((done / total) * 100)));
+  }
+
   function setState(state, extra) {
     btn.dataset.state = state;
     btn.disabled = (state === 'checking' || state === 'downloading');
@@ -137,6 +142,43 @@ function makeOfflineBtn(book) {
       case 'downloaded':  btn.textContent = '✓ 已离线'; btn.title = '已缓存，点击移除'; break;
       case 'error':       btn.textContent = '重试'; btn.title = extra || '下载失败'; break;
     }
+  }
+
+  function applySavedDownloadState() {
+    const saved = Offline.getDownloadState(book.id);
+    if (!saved) return false;
+
+    if (saved.status === 'downloading') {
+      setState('downloading', progressPercent(saved.done || 0, saved.total || 0));
+      return true;
+    }
+
+    if (saved.status === 'done') {
+      setState('downloaded');
+      return true;
+    }
+
+    if (saved.status === 'error') {
+      setState('error', saved.error || '下载失败');
+      return true;
+    }
+
+    return false;
+  }
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      const msg = event.data || {};
+      if (msg.type !== Offline.MSG_PROGRESS || msg.bookId !== book.id) return;
+
+      if (msg.status === 'downloading') {
+        setState('downloading', progressPercent(msg.done || 0, msg.total || 0));
+      } else if (msg.status === 'done') {
+        setState('downloaded');
+      } else if (msg.status === 'error') {
+        setState('error', msg.error || '下载失败');
+      }
+    });
   }
 
   btn.addEventListener('click', async (e) => {
@@ -153,7 +195,7 @@ function makeOfflineBtn(book) {
     try {
       setState('downloading', 0);
       await Offline.download(book, (done, total) =>
-        setState('downloading', Math.round((done / total) * 100)));
+        setState('downloading', progressPercent(done, total)));
       setState('downloaded');
     } catch (err) {
       setState('error', String(err && err.message || err));
@@ -163,6 +205,7 @@ function makeOfflineBtn(book) {
   // 初始状态异步探测：是否已经缓存过
   setState('checking');
   scheduleShelfIdleTask(() => {
+    if (applySavedDownloadState()) return;
     Offline.isDownloaded(book).then(d => setState(d ? 'downloaded' : 'idle'));
   });
   return btn;

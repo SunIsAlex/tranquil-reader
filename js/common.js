@@ -54,6 +54,9 @@ const Store = {
 // sw.js 经 caches.match 读取，无网络时也能完整阅读。
 const Offline = {
   CACHE: 'tranquil-books',
+  STATE_PREFIX: 'reader.offlineDownload.',
+  MSG_START: 'OFFLINE_DOWNLOAD_START',
+  MSG_PROGRESS: 'OFFLINE_DOWNLOAD_PROGRESS',
 
   // 浏览器是否支持（需 Cache API；非安全上下文下 caches 不可用）
   supported() { return typeof caches !== 'undefined'; },
@@ -102,15 +105,108 @@ const Offline = {
 
   // 逐个抓取并写入缓存；onProgress(done, total) 用于显示进度
   async download(book, onProgress) {
-    const cache = await caches.open(this.CACHE);
     const urls = this.urls(book);
+    const background = await this.downloadInServiceWorker(book, urls, onProgress);
+    if (background) return background;
+
+    return this.downloadInPage(book, urls, onProgress);
+  },
+
+  async downloadInPage(book, urls, onProgress) {
+    const cache = await caches.open(this.CACHE);
     let done = 0;
+    this.setDownloadState(book.id, {
+      status: 'downloading',
+      done,
+      total: urls.length,
+    });
+
     for (const u of urls) {
       const res = await fetch(u, { cache: 'no-cache' });
       if (!res.ok) throw new Error(`${u}（${res.status}）`);
       await cache.put(u, res);
-      if (onProgress) onProgress(++done, urls.length);
+      done += 1;
+      this.setDownloadState(book.id, {
+        status: 'downloading',
+        done,
+        total: urls.length,
+      });
+      if (onProgress) onProgress(done, urls.length);
     }
+    this.setDownloadState(book.id, {
+      status: 'done',
+      done: urls.length,
+      total: urls.length,
+    });
+  },
+
+  async downloadInServiceWorker(book, urls, onProgress) {
+    if (!('serviceWorker' in navigator)) return null;
+
+    let registration;
+    try {
+      registration = await navigator.serviceWorker.ready;
+    } catch {
+      return null;
+    }
+
+    const worker =
+      navigator.serviceWorker.controller ||
+      registration.active ||
+      registration.waiting ||
+      registration.installing;
+
+    if (!worker) return null;
+
+    const bookId = String(book.id || '');
+    const jobId = `${bookId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    this.setDownloadState(bookId, {
+      jobId,
+      status: 'downloading',
+      done: 0,
+      total: urls.length,
+    });
+
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        navigator.serviceWorker.removeEventListener('message', onMessage);
+      };
+
+      const onMessage = (event) => {
+        const msg = event.data || {};
+        if (msg.type !== this.MSG_PROGRESS || msg.bookId !== bookId) return;
+
+        this.rememberDownloadMessage(msg);
+
+        if (msg.status === 'downloading') {
+          if (onProgress) onProgress(msg.done || 0, msg.total || urls.length);
+          return;
+        }
+
+        cleanup();
+        if (msg.status === 'done') {
+          if (onProgress) onProgress(urls.length, urls.length);
+          resolve();
+        } else {
+          reject(new Error(msg.error || '下载失败'));
+        }
+      };
+
+      navigator.serviceWorker.addEventListener('message', onMessage);
+
+      try {
+        worker.postMessage({
+          type: this.MSG_START,
+          jobId,
+          bookId,
+          urls,
+        });
+      } catch (err) {
+        cleanup();
+        reject(err);
+      }
+    });
   },
 
   // 移除本书章节缓存、封面缓存和该书高亮缓存。清单是多本书共享的，留着不删。
@@ -140,8 +236,89 @@ const Offline = {
     for (const ch of (book.chapters || [])) {
       await cache.delete(`books/${book.id}/${ch.file}`);
     }
+
+    this.clearDownloadState(book.id);
+  },
+
+  downloadStateKey(bookId) {
+    return `${this.STATE_PREFIX}${bookId}`;
+  },
+
+  getDownloadState(bookId) {
+    try {
+      const data = JSON.parse(localStorage.getItem(this.downloadStateKey(bookId)));
+      if (!data || typeof data !== 'object') return null;
+
+      // Avoid leaving a dead "downloading" state forever if the browser killed
+      // the service worker or the app was closed mid-download.
+      if (data.status === 'downloading' && Date.now() - Number(data.time || 0) > 30 * 60 * 1000) {
+        this.clearDownloadState(bookId);
+        return null;
+      }
+
+      return data;
+    } catch {
+      return null;
+    }
+  },
+
+  setDownloadState(bookId, data) {
+    try {
+      localStorage.setItem(this.downloadStateKey(bookId), JSON.stringify({
+        ...data,
+        time: Date.now(),
+      }));
+    } catch { /* ignore storage failures */ }
+  },
+
+  clearDownloadState(bookId) {
+    try { localStorage.removeItem(this.downloadStateKey(bookId)); }
+    catch { /* ignore storage failures */ }
+  },
+
+  rememberDownloadMessage(msg) {
+    if (!msg || !msg.bookId) return;
+
+    if (msg.status === 'done') {
+      this.setDownloadState(msg.bookId, {
+        jobId: msg.jobId || '',
+        status: 'done',
+        done: msg.total || 0,
+        total: msg.total || 0,
+      });
+      return;
+    }
+
+    if (msg.status === 'error') {
+      this.setDownloadState(msg.bookId, {
+        jobId: msg.jobId || '',
+        status: 'error',
+        done: msg.done || 0,
+        total: msg.total || 0,
+        error: msg.error || '下载失败',
+      });
+      return;
+    }
+
+    if (msg.status === 'downloading') {
+      this.setDownloadState(msg.bookId, {
+        jobId: msg.jobId || '',
+        status: 'downloading',
+        done: msg.done || 0,
+        total: msg.total || 0,
+      });
+    }
   },
 };
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    const msg = event.data || {};
+    if (msg.type === Offline.MSG_PROGRESS) {
+      Offline.rememberDownloadMessage(msg);
+    }
+  });
+}
 
 
 function isStandaloneApp() {
