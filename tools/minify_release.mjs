@@ -132,6 +132,7 @@ function pageGlobalNames(rel) {
   return [
     'Store',
     'Offline',
+    'ProgressSync',
     'AppPromo',
     'Theme',
     'isStandaloneApp',
