@@ -28,6 +28,7 @@
       <button id="font-inc" class="icon-btn" title="增大字号" aria-label="增大字号">A+</button>
       <button id="hl-toggle" class="icon-btn" title="开关词语标注" aria-label="开关词语标注" aria-pressed="true">标注</button>
       <button id="search-toggle" class="icon-btn" title="全书搜索" aria-label="打开全书搜索">搜索</button>
+      <button id="sync-toggle" class="icon-btn" title="同步阅读进度" aria-label="打开同步阅读进度">同步</button>
       <button id="bookmark-toggle" class="icon-btn" title="书签和笔记" aria-label="打开书签和笔记" aria-pressed="false">书签</button>
       <button id="toc-toggle" class="icon-btn" title="目录" aria-label="打开目录">目录</button>
       <button id="theme-toggle" class="icon-btn" title="切换深浅色" aria-label="切换深浅色">◐</button>
@@ -51,6 +52,21 @@
     </form>
     <p id="search-status" class="search-status">输入关键词后，将搜索当前书籍的全部章节。</p>
     <ol id="search-results" class="search-results"></ol>
+  </aside>
+
+  <aside id="sync-panel" class="sync-panel" hidden>
+    <div class="sync-head">
+      <h2 class="sync-title">同步阅读进度</h2>
+    </div>
+    <form id="sync-form" class="sync-form">
+      <label class="sr-only" for="sync-code">同步码</label>
+      <input id="sync-code" class="sync-code" type="text" inputmode="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="输入 4-32 位同步码">
+      <div class="sync-actions">
+        <button id="sync-save" class="sync-action" type="button">保存</button>
+        <button id="sync-restore" class="sync-action" type="button">恢复</button>
+      </div>
+    </form>
+    <p id="sync-status" class="sync-status">同一个同步码可在不同设备间保存或恢复阅读进度。</p>
   </aside>
 
   <aside id="bookmarks" class="bookmarks-panel" hidden>

@@ -517,6 +517,33 @@ python3 tools/convert_book_to_simplified.py hongloumeng
 
 正文、封面缩略图、离线书籍等资源使用 Cache API 保存。
 
+## 阅读进度同步
+
+项目包含一个 EdgeOne Pages Edge Function：
+
+```text
+edge-functions/api/progress.js
+```
+
+部署后路由为：
+
+```text
+/api/progress
+```
+
+阅读页顶部的「同步」按钮会使用该接口保存或恢复阅读进度。用户输入 4-32 位同步码后，可以：
+
+- 保存：把本设备的 `reader.progress.*` 和 `reader.lastProgress` 写入 KV
+- 恢复：从 KV 读取同一同步码下的进度并写回本设备
+
+EdgeOne KV 命名空间需要绑定到项目，变量名必须设置为：
+
+```text
+KV
+```
+
+同步码只允许字母、数字和下划线，以匹配 EdgeOne KV 的 key 限制。同步数据仅包含书籍 id、章节、段落、滚动位置和时间戳，不上传正文、书签或笔记。同一个同步码会覆盖之前保存的进度；KV 读取可能有最多约 60 秒的边缘缓存延迟。
+
 ## 浏览器支持
 
 推荐环境：
@@ -559,7 +586,6 @@ python3 tools/convert_book_to_simplified.py hongloumeng
 - 人物 / 概念卡片
 - 时间线视图
 - 阅读统计
-- 多设备同步
 - EPUB 导入
 - TTS 听书模式
 - 用户自定义高亮

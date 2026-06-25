@@ -74,6 +74,9 @@ self.addEventListener('fetch', (event) => {
   // APK 安装包直连下载，不放进运行时缓存
   if (url.pathname.endsWith('.apk')) return;
 
+  // Edge Function API: always pass through, never cache progress sync.
+  if (url.pathname.endsWith('/api/progress')) return;
+
   // 页面导航：联网优先，离线时回退到缓存页面
   if (req.mode === 'navigate') {
     event.respondWith(handleNavigation(req));

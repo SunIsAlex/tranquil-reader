@@ -35,6 +35,66 @@ const Store = {
       }));
     } catch { /* 隐私模式或配额满，静默失败 */ }
   },
+  getAllProgress() {
+    const progress = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith('reader.progress.')) continue;
+        const bookId = key.slice('reader.progress.'.length);
+        if (!bookId) continue;
+
+        const item = JSON.parse(localStorage.getItem(key));
+        if (!item || typeof item !== 'object') continue;
+        if (!Number.isInteger(item.chapter)) continue;
+
+        progress[bookId] = {
+          chapter: item.chapter,
+          para: Number.isInteger(item.para) ? item.para : 0,
+          scroll: Number.isFinite(item.scroll) ? item.scroll : 0,
+          time: Number.isFinite(item.time) ? item.time : Date.now(),
+        };
+      }
+    } catch { /* ignore partial localStorage failures */ }
+
+    return progress;
+  },
+  applyProgressSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') return 0;
+
+    const progress = snapshot.progress || {};
+    let count = 0;
+
+    try {
+      for (const [bookId, item] of Object.entries(progress)) {
+        if (!item || typeof item !== 'object') continue;
+        if (!Number.isInteger(item.chapter)) continue;
+        localStorage.setItem(this.progressKey(bookId), JSON.stringify({
+          chapter: item.chapter,
+          para: Number.isInteger(item.para) ? item.para : 0,
+          scroll: Number.isFinite(item.scroll) ? item.scroll : 0,
+          time: Number.isFinite(item.time) ? item.time : Date.now(),
+        }));
+        count += 1;
+      }
+
+      const last = snapshot.lastProgress;
+      if (last && last.book && progress[last.book]) {
+        localStorage.setItem(this.LAST_KEY, JSON.stringify({
+          book: String(last.book),
+          ...progress[last.book],
+        }));
+      }
+    } catch { /* ignore storage failures */ }
+
+    return count;
+  },
+  progressSnapshot() {
+    return {
+      progress: this.getAllProgress(),
+      lastProgress: this.getLastProgress(),
+    };
+  },
   readerURL(bookId, progress = null) {
     const p = progress || this.getProgress(bookId) || {};
     const chapter = Number.isInteger(p.chapter) ? p.chapter : 0;
@@ -48,6 +108,74 @@ const Store = {
   },
   setFontSize(rem) { localStorage.setItem(this.fontKey, String(rem)); },
 };
+
+/* ---------- 阅读进度同步 ---------- */
+const ProgressSync = {
+  API: 'api/progress',
+
+  normalizeCode(code) {
+    return String(code || '').trim().toLowerCase();
+  },
+
+  validCode(code) {
+    return /^[a-z0-9][a-z0-9_]{3,31}$/.test(this.normalizeCode(code));
+  },
+
+  async save(code) {
+    code = this.normalizeCode(code);
+    if (!this.validCode(code)) throw new Error('同步码需为 4-32 位字母、数字或下划线');
+
+    const snapshot = Store.progressSnapshot();
+    const count = Object.keys(snapshot.progress).length;
+    if (!count) throw new Error('没有可保存的阅读进度');
+
+    const res = await fetch(this.API, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify({ code, ...snapshot }),
+    });
+
+    const data = await readSyncResponse(res);
+    return {
+      code,
+      count: data.count || count,
+      updatedAt: data.updatedAt || Date.now(),
+    };
+  },
+
+  async restore(code) {
+    code = this.normalizeCode(code);
+    if (!this.validCode(code)) throw new Error('同步码需为 4-32 位字母、数字或下划线');
+
+    const res = await fetch(`${this.API}?code=${encodeURIComponent(code)}`, {
+      cache: 'no-store',
+    });
+
+    const data = await readSyncResponse(res);
+    const count = Store.applyProgressSnapshot(data);
+    if (!count) throw new Error('没有可恢复的阅读进度');
+
+    return {
+      code,
+      count,
+      updatedAt: data.updatedAt || null,
+      lastProgress: data.lastProgress || null,
+    };
+  },
+};
+
+async function readSyncResponse(res) {
+  let data = null;
+  try { data = await res.json(); }
+  catch { /* ignore invalid response body */ }
+
+  if (!res.ok || !data || data.ok === false) {
+    throw new Error((data && data.error) || `同步请求失败（${res.status}）`);
+  }
+
+  return data;
+}
 
 /* ---------- 离线下载 ---------- */
 // 把整本书（清单 + 各章正文）写入持久缓存 tranquil-books，
