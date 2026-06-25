@@ -2,7 +2,7 @@
       "relation": ["delegate_permission/common.handle_all_urls"],
       "target": {
         "namespace": "android_app",
-        "package_name": "cool.edgeone.zh_cn.tranquil_reader.twa",
-        "sha256_cert_fingerprints": ["33:DF:5B:1F:AB:78:31:1D:76:27:E2:5C:18:6C:D4:41:01:BC:E8:49:33:86:F2:45:75:90:E2:A6:57:73:07:00"]
+        "package_name": "org.sunisalex.reader.twa",
+        "sha256_cert_fingerprints": ["43:A3:20:19:7D:77:D0:AD:42:35:40:08:19:BF:7E:FF:6E:17:5E:27:7F:68:25:A6:CD:5F:63:EE:43:24:40:C4"]
       }
     }]
