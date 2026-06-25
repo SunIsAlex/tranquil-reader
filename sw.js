@@ -7,13 +7,16 @@
    - 用户手动离线下载的书保存在 tranquil-books，不随版本升级删除
    ============================================================ */
 
-const VERSION = 'v18';
+const VERSION = 'v19';
 
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
 
 // 用户主动“离线下载”的书放这里：不带版本号，跨 shell 升级保留。
 const BOOKS_CACHE = 'tranquil-books';
+const OFFLINE_DOWNLOAD_START = 'OFFLINE_DOWNLOAD_START';
+const OFFLINE_DOWNLOAD_PROGRESS = 'OFFLINE_DOWNLOAD_PROGRESS';
+const offlineDownloadJobs = new Map();
 
 // 应用外壳。改了这里面的文件后，记得 bump VERSION。
 const SHELL = [
@@ -95,6 +98,18 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(staleWhileRevalidate(req, RUNTIME_CACHE));
 });
 
+self.addEventListener('message', (event) => {
+  const msg = event.data || {};
+  if (msg.type !== OFFLINE_DOWNLOAD_START) return;
+
+  const bookId = String(msg.bookId || '');
+  const jobId = String(msg.jobId || '');
+  const urls = Array.isArray(msg.urls) ? msg.urls.map(String).filter(Boolean) : [];
+  if (!bookId || !jobId || !urls.length) return;
+
+  event.waitUntil(startOfflineBookDownload(bookId, jobId, urls));
+});
+
 async function handleNavigation(req) {
   try {
     return await fetch(req);
@@ -145,4 +160,91 @@ async function staleWhileRevalidate(req, cacheName) {
     .catch(() => null);
 
   return cached || await network || Response.error();
+}
+
+async function startOfflineBookDownload(bookId, jobId, urls) {
+  const existing = offlineDownloadJobs.get(bookId);
+  if (existing) {
+    await broadcastOfflineDownload({
+      jobId,
+      bookId,
+      status: 'downloading',
+      done: existing.done,
+      total: existing.total,
+    });
+    return existing.promise;
+  }
+
+  const job = {
+    done: 0,
+    total: urls.length,
+    promise: null,
+  };
+
+  job.promise = downloadBookToCache(bookId, jobId, urls, job)
+    .finally(() => offlineDownloadJobs.delete(bookId));
+
+  offlineDownloadJobs.set(bookId, job);
+  return job.promise;
+}
+
+async function downloadBookToCache(bookId, jobId, urls, job) {
+  const cache = await caches.open(BOOKS_CACHE);
+
+  await broadcastOfflineDownload({
+    jobId,
+    bookId,
+    status: 'downloading',
+    done: 0,
+    total: urls.length,
+  });
+
+  try {
+    for (const url of urls) {
+      const res = await fetch(url, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(`${url} (${res.status})`);
+      await cache.put(url, res.clone());
+
+      job.done += 1;
+      await broadcastOfflineDownload({
+        jobId,
+        bookId,
+        status: 'downloading',
+        done: job.done,
+        total: urls.length,
+      });
+    }
+
+    await broadcastOfflineDownload({
+      jobId,
+      bookId,
+      status: 'done',
+      done: urls.length,
+      total: urls.length,
+    });
+  } catch (err) {
+    await broadcastOfflineDownload({
+      jobId,
+      bookId,
+      status: 'error',
+      done: job.done,
+      total: urls.length,
+      error: String(err && err.message || err),
+    });
+    throw err;
+  }
+}
+
+async function broadcastOfflineDownload(payload) {
+  const clients = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  });
+
+  for (const client of clients) {
+    client.postMessage({
+      type: OFFLINE_DOWNLOAD_PROGRESS,
+      ...payload,
+    });
+  }
 }
