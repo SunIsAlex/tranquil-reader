@@ -7,6 +7,7 @@
   if (maybeResumeLastReadOnAppLaunch()) return;
 
   const listEl = document.getElementById('book-list');
+  setupShelfSync();
 
   // 安卓浏览器访客：在书架顶部推荐下载 App（与书目加载相互独立）
   maybeShowAppBanner();
@@ -73,6 +74,205 @@
   }
   listEl.appendChild(frag);
 })();
+
+
+function setupShelfSync() {
+  const els = {
+    toggle: document.getElementById('sync-toggle'),
+    panel: document.getElementById('sync-panel'),
+    form: document.getElementById('sync-form'),
+    code: document.getElementById('sync-code'),
+    save: document.getElementById('sync-save'),
+    restore: document.getElementById('sync-restore'),
+    status: document.getElementById('sync-status'),
+  };
+
+  if (!els.toggle || !els.panel || !els.form || !els.code || !els.save || !els.restore || !els.status) {
+    return;
+  }
+
+  let lastFocusBeforeSync = null;
+  let syncHistoryOpen = false;
+  let ignoreNextPopState = false;
+
+  els.toggle.setAttribute('aria-controls', 'sync-panel');
+  els.toggle.setAttribute('aria-expanded', String(!els.panel.hidden));
+  els.toggle.setAttribute('aria-label', els.panel.hidden ? '打开同步阅读进度' : '关闭同步阅读进度');
+  els.panel.setAttribute('role', 'dialog');
+  els.panel.setAttribute('aria-label', '同步阅读进度');
+  els.panel.setAttribute('aria-hidden', String(els.panel.hidden));
+  els.panel.tabIndex = -1;
+
+  function syncCode() {
+    return ProgressSync.normalizeCode(els.code.value);
+  }
+
+  function setBusy(busy) {
+    els.save.disabled = busy;
+    els.restore.disabled = busy;
+    els.code.disabled = busy;
+  }
+
+  function setStatus(message, state = '') {
+    els.status.textContent = message;
+    els.status.dataset.state = state;
+  }
+
+  function pushSyncHistory() {
+    if (syncHistoryOpen) return;
+    try {
+      history.pushState({ ...(history.state || {}), shelfOverlay: 'sync' }, '', location.href);
+      syncHistoryOpen = true;
+    } catch {
+      syncHistoryOpen = false;
+    }
+  }
+
+  function consumeSyncHistory() {
+    if (!syncHistoryOpen) return;
+    syncHistoryOpen = false;
+    ignoreNextPopState = true;
+    try { history.back(); }
+    catch { ignoreNextPopState = false; }
+  }
+
+  function openSync() {
+    if (!els.panel.hidden) {
+      requestAnimationFrame(() => els.code.focus({ preventScroll: true }));
+      return;
+    }
+
+    lastFocusBeforeSync = document.activeElement;
+    els.panel.hidden = false;
+    els.panel.setAttribute('aria-hidden', 'false');
+    els.toggle.setAttribute('aria-expanded', 'true');
+    els.toggle.setAttribute('aria-label', '关闭同步阅读进度');
+    pushSyncHistory();
+
+    requestAnimationFrame(() => {
+      els.code.focus({ preventScroll: true });
+      els.code.select();
+    });
+  }
+
+  function closeSync(restoreFocus = true, options = {}) {
+    if (els.panel.hidden) return;
+    els.panel.hidden = true;
+    els.panel.setAttribute('aria-hidden', 'true');
+    els.toggle.setAttribute('aria-expanded', 'false');
+    els.toggle.setAttribute('aria-label', '打开同步阅读进度');
+
+    if (restoreFocus) {
+      const target = lastFocusBeforeSync && document.contains(lastFocusBeforeSync)
+        ? lastFocusBeforeSync
+        : els.toggle;
+      target.focus({ preventScroll: true });
+    }
+    lastFocusBeforeSync = null;
+
+    if (!options.fromHistory && !options.keepHistory) {
+      consumeSyncHistory();
+    }
+  }
+
+  async function saveProgress() {
+    const code = syncCode();
+
+    if (!ProgressSync.validCode(code)) {
+      setStatus('同步码需为 4-32 位字母、数字或下划线。', 'error');
+      els.code.focus({ preventScroll: true });
+      return;
+    }
+
+    setBusy(true);
+    setStatus('正在保存阅读进度…');
+    try {
+      const result = await ProgressSync.save(code);
+      setStatus(`已保存 ${result.count} 本书的阅读进度。`, 'ok');
+    } catch (err) {
+      setStatus(String(err && err.message || err || '保存失败'), 'error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function restoreProgress() {
+    const code = syncCode();
+
+    if (!ProgressSync.validCode(code)) {
+      setStatus('同步码需为 4-32 位字母、数字或下划线。', 'error');
+      els.code.focus({ preventScroll: true });
+      return;
+    }
+
+    setBusy(true);
+    setStatus('正在恢复阅读进度…');
+    try {
+      const result = await ProgressSync.restore(code);
+      setStatus(`已恢复 ${result.count} 本书的阅读进度。`, 'ok');
+      window.setTimeout(() => location.reload(), 350);
+    } catch (err) {
+      setStatus(String(err && err.message || err || '恢复失败'), 'error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function trapSyncFocus(e) {
+    if (els.panel.hidden || e.key !== 'Tab') return;
+    const focusables = [...els.panel.querySelectorAll('button:not([disabled]), input, [tabindex]:not([tabindex="-1"])')]
+      .filter(el => !el.hidden && el.offsetParent !== null);
+    if (!focusables.length) {
+      e.preventDefault();
+      els.panel.focus({ preventScroll: true });
+      return;
+    }
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus({ preventScroll: true });
+    }
+  }
+
+  els.toggle.addEventListener('click', () => els.panel.hidden ? openSync() : closeSync(true));
+  els.form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    saveProgress();
+  });
+  els.save.addEventListener('click', saveProgress);
+  els.restore.addEventListener('click', restoreProgress);
+
+  document.addEventListener('click', (e) => {
+    if (!els.panel.hidden && !els.panel.contains(e.target) && e.target !== els.toggle) {
+      closeSync(false);
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    trapSyncFocus(e);
+    if (!els.panel.hidden && e.key === 'Escape') {
+      e.preventDefault();
+      closeSync(true);
+    }
+  });
+
+  window.addEventListener('popstate', () => {
+    if (ignoreNextPopState) {
+      ignoreNextPopState = false;
+      return;
+    }
+
+    if (!els.panel.hidden) {
+      syncHistoryOpen = false;
+      closeSync(true, { fromHistory: true });
+    }
+  });
+}
 
 
 // TWA / PWA 从图标冷启动时，start_url 会先打开书架。
