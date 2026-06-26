@@ -43,10 +43,19 @@
     if (progress && Number.isInteger(progress.chapter)) {
       const total = book.chapters ? book.chapters.length : null;
       const at = progress.chapter + 1;
-      progressHTML = `<div class="book-progress">● 读到第 ${at}${total ? ' / ' + total : ''} 章</div>`;
+      if (isPDFBook(book)) {
+        const page = Math.max(1, progress.para || 1);
+        const partCount = pdfPartCount(book);
+        const place = partCount > 1 ? `第 ${at} 卷 · 第 ${page} 页` : `第 ${page} 页`;
+        progressHTML = `<div class="book-progress">● 读到${place}</div>`;
+      } else {
+        progressHTML = `<div class="book-progress">● 读到第 ${at}${total ? ' / ' + total : ''} 章</div>`;
+      }
     }
 
-    const meta = book.chapters ? `${book.chapters.length} 章` : '';
+    const meta = isPDFBook(book)
+      ? pdfBookMeta(book)
+      : book.chapters ? `${book.chapters.length} 章` : '';
 
     link.innerHTML = `
       <div class="book-main">
@@ -454,6 +463,26 @@ function renderBookCover(book) {
 
   a.appendChild(img);
   return a;
+}
+
+function isPDFBook(book) {
+  return book && (
+    book.type === 'pdf' ||
+    typeof book.pdfUrl === 'string' ||
+    typeof book.pdfKey === 'string' ||
+    Array.isArray(book.parts)
+  );
+}
+
+function pdfPartCount(book) {
+  return Array.isArray(book.parts) ? book.parts.length : 0;
+}
+
+function pdfBookMeta(book) {
+  const partCount = pdfPartCount(book);
+  if (partCount > 1) return `PDF · ${partCount} 卷`;
+  if (Number.isInteger(book.pageCount) && book.pageCount > 0) return `PDF · ${book.pageCount} 页`;
+  return 'PDF';
 }
 
 function resolveBookAsset(book, file) {

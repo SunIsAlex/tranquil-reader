@@ -77,6 +77,9 @@ self.addEventListener('fetch', (event) => {
   // Edge Function API: always pass through, never cache progress sync.
   if (url.pathname.endsWith('/api/progress')) return;
 
+  // PDF streams may be large and should keep native browser/network behavior.
+  if (url.pathname.endsWith('/api/pdf')) return;
+
   // 页面导航：联网优先，离线时回退到缓存页面
   if (req.mode === 'navigate') {
     event.respondWith(handleNavigation(req));
@@ -94,6 +97,12 @@ self.addEventListener('fetch', (event) => {
   // 读过一次后可离线，联网时后台更新。
   if (url.pathname.endsWith('.txt')) {
     event.respondWith(staleWhileRevalidate(req, RUNTIME_CACHE));
+    return;
+  }
+
+  // 运行时代码：优先拿新版，避免修复后仍先执行旧 JS。
+  if (/\.(?:js|mjs|css|wasm)$/i.test(url.pathname)) {
+    event.respondWith(networkFirst(req, RUNTIME_CACHE));
     return;
   }
 

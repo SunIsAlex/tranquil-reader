@@ -40,13 +40,26 @@
     els.body.innerHTML = `<p class="empty">加载失败：${err.message}</p>`;
     return;
   }
-  if (!book || !book.chapters || !book.chapters.length) {
-    els.body.innerHTML = `<p class="empty">找不到这本书或它没有章节。</p>`;
+  if (!book) {
+    els.body.innerHTML = `<p class="empty">找不到这本书。</p>`;
     return;
   }
 
   els.title.textContent = book.title;
   document.title = `${book.title} · 静读`;
+
+  let pdfjsLoadPromise = null;
+  const pdfDocumentCache = new Map();
+
+  if (isPDFBook(book)) {
+    initPDFReader(book);
+    return;
+  }
+
+  if (!book.chapters || !book.chapters.length) {
+    els.body.innerHTML = `<p class="empty">找不到这本书或它没有章节。</p>`;
+    return;
+  }
 
   // ---- 词语标注（高亮） ----
   // 推荐新结构：
@@ -201,6 +214,262 @@
   hlBtn.addEventListener('click', () =>
     applyHL(document.body.classList.contains('no-hl')));
   if (!hasHighlights(highlightData)) hlBtn.hidden = true; // 这本书没配词表就不显示开关
+
+  function isPDFBook(book) {
+    return book && (
+      book.type === 'pdf' ||
+      typeof book.pdfUrl === 'string' ||
+      typeof book.pdfKey === 'string' ||
+      Array.isArray(book.parts)
+    );
+  }
+
+  function initPDFReader(book) {
+    const parts = getPDFParts(book);
+    document.body.classList.add('pdf-reading');
+    els.progress.hidden = true;
+
+    [
+      els.fontInc,
+      els.fontDec,
+      document.getElementById('hl-toggle'),
+      els.searchToggle,
+      els.bookmarkToggle,
+      els.tocToggle,
+    ].forEach(el => { if (el) el.hidden = true; });
+
+    if (!parts.length) {
+      els.chapTitle.textContent = book.title;
+      els.body.innerHTML = `<p class="empty">这本 PDF 没有配置 pdfUrl、pdfKey 或 parts。</p>`;
+      document.querySelector('.chapter-nav')?.remove();
+      return;
+    }
+
+    const savedPDF = Store.getProgress(bookId);
+    const savedPart = savedPDF && Number.isInteger(savedPDF.chapter)
+      ? Math.max(0, Math.min(savedPDF.chapter, parts.length - 1))
+      : 0;
+    const initialPage = savedPDF && Number.isInteger(savedPDF.para) && savedPDF.para > 0
+      ? savedPDF.para
+      : 1;
+
+    els.body.innerHTML = renderPDFReader(parts, savedPart, initialPage, book.title);
+    document.querySelector('.chapter-nav')?.remove();
+
+    const viewer = els.body.querySelector('.pdf-canvas-wrap');
+    const canvas = els.body.querySelector('.pdf-canvas');
+    const status = els.body.querySelector('.pdf-status');
+    const partSelect = els.body.querySelector('.pdf-part-select');
+    const partPrev = els.body.querySelector('.pdf-part-prev');
+    const partNext = els.body.querySelector('.pdf-part-next');
+    const pageInput = els.body.querySelector('.pdf-page-input');
+    const pageGo = els.body.querySelector('.pdf-page-go');
+    const openLink = els.body.querySelector('.pdf-open-link');
+    const pageTotal = els.body.querySelector('.pdf-page-total');
+    let currentPart = savedPart;
+    let renderTicket = 0;
+
+    function setPDFLocation(partIndex, page) {
+      currentPart = Math.max(0, Math.min(partIndex, parts.length - 1));
+      const part = parts[currentPart];
+      const pageCount = Number.isInteger(part.pageCount) && part.pageCount > 0
+        ? part.pageCount
+        : null;
+      const nextPage = Math.max(1, pageCount ? Math.min(page, pageCount) : page);
+      const src = pdfURLWithPage(part.src, nextPage);
+
+      els.chapTitle.textContent = parts.length > 1 ? part.title : book.title;
+      partSelect.value = String(currentPart);
+      partPrev.disabled = currentPart <= 0;
+      partNext.disabled = currentPart >= parts.length - 1;
+      pageInput.value = String(nextPage);
+      if (pageCount) {
+        pageInput.max = String(pageCount);
+        pageTotal.textContent = `/ ${pageCount}`;
+      } else {
+        pageInput.removeAttribute('max');
+        pageTotal.textContent = '';
+      }
+      openLink.href = src;
+      Store.setProgress(bookId, {
+        chapter: currentPart,
+        para: nextPage,
+        scroll: 0,
+        time: Date.now(),
+      });
+      renderPDFPage(part, nextPage, ++renderTicket);
+    }
+
+    partSelect.addEventListener('change', () => {
+      setPDFLocation(parseInt(partSelect.value, 10) || 0, 1);
+    });
+    partPrev.addEventListener('click', () => setPDFLocation(currentPart - 1, 1));
+    partNext.addEventListener('click', () => setPDFLocation(currentPart + 1, 1));
+    pageGo.addEventListener('click', () => setPDFLocation(currentPart, parseInt(pageInput.value, 10) || 1));
+    pageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        setPDFLocation(currentPart, parseInt(pageInput.value, 10) || 1);
+      }
+    });
+
+    setPDFLocation(savedPart, initialPage);
+
+    async function renderPDFPage(part, page, ticket) {
+      status.textContent = '正在加载 PDF...';
+      viewer.classList.add('is-loading');
+
+      try {
+        const pdf = await loadPDFDocument(part.src);
+        if (ticket !== renderTicket) return;
+
+        const pageCount = pdf.numPages;
+        part.pageCount = pageCount;
+        const nextPage = Math.max(1, Math.min(page, pageCount));
+        pageInput.max = String(pageCount);
+        pageInput.value = String(nextPage);
+        pageTotal.textContent = `/ ${pageCount}`;
+
+        const pdfPage = await pdf.getPage(nextPage);
+        if (ticket !== renderTicket) return;
+
+        const baseViewport = pdfPage.getViewport({ scale: 1 });
+        const availableWidth = Math.max(280, (viewer.clientWidth || document.documentElement.clientWidth || 360) - 24);
+        const cssScale = Math.min(2.4, Math.max(0.6, availableWidth / baseViewport.width));
+        const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+        const viewport = pdfPage.getViewport({ scale: cssScale });
+
+        canvas.width = Math.floor(viewport.width * outputScale);
+        canvas.height = Math.floor(viewport.height * outputScale);
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = `${Math.floor(viewport.height)}px`;
+
+        const context = canvas.getContext('2d', { alpha: false });
+        context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, viewport.width, viewport.height);
+
+        await pdfPage.render({ canvasContext: context, viewport }).promise;
+        if (ticket !== renderTicket) return;
+
+        status.textContent = '';
+        viewer.classList.remove('is-loading');
+
+        if (nextPage !== page) {
+          Store.setProgress(bookId, {
+            chapter: currentPart,
+            para: nextPage,
+            scroll: 0,
+            time: Date.now(),
+          });
+        }
+      } catch (err) {
+        if (ticket !== renderTicket) return;
+        console.warn('Failed to render PDF:', err);
+        viewer.classList.remove('is-loading');
+        status.textContent = `PDF 加载失败：${pdfErrorMessage(err)}。请用“新窗口打开”。`;
+      }
+    }
+  }
+
+  async function loadPDFJS() {
+    if (!pdfjsLoadPromise) {
+      const pdfjsURL = new URL('vendor/pdfjs/pdf.min.mjs', location.href).href;
+      const workerURL = new URL('vendor/pdfjs/pdf.worker.min.mjs', location.href).href;
+      pdfjsLoadPromise = import(pdfjsURL).then(pdfjs => {
+        pdfjs.GlobalWorkerOptions.workerSrc = workerURL;
+        return pdfjs;
+      });
+    }
+    return pdfjsLoadPromise;
+  }
+
+  async function loadPDFDocument(src) {
+    if (!pdfDocumentCache.has(src)) {
+      pdfDocumentCache.set(src, loadPDFJS().then(pdfjs => pdfjs.getDocument({
+        url: src,
+        cMapUrl: new URL('vendor/pdfjs/cmaps/', location.href).href,
+        cMapPacked: true,
+        standardFontDataUrl: new URL('vendor/pdfjs/standard_fonts/', location.href).href,
+        wasmUrl: new URL('vendor/pdfjs/wasm/', location.href).href,
+        useWorkerFetch: false,
+        isOffscreenCanvasSupported: false,
+        isImageDecoderSupported: false,
+      }).promise));
+    }
+    return pdfDocumentCache.get(src);
+  }
+
+  function pdfErrorMessage(err) {
+    const raw = err && (err.message || err.name || String(err));
+    return String(raw || '未知错误').replace(/\s+/g, ' ').slice(0, 180);
+  }
+
+  function getPDFParts(book) {
+    const rawParts = Array.isArray(book.parts) && book.parts.length
+      ? book.parts
+      : [book];
+
+    return rawParts
+      .map((part, index) => {
+        const src = resolvePDFSource(part);
+        if (!src) return null;
+        const title = typeof part.title === 'string' && part.title.trim()
+          ? part.title.trim()
+          : `第 ${index + 1} 卷`;
+        const pageCount = Number.isInteger(part.pageCount) && part.pageCount > 0
+          ? part.pageCount
+          : null;
+        return { title, src, pageCount };
+      })
+      .filter(Boolean);
+  }
+
+  function resolvePDFSource(source) {
+    const pdfUrl = typeof source.pdfUrl === 'string' ? source.pdfUrl.trim() : '';
+    if (pdfUrl) return pdfUrl;
+
+    const pdfKey = typeof source.pdfKey === 'string' ? source.pdfKey.trim() : '';
+    if (pdfKey) return `api/pdf?key=${encodeURIComponent(pdfKey)}`;
+
+    return '';
+  }
+
+  function renderPDFReader(parts, partIndex, page, title) {
+    const options = parts.map((part, index) => (
+      `<option value="${index}" ${index === partIndex ? 'selected' : ''}>${escapeHTML(part.title)}</option>`
+    )).join('');
+    const part = parts[partIndex];
+    const pageCount = Number.isInteger(part.pageCount) && part.pageCount > 0 ? part.pageCount : null;
+    const total = pageCount ? `/ ${pageCount}` : '';
+    const partControlsHidden = parts.length > 1 ? '' : ' hidden';
+    return `
+      <section class="pdf-reader-shell">
+        <div class="pdf-toolbar">
+          <button class="pdf-part-prev" type="button"${partControlsHidden}>上一卷</button>
+          <select class="pdf-part-select"${partControlsHidden} aria-label="选择 PDF 分卷">
+            ${options}
+          </select>
+          <button class="pdf-part-next" type="button"${partControlsHidden}>下一卷</button>
+          <label class="pdf-page-label">
+            <span>页码</span>
+            <input class="pdf-page-input" type="number" inputmode="numeric" min="1" ${pageCount ? `max="${pageCount}"` : ''} value="${page}">
+            <span class="pdf-page-total">${total}</span>
+          </label>
+          <button class="pdf-page-go" type="button">跳转</button>
+          <a class="pdf-open-link" href="${escapeHTML(pdfURLWithPage(part.src, page))}" target="_blank" rel="noopener">新窗口打开</a>
+        </div>
+        <div class="pdf-canvas-wrap" role="region" aria-label="${escapeHTML(title || 'PDF')}">
+          <canvas class="pdf-canvas"></canvas>
+          <p class="pdf-status" aria-live="polite"></p>
+        </div>
+      </section>`;
+  }
+
+  function pdfURLWithPage(src, page) {
+    const clean = String(src || '').split('#')[0];
+    return `${clean}#page=${Math.max(1, page || 1)}&toolbar=1&navpanes=0`;
+  }
 
   // ---- 状态 ----
   let current = 0;
