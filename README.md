@@ -228,6 +228,89 @@ novel-reader/
 | `coverThumb` | 书架缩略封面 |
 | `highlightsFile` | 外部高亮 JSON 文件 |
 | `chapters` | 章节列表 |
+| `type` | 可选。`"pdf"` 表示 PDF 书籍 |
+| `pdfUrl` | 可选。PDF URL，可以是外部 URL 或站内路径 |
+| `pdfKey` | 可选。EdgeOne Blob 中的 PDF key，例如 `pdfs/example.pdf` |
+| `pageCount` | 可选。PDF 页数，用于页码输入上限和书架显示 |
+| `parts` | 可选。PDF 分卷列表，每项可配置 `title`、`pdfUrl` 或 `pdfKey`、`pageCount` |
+
+### PDF 书籍
+
+PDF 文件不建议放进 Git 仓库。推荐的免备案方案是使用 EdgeOne Blob 保存 PDF，并通过 Pages Edge Function 读取：
+
+```text
+edge-functions/api/pdf.js
+```
+
+部署后读取路由为：
+
+```text
+/api/pdf?key=pdfs/example.pdf
+```
+
+EdgeOne Blob 的 namespace 固定为：
+
+```text
+tranquil-reader-pdfs
+```
+
+上传 PDF 时建议使用 Blob SDK 或临时上传 URL，把对象 key 放在 `pdfs/` 目录下，例如：
+
+```text
+pdfs/example.pdf
+```
+
+然后在 `books/manifest.json` 中注册：
+
+```json
+{
+  "id": "example-pdf",
+  "type": "pdf",
+  "title": "示例 PDF",
+  "author": "作者",
+  "cover": "https://example.com/example-cover.jpg",
+  "pdfKey": "pdfs/example.pdf",
+  "pageCount": 320
+}
+```
+
+也可以不用 Blob，直接引用外部 PDF 或站内 PDF：
+
+```json
+{
+  "id": "local-pdf",
+  "type": "pdf",
+  "title": "本地 PDF",
+  "author": "作者",
+  "pdfUrl": "books/local-pdf/example.pdf",
+  "pageCount": 120
+}
+```
+
+大 PDF 可以拆成多个小 PDF，并用 `parts` 登记。阅读器会把进度保存为“第几卷 + 第几页”：
+
+```json
+{
+  "id": "example-pdf-parts",
+  "type": "pdf",
+  "title": "分卷 PDF",
+  "author": "作者",
+  "parts": [
+    {
+      "title": "1 第一章",
+      "pdfUrl": "books/example-pdf-parts/01.pdf",
+      "pageCount": 24
+    },
+    {
+      "title": "2 第二章",
+      "pdfUrl": "books/example-pdf-parts/02.pdf",
+      "pageCount": 31
+    }
+  ]
+}
+```
+
+PDF 阅读器使用 PDF.js 在页面内渲染当前页，并提供“新窗口打开”兜底。应用会保存用户通过页码框跳转到的页码；如果用户只在单页内部滚动或缩放，浏览器不会产生新的页码进度。
 
 ## 添加一本新书
 

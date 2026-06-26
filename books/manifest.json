@@ -1027,6 +1027,229 @@
         }
       ],
       "highlightsFile": "highlights.json"
+    },
+    {
+      "id": "clayden-chinese",
+      "type": "pdf",
+      "title": "有机化学（Clayden 原书第二版）",
+      "author": "Jonathan Clayden / Nick Greeves / Stuart Warren；delay 译",
+      "parts": [
+        {
+          "title": "1 什么是有机化学?",
+          "pdfUrl": "books/clayden-chinese/01.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "2 有机结构",
+          "pdfUrl": "books/clayden-chinese/02.pdf",
+          "pageCount": 28
+        },
+        {
+          "title": "3 有机结构的确定",
+          "pdfUrl": "books/clayden-chinese/03.pdf",
+          "pageCount": 37
+        },
+        {
+          "title": "4 分子结构",
+          "pdfUrl": "books/clayden-chinese/04.pdf",
+          "pageCount": 27
+        },
+        {
+          "title": "5 有机反应",
+          "pdfUrl": "books/clayden-chinese/05.pdf",
+          "pageCount": 18
+        },
+        {
+          "title": "6 对羰基的亲核加成",
+          "pdfUrl": "books/clayden-chinese/06.pdf",
+          "pageCount": 16
+        },
+        {
+          "title": "7 离域与共轭",
+          "pdfUrl": "books/clayden-chinese/07.pdf",
+          "pageCount": 22
+        },
+        {
+          "title": "8 酸性、碱性和 pKa",
+          "pdfUrl": "books/clayden-chinese/08.pdf",
+          "pageCount": 19
+        },
+        {
+          "title": "9 使用有机金属试剂构建 C-C 键",
+          "pdfUrl": "books/clayden-chinese/09.pdf",
+          "pageCount": 15
+        },
+        {
+          "title": "10 羰基上的亲核取代",
+          "pdfUrl": "books/clayden-chinese/10.pdf",
+          "pageCount": 25
+        },
+        {
+          "title": "11 伴随羰基氧失去的羰基亲核取代",
+          "pdfUrl": "books/clayden-chinese/11.pdf",
+          "pageCount": 18
+        },
+        {
+          "title": "12 平衡、速率和机理",
+          "pdfUrl": "books/clayden-chinese/12.pdf",
+          "pageCount": 29
+        },
+        {
+          "title": "13 1H NMR: 核磁共振氢谱",
+          "pdfUrl": "books/clayden-chinese/13.pdf",
+          "pageCount": 33
+        },
+        {
+          "title": "14 立体化学",
+          "pdfUrl": "books/clayden-chinese/14.pdf",
+          "pageCount": 26
+        },
+        {
+          "title": "15 饱和碳上的亲核取代",
+          "pdfUrl": "books/clayden-chinese/15.pdf",
+          "pageCount": 32
+        },
+        {
+          "title": "16 构象分析",
+          "pdfUrl": "books/clayden-chinese/16.pdf",
+          "pageCount": 22
+        },
+        {
+          "title": "17 消除反应",
+          "pdfUrl": "books/clayden-chinese/17.pdf",
+          "pageCount": 25
+        },
+        {
+          "title": "18 光谱分析综述",
+          "pdfUrl": "books/clayden-chinese/18.pdf",
+          "pageCount": 20
+        },
+        {
+          "title": "19 烯烃的亲电加成",
+          "pdfUrl": "books/clayden-chinese/19.pdf",
+          "pageCount": 22
+        },
+        {
+          "title": "20 烯醇和烯醇盐的形成和反应",
+          "pdfUrl": "books/clayden-chinese/20.pdf",
+          "pageCount": 22
+        },
+        {
+          "title": "21 芳香亲电取代",
+          "pdfUrl": "books/clayden-chinese/21.pdf",
+          "pageCount": 27
+        },
+        {
+          "title": "22 共轭加成和芳香亲核取代",
+          "pdfUrl": "books/clayden-chinese/22.pdf",
+          "pageCount": 30
+        },
+        {
+          "title": "23 化学选择性和保护基",
+          "pdfUrl": "books/clayden-chinese/23.pdf",
+          "pageCount": 34
+        },
+        {
+          "title": "24 区域选择性",
+          "pdfUrl": "books/clayden-chinese/24.pdf",
+          "pageCount": 22
+        },
+        {
+          "title": "25 烯醇盐的烷基化",
+          "pdfUrl": "books/clayden-chinese/25.pdf",
+          "pageCount": 30
+        },
+        {
+          "title": "26 烯醇盐和羰基化合物的反应：羟醛反应和 Claisen 反应",
+          "pdfUrl": "books/clayden-chinese/26.pdf",
+          "pageCount": 42
+        },
+        {
+          "title": "27 有机化学中的硫、硅和磷",
+          "pdfUrl": "books/clayden-chinese/27.pdf",
+          "pageCount": 38
+        },
+        {
+          "title": "28 逆合成分析",
+          "pdfUrl": "books/clayden-chinese/28.pdf",
+          "pageCount": 29
+        },
+        {
+          "title": "29 芳杂环 1: 反应",
+          "pdfUrl": "books/clayden-chinese/29.pdf",
+          "pageCount": 34
+        },
+        {
+          "title": "30 芳杂环 2: 合成",
+          "pdfUrl": "books/clayden-chinese/30.pdf",
+          "pageCount": 32
+        },
+        {
+          "title": "31 饱和杂环和立体电子效应",
+          "pdfUrl": "books/clayden-chinese/31.pdf",
+          "pageCount": 36
+        },
+        {
+          "title": "32 环状分子中的立体选择性",
+          "pdfUrl": "books/clayden-chinese/32.pdf",
+          "pageCount": 27
+        },
+        {
+          "title": "33 非对映选择性",
+          "pdfUrl": "books/clayden-chinese/33.pdf",
+          "pageCount": 25
+        },
+        {
+          "title": "34 周环反应 1: 环加成",
+          "pdfUrl": "books/clayden-chinese/34.pdf",
+          "pageCount": 32
+        },
+        {
+          "title": "35 周环反应 2: σ 重排和电环化反应",
+          "pdfUrl": "books/clayden-chinese/35.pdf",
+          "pageCount": 22
+        },
+        {
+          "title": "36 参与、重排和碎片化",
+          "pdfUrl": "books/clayden-chinese/36.pdf",
+          "pageCount": 39
+        },
+        {
+          "title": "37 自由基反应",
+          "pdfUrl": "books/clayden-chinese/37.pdf",
+          "pageCount": 33
+        },
+        {
+          "title": "38 卡宾的合成与反应",
+          "pdfUrl": "books/clayden-chinese/38.pdf",
+          "pageCount": 26
+        },
+        {
+          "title": "39 探寻反应机理",
+          "pdfUrl": "books/clayden-chinese/39.pdf",
+          "pageCount": 40
+        },
+        {
+          "title": "40 金属有机化学",
+          "pdfUrl": "books/clayden-chinese/40.pdf",
+          "pageCount": 33
+        },
+        {
+          "title": "41 不对称合成",
+          "pdfUrl": "books/clayden-chinese/41.pdf",
+          "pageCount": 32
+        },
+        {
+          "title": "42 生命中的有机化学",
+          "pdfUrl": "books/clayden-chinese/42.pdf",
+          "pageCount": 35
+        },
+        {
+          "title": "43 当今的有机化学",
+          "pdfUrl": "books/clayden-chinese/43.pdf",
+          "pageCount": 13
+        }
+      ]
     }
   ]
 }
