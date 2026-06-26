@@ -20,13 +20,6 @@
     searchInput:  document.getElementById('search-input'),
     searchStatus: document.getElementById('search-status'),
     searchResults: document.getElementById('search-results'),
-    syncToggle: document.getElementById('sync-toggle'),
-    syncPanel: document.getElementById('sync-panel'),
-    syncForm: document.getElementById('sync-form'),
-    syncCode: document.getElementById('sync-code'),
-    syncSave: document.getElementById('sync-save'),
-    syncRestore: document.getElementById('sync-restore'),
-    syncStatus: document.getElementById('sync-status'),
     bookmarkToggle: document.getElementById('bookmark-toggle'),
     bookmarks:  document.getElementById('bookmarks'),
     bookmarkAdd: document.getElementById('bookmark-add'),
@@ -220,7 +213,6 @@
   let progressRaf = 0;
   let lastFocusBeforeTOC = null;
   let lastFocusBeforeSearch = null;
-  let lastFocusBeforeSync = null;
   let lastFocusBeforeBookmarks = null;
   let bookmarks = loadBookmarks();
   const prefetchedChapters = new Set();
@@ -334,16 +326,6 @@
     els.searchPanel.tabIndex = -1;
   }
 
-  function setupSyncAccessibility() {
-    els.syncToggle.setAttribute('aria-controls', 'sync-panel');
-    els.syncToggle.setAttribute('aria-expanded', String(!els.syncPanel.hidden));
-    els.syncToggle.setAttribute('aria-label', els.syncPanel.hidden ? '打开同步阅读进度' : '关闭同步阅读进度');
-    els.syncPanel.setAttribute('role', 'dialog');
-    els.syncPanel.setAttribute('aria-label', '同步阅读进度');
-    els.syncPanel.setAttribute('aria-hidden', String(els.syncPanel.hidden));
-    els.syncPanel.tabIndex = -1;
-  }
-
   function pushOverlayHistory(type) {
     if (activeOverlayHistory === type) return;
 
@@ -368,7 +350,6 @@
     if (!els.toc.hidden) return;
     setTopbarHidden(false);
     closeSearch(false, { keepHistory: true });
-    closeSync(false, { keepHistory: true });
     closeBookmarks(false, { keepHistory: true });
     lastFocusBeforeTOC = document.activeElement;
     els.toc.hidden = false;
@@ -411,7 +392,6 @@
     }
     setTopbarHidden(false);
     closeTOC(false, { keepHistory: true });
-    closeSync(false, { keepHistory: true });
     closeBookmarks(false, { keepHistory: true });
     lastFocusBeforeSearch = document.activeElement;
     els.searchPanel.hidden = false;
@@ -446,48 +426,6 @@
     }
   }
 
-  function openSync() {
-    if (!els.syncPanel.hidden) {
-      requestAnimationFrame(() => els.syncCode.focus({ preventScroll: true }));
-      return;
-    }
-    setTopbarHidden(false);
-    closeTOC(false, { keepHistory: true });
-    closeSearch(false, { keepHistory: true });
-    closeBookmarks(false, { keepHistory: true });
-    lastFocusBeforeSync = document.activeElement;
-    els.syncPanel.hidden = false;
-    els.syncPanel.setAttribute('aria-hidden', 'false');
-    els.syncToggle.setAttribute('aria-expanded', 'true');
-    els.syncToggle.setAttribute('aria-label', '关闭同步阅读进度');
-    pushOverlayHistory('sync');
-
-    requestAnimationFrame(() => {
-      els.syncCode.focus({ preventScroll: true });
-      els.syncCode.select();
-    });
-  }
-
-  function closeSync(restoreFocus = true, options = {}) {
-    if (els.syncPanel.hidden) return;
-    els.syncPanel.hidden = true;
-    els.syncPanel.setAttribute('aria-hidden', 'true');
-    els.syncToggle.setAttribute('aria-expanded', 'false');
-    els.syncToggle.setAttribute('aria-label', '打开同步阅读进度');
-
-    if (restoreFocus) {
-      const target = lastFocusBeforeSync && document.contains(lastFocusBeforeSync)
-        ? lastFocusBeforeSync
-        : els.syncToggle;
-      target.focus({ preventScroll: true });
-    }
-    lastFocusBeforeSync = null;
-
-    if (!options.fromHistory && !options.keepHistory) {
-      consumeOverlayHistory('sync');
-    }
-  }
-
   function trapTOCFocus(e) {
     if (els.toc.hidden || e.key !== 'Tab') return;
     const focusables = [...els.toc.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')]
@@ -511,28 +449,19 @@
 
   setupTOCAccessibility();
   setupSearchAccessibility();
-  setupSyncAccessibility();
   setupBookmarkPanelAccessibility();
   els.tocToggle.addEventListener('click', () => els.toc.hidden ? openTOC() : closeTOC(true));
   els.searchToggle.addEventListener('click', () => els.searchPanel.hidden ? openSearch() : closeSearch(true));
-  els.syncToggle.addEventListener('click', () => els.syncPanel.hidden ? openSync() : closeSync(true));
   els.searchForm.addEventListener('submit', (e) => {
     e.preventDefault();
     runBookSearch(els.searchInput.value);
   });
-  els.syncForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    saveSyncProgress();
-  });
-  els.syncSave.addEventListener('click', saveSyncProgress);
-  els.syncRestore.addEventListener('click', restoreSyncProgress);
   els.searchInput.addEventListener('input', () => {
     if (!els.searchInput.value.trim()) resetSearchPanel();
   });
   document.addEventListener('keydown', (e) => {
     trapTOCFocus(e);
     trapPanelFocus(els.searchPanel, e);
-    trapPanelFocus(els.syncPanel, e);
     trapPanelFocus(els.bookmarks, e);
   });
   els.bookmarkToggle.addEventListener('click', () => els.bookmarks.hidden ? openBookmarks() : closeBookmarks(true));
@@ -541,7 +470,6 @@
   document.addEventListener('click', (e) => {
     if (!els.toc.hidden && !els.toc.contains(e.target) && e.target !== els.tocToggle) closeTOC(false);
     if (!els.searchPanel.hidden && !els.searchPanel.contains(e.target) && e.target !== els.searchToggle) closeSearch(false);
-    if (!els.syncPanel.hidden && !els.syncPanel.contains(e.target) && e.target !== els.syncToggle) closeSync(false);
     if (!els.bookmarks.hidden && !els.bookmarks.contains(e.target) && e.target !== els.bookmarkToggle) closeBookmarks(false);
   });
   document.querySelector('.topbar')?.addEventListener('focusin', () => {
@@ -551,7 +479,7 @@
   function setupTopbarSwipeAutoHide() {
     document.addEventListener('touchstart', (e) => {
       if (!topbarAutoHideReady || e.touches.length !== 1) return;
-      if (!els.toc.hidden || !els.searchPanel.hidden || !els.syncPanel.hidden || !els.bookmarks.hidden) return;
+      if (!els.toc.hidden || !els.searchPanel.hidden || !els.bookmarks.hidden) return;
 
       const t = e.touches[0];
       topbarTouchStartY = t.clientY;
@@ -561,7 +489,7 @@
 
     document.addEventListener('touchmove', (e) => {
       if (!topbarAutoHideReady || e.touches.length !== 1) return;
-      if (!els.toc.hidden || !els.searchPanel.hidden || !els.syncPanel.hidden || !els.bookmarks.hidden) {
+      if (!els.toc.hidden || !els.searchPanel.hidden || !els.bookmarks.hidden) {
         setTopbarHidden(false);
         return;
       }
@@ -665,83 +593,12 @@
       return;
     }
 
-    if (!els.syncPanel.hidden) {
-      activeOverlayHistory = null;
-      closeSync(true, { fromHistory: true });
-      return;
-    }
-
     if (!els.bookmarks.hidden) {
       activeOverlayHistory = null;
       closeBookmarks(true, { fromHistory: true });
     }
   });
 
-
-  // ---- 阅读进度同步 ----
-  function syncCode() {
-    return ProgressSync.normalizeCode(els.syncCode.value);
-  }
-
-  function setSyncBusy(busy) {
-    els.syncSave.disabled = busy;
-    els.syncRestore.disabled = busy;
-    els.syncCode.disabled = busy;
-  }
-
-  function setSyncStatus(message, state = '') {
-    els.syncStatus.textContent = message;
-    els.syncStatus.dataset.state = state;
-  }
-
-  async function saveSyncProgress() {
-    saveProgress();
-    const code = syncCode();
-
-    if (!ProgressSync.validCode(code)) {
-      setSyncStatus('同步码需为 4-32 位字母、数字或下划线。', 'error');
-      els.syncCode.focus({ preventScroll: true });
-      return;
-    }
-
-    setSyncBusy(true);
-    setSyncStatus('正在保存阅读进度…');
-    try {
-      const result = await ProgressSync.save(code);
-      setSyncStatus(`已保存 ${result.count} 本书的阅读进度。`, 'ok');
-    } catch (err) {
-      setSyncStatus(String(err && err.message || err || '保存失败'), 'error');
-    } finally {
-      setSyncBusy(false);
-    }
-  }
-
-  async function restoreSyncProgress() {
-    const code = syncCode();
-
-    if (!ProgressSync.validCode(code)) {
-      setSyncStatus('同步码需为 4-32 位字母、数字或下划线。', 'error');
-      els.syncCode.focus({ preventScroll: true });
-      return;
-    }
-
-    setSyncBusy(true);
-    setSyncStatus('正在恢复阅读进度…');
-    try {
-      const result = await ProgressSync.restore(code);
-      const restored = Store.getProgress(bookId);
-      setSyncStatus(`已恢复 ${result.count} 本书的阅读进度。`, 'ok');
-
-      if (restored && Number.isInteger(restored.chapter)) {
-        closeSync(false);
-        await loadChapter(restored.chapter, restored);
-      }
-    } catch (err) {
-      setSyncStatus(String(err && err.message || err || '恢复失败'), 'error');
-    } finally {
-      setSyncBusy(false);
-    }
-  }
 
   // ---- 全书搜索 ----
   function resetSearchPanel() {
@@ -1403,13 +1260,12 @@
   }
 
   function setTopbarHidden(hidden) {
-    // 顶部、目录/搜索/同步/书签打开时强制显示。
+    // 顶部、目录/搜索/书签打开时强制显示。
     if (
       hidden &&
       (getScrollY() < 80 ||
         !els.toc.hidden ||
         !els.searchPanel.hidden ||
-        !els.syncPanel.hidden ||
         !els.bookmarks.hidden)
     ) {
       hidden = false;
@@ -1654,7 +1510,7 @@
       return;
     }
 
-    if (!els.toc.hidden || !els.searchPanel.hidden || !els.syncPanel.hidden || !els.bookmarks.hidden) {
+    if (!els.toc.hidden || !els.searchPanel.hidden || !els.bookmarks.hidden) {
       if (e.key === 'Escape') {
         e.preventDefault();
         closeTOC(true);

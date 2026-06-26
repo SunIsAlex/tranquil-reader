@@ -531,7 +531,7 @@ edge-functions/api/progress.js
 /api/progress
 ```
 
-阅读页顶部的「同步」按钮会使用该接口保存或恢复阅读进度。用户输入 4-32 位同步码后，可以：
+书架页顶部的「同步」按钮会使用该接口保存或恢复全局阅读进度。用户输入 4-32 位同步码后，可以：
 
 - 保存：把本设备的 `reader.progress.*` 和 `reader.lastProgress` 写入 KV
 - 恢复：从 KV 读取同一同步码下的进度并写回本设备
