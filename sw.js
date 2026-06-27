@@ -7,7 +7,7 @@
    - 用户手动离线下载的书保存在 tranquil-books，不随版本升级删除
    ============================================================ */
 
-const VERSION = 'v22';
+const VERSION = 'v23';
 
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
@@ -120,10 +120,18 @@ self.addEventListener('message', (event) => {
 
   const bookId = String(msg.bookId || '');
   const jobId = String(msg.jobId || '');
+  const bookTitle = String(msg.bookTitle || bookId);
+  const showNotification = msg.showNotification === true;
   const urls = Array.isArray(msg.urls) ? msg.urls.map(String).filter(Boolean) : [];
   if (!bookId || !jobId || !urls.length) return;
 
-  event.waitUntil(startOfflineBookDownload(bookId, jobId, urls));
+  event.waitUntil(startOfflineBookDownload(
+    bookId,
+    jobId,
+    urls,
+    bookTitle,
+    showNotification
+  ));
 });
 
 async function handleNavigation(req) {
@@ -241,7 +249,7 @@ async function staleWhileRevalidate(req, cacheName) {
   return cached || await network || Response.error();
 }
 
-async function startOfflineBookDownload(bookId, jobId, urls) {
+async function startOfflineBookDownload(bookId, jobId, urls, bookTitle, showNotification) {
   const existing = offlineDownloadJobs.get(bookId);
   if (existing) {
     await broadcastOfflineDownload({
@@ -251,12 +259,19 @@ async function startOfflineBookDownload(bookId, jobId, urls) {
       done: existing.done,
       total: existing.total,
     });
+    if (showNotification) {
+      existing.showNotification = true;
+      existing.bookTitle = bookTitle;
+      await showOfflineDownloadNotification(existing.bookTitle, bookId, existing.done, existing.total);
+    }
     return existing.promise;
   }
 
   const job = {
     done: 0,
     total: urls.length,
+    bookTitle,
+    showNotification,
     promise: null,
   };
 
@@ -277,6 +292,9 @@ async function downloadBookToCache(bookId, jobId, urls, job) {
     done: 0,
     total: urls.length,
   });
+  if (job.showNotification) {
+    await showOfflineDownloadNotification(job.bookTitle, bookId, 0, urls.length);
+  }
 
   try {
     for (const url of urls) {
@@ -292,6 +310,9 @@ async function downloadBookToCache(bookId, jobId, urls, job) {
         done: job.done,
         total: urls.length,
       });
+      if (job.showNotification) {
+        await showOfflineDownloadNotification(job.bookTitle, bookId, job.done, urls.length);
+      }
     }
 
     await broadcastOfflineDownload({
@@ -301,6 +322,9 @@ async function downloadBookToCache(bookId, jobId, urls, job) {
       done: urls.length,
       total: urls.length,
     });
+    if (job.showNotification) {
+      await showOfflineDownloadNotification(job.bookTitle, bookId, urls.length, urls.length, 'done');
+    }
   } catch (err) {
     await broadcastOfflineDownload({
       jobId,
@@ -310,9 +334,75 @@ async function downloadBookToCache(bookId, jobId, urls, job) {
       total: urls.length,
       error: String(err && err.message || err),
     });
+    if (job.showNotification) {
+      await showOfflineDownloadNotification(
+        job.bookTitle,
+        bookId,
+        job.done,
+        urls.length,
+        'error'
+      );
+    }
     throw err;
   }
 }
+
+async function showOfflineDownloadNotification(bookTitle, bookId, done, total, status = 'downloading') {
+  if (!self.registration || !self.registration.showNotification) return;
+
+  const safeTotal = Math.max(0, Number(total) || 0);
+  const safeDone = Math.max(0, Math.min(safeTotal, Number(done) || 0));
+  const percent = safeTotal ? Math.round((safeDone / safeTotal) * 100) : 0;
+  let title = `正在离线下载 ${percent}%`;
+  let body = `《${bookTitle}》（${safeDone}/${safeTotal}）`;
+
+  if (status === 'done') {
+    title = `《${bookTitle}》已可离线阅读`;
+    body = '下载完成';
+  } else if (status === 'error') {
+    title = `《${bookTitle}》离线下载失败`;
+    body = `已完成 ${percent}%，请打开应用重试`;
+  }
+
+  try {
+    await self.registration.showNotification(title, {
+      body,
+      tag: `offline-download-${bookId}`,
+      icon: 'icons/icon-192.png',
+      badge: 'icons/icon-192.png',
+      silent: status === 'downloading',
+      requireInteraction: status === 'downloading',
+      data: {
+        bookId,
+        url: `reader.html?book=${encodeURIComponent(bookId)}`,
+      },
+    });
+  } catch {
+    // Notification delivery is best-effort and must never abort the download.
+  }
+}
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL(
+    event.notification.data && event.notification.data.url || 'index.html',
+    self.registration.scope
+  ).href;
+
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true,
+    });
+    for (const client of windows) {
+      if ('focus' in client) {
+        if ('navigate' in client) await client.navigate(target);
+        return client.focus();
+      }
+    }
+    if (self.clients.openWindow) return self.clients.openWindow(target);
+  })());
+});
 
 async function broadcastOfflineDownload(payload) {
   const clients = await self.clients.matchAll({
