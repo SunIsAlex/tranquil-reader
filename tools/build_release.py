@@ -26,7 +26,6 @@ DEPLOY_PATHS = [
     "app",
     "books",
     "css",
-    "edge-functions",
     "icons",
     "js",
     "favicon.ico",

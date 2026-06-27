@@ -5453,4 +5453,4 @@ globalThis.pdfjsImageDecoders = {
 
 export { Jbig2Error, JBig2CCITTFaxImage as Jbig2Image, JpegError, JpegImage, JpxError, JpxImage, VerbosityLevel, getVerbosityLevel, setVerbosityLevel };
 
-//# sourceMappingURL=pdf.image_decoders.mjs.map
+//# sourceMappingURL=pdf.image_decoders.js.map
