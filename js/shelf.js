@@ -69,7 +69,7 @@
     side.innerHTML = `<span class="book-meta">${escapeHTML(meta)}</span>`;
 
     // 离线下载按钮（浏览器支持时才显示）。按钮与链接分离，避免 <button> 嵌套在 <a> 中。
-    if (Offline.supported()) {
+    if (Offline.supported() && Offline.canDownload(book)) {
       side.appendChild(makeOfflineBtn(book));
     }
 
