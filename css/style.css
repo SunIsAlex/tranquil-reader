@@ -484,6 +484,7 @@ body {
 }
 
 @media (pointer: coarse) {
+  .reader-edge-gesture,
   .pdf-edge-gesture {
     position: fixed;
     top: 0;
@@ -493,7 +494,10 @@ body {
     width: 28px;
     touch-action: none;
   }
+  .reader-edge-gesture { z-index: 19; }
+  .reader-edge-gesture-left,
   .pdf-edge-gesture-left { left: 0; }
+  .reader-edge-gesture-right,
   .pdf-edge-gesture-right { right: 0; }
 }
 
