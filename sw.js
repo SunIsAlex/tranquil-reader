@@ -7,7 +7,7 @@
    - 用户手动离线下载的书保存在 tranquil-books，不随版本升级删除
    ============================================================ */
 
-const VERSION = 'v19';
+const VERSION = 'v20';
 
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
@@ -79,6 +79,7 @@ self.addEventListener('fetch', (event) => {
 
   // PDF streams may be large and should keep native browser/network behavior.
   if (url.pathname.endsWith('/api/pdf')) return;
+  if (url.pathname.toLowerCase().endsWith('.pdf')) return;
 
   // 页面导航：联网优先，离线时回退到缓存页面
   if (req.mode === 'navigate') {

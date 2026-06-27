@@ -614,6 +614,10 @@
     if (!pdfDocumentCache.has(src)) {
       pdfDocumentCache.set(src, loadPDFJS().then(pdfjs => pdfjs.getDocument({
         url: src,
+        disableRange: false,
+        disableStream: true,
+        disableAutoFetch: true,
+        rangeChunkSize: 256 * 1024,
         cMapUrl: new URL('vendor/pdfjs/cmaps/', location.href).href,
         cMapPacked: true,
         standardFontDataUrl: new URL('vendor/pdfjs/standard_fonts/', location.href).href,
