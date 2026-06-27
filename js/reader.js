@@ -259,15 +259,32 @@
     const viewer = els.body.querySelector('.pdf-canvas-wrap');
     const canvas = els.body.querySelector('.pdf-canvas');
     const status = els.body.querySelector('.pdf-status');
+    const toolbar = els.body.querySelector('.pdf-toolbar');
     const partSelect = els.body.querySelector('.pdf-part-select');
-    const partPrev = els.body.querySelector('.pdf-part-prev');
-    const partNext = els.body.querySelector('.pdf-part-next');
     const pageInput = els.body.querySelector('.pdf-page-input');
-    const pageGo = els.body.querySelector('.pdf-page-go');
     const openLink = els.body.querySelector('.pdf-open-link');
     const pageTotal = els.body.querySelector('.pdf-page-total');
+    const zoomValue = els.body.querySelector('.pdf-zoom-value');
     let currentPart = savedPart;
+    let currentPage = initialPage;
+    let zoom = 1;
     let renderTicket = 0;
+    let controlsTimer = 0;
+    let resizeTimer = 0;
+    let pinch = null;
+    let zoomFocus = null;
+    let edgeSwipe = null;
+    let edgeBackArmedUntil = 0;
+    let suppressNativeBackUntil = 0;
+    let ignoreClickUntil = 0;
+    const isMobilePDF = window.matchMedia('(pointer: coarse)').matches;
+    const pdfHistoryGuard = 'pdf-reader-guard';
+
+    if (isMobilePDF) {
+      history.replaceState({ ...(history.state || {}), pdfReader: true }, '', location.href);
+      history.pushState({ pdfReader: true, guard: pdfHistoryGuard }, '', location.href);
+      window.addEventListener('popstate', handlePDFHistoryBack);
+    }
 
     function setPDFLocation(partIndex, page) {
       currentPart = Math.max(0, Math.min(partIndex, parts.length - 1));
@@ -277,11 +294,10 @@
         : null;
       const nextPage = Math.max(1, pageCount ? Math.min(page, pageCount) : page);
       const src = pdfURLWithPage(part.src, nextPage);
+      currentPage = nextPage;
 
       els.chapTitle.textContent = parts.length > 1 ? part.title : book.title;
       partSelect.value = String(currentPart);
-      partPrev.disabled = currentPart <= 0;
-      partNext.disabled = currentPart >= parts.length - 1;
       pageInput.value = String(nextPage);
       if (pageCount) {
         pageInput.max = String(pageCount);
@@ -302,18 +318,220 @@
 
     partSelect.addEventListener('change', () => {
       setPDFLocation(parseInt(partSelect.value, 10) || 0, 1);
+      partSelect.blur();
+      hidePDFControls();
     });
-    partPrev.addEventListener('click', () => setPDFLocation(currentPart - 1, 1));
-    partNext.addEventListener('click', () => setPDFLocation(currentPart + 1, 1));
-    pageGo.addEventListener('click', () => setPDFLocation(currentPart, parseInt(pageInput.value, 10) || 1));
+    pageInput.addEventListener('change', () => {
+      setPDFLocation(currentPart, parseInt(pageInput.value, 10) || 1);
+      pageInput.blur();
+      hidePDFControls();
+    });
     pageInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         setPDFLocation(currentPart, parseInt(pageInput.value, 10) || 1);
+        pageInput.blur();
+        hidePDFControls();
       }
     });
 
+    toolbar.addEventListener('pointerdown', (e) => e.stopPropagation());
+    toolbar.addEventListener('click', (e) => e.stopPropagation());
+    toolbar.addEventListener('focusin', showPDFControls);
+    toolbar.addEventListener('pointermove', showPDFControls);
+
+    viewer.addEventListener('click', (e) => {
+      if (Date.now() < ignoreClickUntil || e.target.closest('.pdf-toolbar')) return;
+      const rect = viewer.getBoundingClientRect();
+      const position = (e.clientX - rect.left) / rect.width;
+      if (position < 0.3) {
+        changePDFPage(-1);
+      } else if (position > 0.7) {
+        changePDFPage(1);
+      } else if (!isMobilePDF) {
+        togglePDFControls();
+      }
+    });
+
+    viewer.addEventListener('touchstart', handlePDFTouchStart, { passive: false });
+    viewer.addEventListener('touchmove', handlePDFTouchMove, { passive: false });
+    viewer.addEventListener('touchend', handlePDFTouchEnd, { passive: true });
+    viewer.addEventListener('touchcancel', handlePDFTouchEnd, { passive: true });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.target.matches('input, select')) return;
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        changePDFPage(-1);
+      } else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        changePDFPage(1);
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(renderCurrentPDFPage, 180);
+    });
+
+    showPDFControls();
     setPDFLocation(savedPart, initialPage);
+
+    function changePDFPage(delta) {
+      const part = parts[currentPart];
+      const pageCount = Number.isInteger(part.pageCount) ? part.pageCount : null;
+      if (delta < 0 && currentPage <= 1) {
+        if (currentPart > 0) {
+          const previous = parts[currentPart - 1];
+          setPDFLocation(currentPart - 1, previous.pageCount || 1);
+        }
+        return;
+      }
+      if (delta > 0 && pageCount && currentPage >= pageCount) {
+        if (currentPart < parts.length - 1) setPDFLocation(currentPart + 1, 1);
+        return;
+      }
+      setPDFLocation(currentPart, currentPage + delta);
+    }
+
+    function showPDFControls() {
+      document.body.classList.remove('pdf-controls-hidden', 'reader-topbar-hidden');
+      clearTimeout(controlsTimer);
+      controlsTimer = window.setTimeout(() => {
+        if (!toolbar.matches(':focus-within')) hidePDFControls();
+      }, 1200);
+    }
+
+    function handlePDFBackGesture() {
+      if (Date.now() < edgeBackArmedUntil) {
+        location.href = 'index.html';
+        return true;
+      }
+      edgeBackArmedUntil = Date.now() + 4000;
+      showPDFControls();
+      return false;
+    }
+
+    function handlePDFHistoryBack() {
+      if (Date.now() < suppressNativeBackUntil) {
+        history.pushState({ pdfReader: true, guard: pdfHistoryGuard }, '', location.href);
+        return;
+      }
+      if (!handlePDFBackGesture()) {
+        history.pushState({ pdfReader: true, guard: pdfHistoryGuard }, '', location.href);
+      }
+    }
+
+    function hidePDFControls() {
+      clearTimeout(controlsTimer);
+      const wasVisible = !document.body.classList.contains('pdf-controls-hidden');
+      document.body.classList.add('pdf-controls-hidden', 'reader-topbar-hidden');
+      if (wasVisible && canvas.width) {
+        requestAnimationFrame(renderCurrentPDFPage);
+      }
+    }
+
+    function togglePDFControls() {
+      if (document.body.classList.contains('pdf-controls-hidden')) {
+        showPDFControls();
+      } else {
+        hidePDFControls();
+      }
+    }
+
+    function touchDistance(touches) {
+      return Math.hypot(
+        touches[0].clientX - touches[1].clientX,
+        touches[0].clientY - touches[1].clientY
+      );
+    }
+
+    function handlePDFTouchStart(e) {
+      if (e.touches.length === 1 && isMobilePDF) {
+        const touch = e.touches[0];
+        const edgeSize = 28;
+        if (touch.clientX <= edgeSize || touch.clientX >= window.innerWidth - edgeSize) {
+          e.preventDefault();
+          edgeSwipe = {
+            side: touch.clientX <= edgeSize ? 'left' : 'right',
+            x: touch.clientX,
+            y: touch.clientY,
+            lastX: touch.clientX,
+            lastY: touch.clientY,
+          };
+        }
+        return;
+      }
+      if (e.touches.length !== 2) return;
+      edgeSwipe = null;
+      const canvasRect = canvas.getBoundingClientRect();
+      const viewerRect = viewer.getBoundingClientRect();
+      const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      pinch = {
+        distance: Math.max(1, touchDistance(e.touches)),
+        zoom,
+        nextZoom: zoom,
+        focusX: Math.min(1, Math.max(0, (centerX - canvasRect.left) / Math.max(1, canvasRect.width))),
+        focusY: Math.min(1, Math.max(0, (centerY - canvasRect.top) / Math.max(1, canvasRect.height))),
+        viewerX: centerX - viewerRect.left,
+        viewerY: centerY - viewerRect.top,
+      };
+      canvas.style.transformOrigin = `${pinch.focusX * 100}% ${pinch.focusY * 100}%`;
+      canvas.classList.add('is-pinching');
+      clearTimeout(controlsTimer);
+      ignoreClickUntil = Date.now() + 500;
+    }
+
+    function handlePDFTouchMove(e) {
+      if (edgeSwipe && e.touches.length === 1) {
+        e.preventDefault();
+        edgeSwipe.lastX = e.touches[0].clientX;
+        edgeSwipe.lastY = e.touches[0].clientY;
+        return;
+      }
+      if (!pinch || e.touches.length !== 2) return;
+      e.preventDefault();
+      const ratio = touchDistance(e.touches) / pinch.distance;
+      pinch.nextZoom = Math.min(4, Math.max(1, pinch.zoom * ratio));
+      canvas.style.transform = `scale(${pinch.nextZoom / zoom})`;
+      zoomValue.textContent = `${Math.round(pinch.nextZoom * 100)}%`;
+      ignoreClickUntil = Date.now() + 500;
+    }
+
+    function handlePDFTouchEnd(e) {
+      if (edgeSwipe && e.touches.length === 0) {
+        const dx = edgeSwipe.lastX - edgeSwipe.x;
+        const dy = edgeSwipe.lastY - edgeSwipe.y;
+        const inward = edgeSwipe.side === 'left' ? dx : -dx;
+        edgeSwipe = null;
+        if (inward >= 56 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+          ignoreClickUntil = Date.now() + 500;
+          suppressNativeBackUntil = Date.now() + 800;
+          handlePDFBackGesture();
+        }
+        return;
+      }
+      if (!pinch || e.touches.length > 1) return;
+      zoom = pinch.nextZoom;
+      zoomFocus = {
+        x: pinch.focusX,
+        y: pinch.focusY,
+        viewerX: pinch.viewerX,
+        viewerY: pinch.viewerY,
+      };
+      pinch = null;
+      canvas.classList.remove('is-pinching');
+      canvas.style.transform = '';
+      canvas.style.transformOrigin = '';
+      ignoreClickUntil = Date.now() + 500;
+      renderCurrentPDFPage();
+      if (!isMobilePDF) showPDFControls();
+    }
+
+    function renderCurrentPDFPage() {
+      renderPDFPage(parts[currentPart], currentPage, ++renderTicket);
+    }
 
     async function renderPDFPage(part, page, ticket) {
       status.textContent = '正在加载 PDF...';
@@ -334,18 +552,37 @@
         if (ticket !== renderTicket) return;
 
         const baseViewport = pdfPage.getViewport({ scale: 1 });
-        const availableWidth = Math.max(280, (viewer.clientWidth || document.documentElement.clientWidth || 360) - 24);
-        const cssScale = Math.min(2.4, Math.max(0.6, availableWidth / baseViewport.width));
-        const outputScale = Math.min(window.devicePixelRatio || 1, 2);
+        const availableWidth = Math.max(280, viewer.clientWidth || window.innerWidth || 360);
+        const availableHeight = Math.max(320, viewer.clientHeight || window.innerHeight || 640);
+        const fitScale = Math.min(
+          availableWidth / baseViewport.width,
+          availableHeight / baseViewport.height
+        );
+        const cssScale = Math.max(0.25, fitScale * zoom);
         const viewport = pdfPage.getViewport({ scale: cssScale });
+        const deviceScale = Math.min(window.devicePixelRatio || 1, 3);
+        const maxPixels = 24 * 1024 * 1024;
+        const pixelScale = Math.min(
+          deviceScale,
+          Math.sqrt(maxPixels / Math.max(1, viewport.width * viewport.height))
+        );
 
-        canvas.width = Math.floor(viewport.width * outputScale);
-        canvas.height = Math.floor(viewport.height * outputScale);
+        canvas.width = Math.floor(viewport.width * pixelScale);
+        canvas.height = Math.floor(viewport.height * pixelScale);
         canvas.style.width = `${Math.floor(viewport.width)}px`;
         canvas.style.height = `${Math.floor(viewport.height)}px`;
 
+        if (zoomFocus) {
+          const focus = zoomFocus;
+          zoomFocus = null;
+          requestAnimationFrame(() => {
+            viewer.scrollLeft = canvas.offsetLeft + viewport.width * focus.x - focus.viewerX;
+            viewer.scrollTop = canvas.offsetTop + viewport.height * focus.y - focus.viewerY;
+          });
+        }
+
         const context = canvas.getContext('2d', { alpha: false });
-        context.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+        context.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
         context.fillStyle = '#fff';
         context.fillRect(0, 0, viewport.width, viewport.height);
 
@@ -354,6 +591,10 @@
 
         status.textContent = '';
         viewer.classList.remove('is-loading');
+        currentPage = nextPage;
+        pageInput.value = String(nextPage);
+        openLink.href = pdfURLWithPage(part.src, nextPage);
+        zoomValue.textContent = `${Math.round(zoom * 100)}%`;
 
         if (nextPage !== page) {
           Store.setProgress(bookId, {
@@ -443,24 +684,23 @@
     const part = parts[partIndex];
     const pageCount = Number.isInteger(part.pageCount) && part.pageCount > 0 ? part.pageCount : null;
     const total = pageCount ? `/ ${pageCount}` : '';
-    const partControlsHidden = parts.length > 1 ? '' : ' hidden';
     return `
       <section class="pdf-reader-shell">
         <div class="pdf-toolbar">
-          <button class="pdf-part-prev" type="button"${partControlsHidden}>上一卷</button>
-          <select class="pdf-part-select"${partControlsHidden} aria-label="选择 PDF 分卷">
+          <select class="pdf-part-select"${parts.length > 1 ? '' : ' hidden'} aria-label="选择 PDF 分卷">
             ${options}
           </select>
-          <button class="pdf-part-next" type="button"${partControlsHidden}>下一卷</button>
           <label class="pdf-page-label">
-            <span>页码</span>
+            <span class="sr-only">页码</span>
             <input class="pdf-page-input" type="number" inputmode="numeric" min="1" ${pageCount ? `max="${pageCount}"` : ''} value="${page}">
             <span class="pdf-page-total">${total}</span>
           </label>
-          <button class="pdf-page-go" type="button">跳转</button>
-          <a class="pdf-open-link" href="${escapeHTML(pdfURLWithPage(part.src, page))}" target="_blank" rel="noopener">新窗口打开</a>
+          <span class="pdf-zoom-value">100%</span>
+          <a class="pdf-open-link" href="${escapeHTML(pdfURLWithPage(part.src, page))}" target="_blank" rel="noopener" title="新窗口打开" aria-label="新窗口打开">↗</a>
         </div>
         <div class="pdf-canvas-wrap" role="region" aria-label="${escapeHTML(title || 'PDF')}">
+          <span class="pdf-edge-gesture pdf-edge-gesture-left" aria-hidden="true"></span>
+          <span class="pdf-edge-gesture pdf-edge-gesture-right" aria-hidden="true"></span>
           <canvas class="pdf-canvas"></canvas>
           <p class="pdf-status" aria-live="polite"></p>
         </div>

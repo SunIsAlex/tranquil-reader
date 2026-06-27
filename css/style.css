@@ -332,52 +332,67 @@ body {
 .chapter-body .empty { text-align: center; color: var(--text-dim); text-indent: 0; }
 
 .pdf-reading .reader {
-  max-width: min(72rem, 100vw);
-  padding: 1rem 1rem 2rem;
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  max-width: none;
+  padding: 0;
+  background: var(--surface-2);
 }
 .pdf-reading .chapter-title {
-  margin-bottom: 1rem;
+  display: none;
 }
 .pdf-reading .chapter-body {
+  width: 100%;
+  height: 100%;
   font-family: var(--sans);
   font-size: 1rem;
   line-height: 1.5;
 }
 .pdf-reader-shell {
-  display: grid;
-  gap: .75rem;
+  width: 100%;
+  height: 100%;
 }
 .pdf-toolbar {
+  position: fixed;
+  bottom: max(.5rem, env(safe-area-inset-bottom));
+  left: 50%;
+  z-index: 24;
   display: flex;
   align-items: center;
-  gap: .6rem;
-  flex-wrap: wrap;
-  padding: .65rem .75rem;
-  background: var(--surface);
+  gap: .45rem;
+  max-width: calc(100vw - 1rem);
+  padding: .38rem .48rem;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, .12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transform: translateX(-50%);
+  transition: opacity .16s ease, transform .16s ease;
 }
 .pdf-page-label {
   display: inline-flex;
   align-items: center;
-  gap: .45rem;
+  gap: .25rem;
   color: var(--text-soft);
-  font-size: .86rem;
+  font-size: .78rem;
 }
 .pdf-part-select,
 .pdf-page-input {
-  width: 5.2rem;
+  width: 3.25rem;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
-  border-radius: 8px;
-  padding: .38rem .5rem;
+  border-radius: 6px;
+  padding: .28rem .35rem;
   font: inherit;
+  font-size: .78rem;
 }
 .pdf-part-select {
-  width: min(26rem, 100%);
-  min-width: 12rem;
-  flex: 1 1 16rem;
+  width: min(17rem, 42vw);
+  min-width: 7rem;
 }
 .pdf-page-input {
   appearance: textfield;
@@ -389,59 +404,97 @@ body {
 }
 .pdf-page-total {
   color: var(--text-dim);
+  white-space: nowrap;
 }
-.pdf-part-prev,
-.pdf-part-next,
-.pdf-page-go,
+.pdf-zoom-value {
+  min-width: 2.7rem;
+  color: var(--text-dim);
+  font-size: .72rem;
+  text-align: center;
+}
 .pdf-open-link {
-  appearance: none;
-  border: 1px solid var(--accent-soft);
-  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
   color: var(--text);
-  border-radius: 8px;
-  padding: .38rem .65rem;
-  font: inherit;
-  font-size: .84rem;
+  border-radius: 6px;
+  font-size: 1rem;
   text-decoration: none;
-  cursor: pointer;
 }
-.pdf-part-prev:disabled,
-.pdf-part-next:disabled {
-  cursor: default;
-  opacity: .55;
-}
-.pdf-part-prev:hover:not(:disabled),
-.pdf-part-next:hover:not(:disabled),
-.pdf-page-go:hover,
 .pdf-open-link:hover {
-  border-color: var(--accent);
+  background: var(--surface-2);
 }
 .pdf-canvas-wrap {
+  position: relative;
   width: 100%;
-  min-height: 32rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  padding: .75rem;
+  height: 100%;
+  min-height: 0;
+  background: var(--surface-2);
+  padding: 0;
   overflow: auto;
   text-align: center;
+  overscroll-behavior: contain;
+  overscroll-behavior-x: none;
+  touch-action: pan-x pan-y;
+  transition: height .16s ease, top .16s ease;
+}
+.pdf-reading:not(.pdf-controls-hidden) .pdf-canvas-wrap {
+  top: var(--topbar-height);
+  height: calc(100% - var(--topbar-height) - 3.75rem - env(safe-area-inset-bottom));
 }
 .pdf-canvas {
   display: block;
-  max-width: 100%;
-  height: auto;
-  margin: 0 auto;
+  max-width: none;
+  margin: auto;
   background: #fff;
   box-shadow: 0 2px 14px rgba(0, 0, 0, .12);
+  transform-origin: center center;
+}
+.pdf-canvas.is-pinching {
+  will-change: transform;
+}
+.pdf-edge-gesture {
+  display: none;
 }
 .pdf-status {
-  margin: .75rem 0 0;
+  position: fixed;
+  inset: 50% auto auto 50%;
+  z-index: 23;
+  margin: 0;
+  padding: .4rem .6rem;
+  transform: translate(-50%, -50%);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border-radius: 6px;
   color: var(--text-dim);
   font-size: .86rem;
   text-align: center;
 }
 .pdf-status:empty {
   display: none;
+}
+.pdf-controls-hidden .pdf-toolbar {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, calc(100% + 1rem + env(safe-area-inset-bottom)));
+}
+.pdf-reading {
+  padding-top: 0;
+  overflow: hidden;
+}
+
+@media (pointer: coarse) {
+  .pdf-edge-gesture {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    z-index: 22;
+    display: block;
+    width: 28px;
+    touch-action: none;
+  }
+  .pdf-edge-gesture-left { left: 0; }
+  .pdf-edge-gesture-right { right: 0; }
 }
 
 /* 章节内分隔（用于场景切换 * * *） */
