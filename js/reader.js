@@ -271,6 +271,7 @@
     let renderTicket = 0;
     let activeRenderTask = null;
     let resizeTimer = 0;
+    let wheelZoomTimer = 0;
     let pinch = null;
     let zoomFocus = null;
     let edgeSwipe = null;
@@ -351,6 +352,7 @@
     viewer.addEventListener('touchmove', handlePDFTouchMove, { passive: false });
     viewer.addEventListener('touchend', handlePDFTouchEnd, { passive: true });
     viewer.addEventListener('touchcancel', handlePDFTouchEnd, { passive: true });
+    viewer.addEventListener('wheel', handlePDFWheel, { passive: false });
 
     document.addEventListener('keydown', (e) => {
       if (e.target.matches('input, select')) return;
@@ -431,6 +433,40 @@
         touches[0].clientX - touches[1].clientX,
         touches[0].clientY - touches[1].clientY
       );
+    }
+
+    function handlePDFWheel(e) {
+      if (!e.ctrlKey || !canvas.width) return;
+      e.preventDefault();
+
+      const canvasRect = canvas.getBoundingClientRect();
+      const viewerRect = viewer.getBoundingClientRect();
+      const delta = e.deltaMode === 1
+        ? e.deltaY * 16
+        : e.deltaMode === 2
+          ? e.deltaY * viewer.clientHeight
+          : e.deltaY;
+      const nextZoom = Math.round(
+        Math.min(4, Math.max(1, zoom * Math.exp(-delta * 0.002))) * 100
+      ) / 100;
+
+      if (nextZoom === zoom) return;
+
+      zoomFocus = {
+        x: Math.min(1, Math.max(0, (e.clientX - canvasRect.left) / Math.max(1, canvasRect.width))),
+        y: Math.min(1, Math.max(0, (e.clientY - canvasRect.top) / Math.max(1, canvasRect.height))),
+        viewerX: e.clientX - viewerRect.left,
+        viewerY: e.clientY - viewerRect.top,
+      };
+      zoom = nextZoom;
+      zoomValue.textContent = `${Math.round(zoom * 100)}%`;
+      ignoreClickUntil = Date.now() + 300;
+
+      clearTimeout(wheelZoomTimer);
+      wheelZoomTimer = window.setTimeout(() => {
+        wheelZoomTimer = 0;
+        renderCurrentPDFPage();
+      }, 100);
     }
 
     function handlePDFTouchStart(e) {
