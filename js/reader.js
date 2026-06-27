@@ -374,8 +374,9 @@
 
   async function loadPDFJS() {
     if (!pdfjsLoadPromise) {
-      const pdfjsURL = new URL('vendor/pdfjs/pdf.min.mjs', location.href).href;
-      const workerURL = new URL('vendor/pdfjs/pdf.worker.min.mjs', location.href).href;
+      // Use .js extensions so static hosts return a JavaScript MIME type.
+      const pdfjsURL = new URL('vendor/pdfjs/pdf.min.js', location.href).href;
+      const workerURL = new URL('vendor/pdfjs/pdf.worker.min.js', location.href).href;
       pdfjsLoadPromise = import(pdfjsURL).then(pdfjs => {
         pdfjs.GlobalWorkerOptions.workerSrc = workerURL;
         return pdfjs;
