@@ -7,7 +7,7 @@
    - 用户手动离线下载的书保存在 tranquil-books，不随版本升级删除
    ============================================================ */
 
-const VERSION = 'v23';
+const VERSION = 'v24';
 
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
@@ -16,7 +16,9 @@ const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
 const BOOKS_CACHE = 'tranquil-books';
 const OFFLINE_DOWNLOAD_START = 'OFFLINE_DOWNLOAD_START';
 const OFFLINE_DOWNLOAD_PROGRESS = 'OFFLINE_DOWNLOAD_PROGRESS';
+const OFFLINE_DOWNLOAD_ENABLE_NOTIFICATION = 'OFFLINE_DOWNLOAD_ENABLE_NOTIFICATION';
 const offlineDownloadJobs = new Map();
+const offlineDownloadNotificationRequests = new Map();
 
 // 应用外壳。改了这里面的文件后，记得 bump VERSION。
 const SHELL = [
@@ -116,6 +118,13 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('message', (event) => {
   const msg = event.data || {};
+  if (msg.type === OFFLINE_DOWNLOAD_ENABLE_NOTIFICATION) {
+    const bookId = String(msg.bookId || '');
+    const bookTitle = String(msg.bookTitle || bookId);
+    if (!bookId) return;
+    event.waitUntil(enableOfflineDownloadNotification(bookId, bookTitle));
+    return;
+  }
   if (msg.type !== OFFLINE_DOWNLOAD_START) return;
 
   const bookId = String(msg.bookId || '');
@@ -250,6 +259,12 @@ async function staleWhileRevalidate(req, cacheName) {
 }
 
 async function startOfflineBookDownload(bookId, jobId, urls, bookTitle, showNotification) {
+  if (offlineDownloadNotificationRequests.has(bookId)) {
+    showNotification = true;
+    bookTitle = offlineDownloadNotificationRequests.get(bookId) || bookTitle;
+    offlineDownloadNotificationRequests.delete(bookId);
+  }
+
   const existing = offlineDownloadJobs.get(bookId);
   if (existing) {
     await broadcastOfflineDownload({
@@ -298,9 +313,12 @@ async function downloadBookToCache(bookId, jobId, urls, job) {
 
   try {
     for (const url of urls) {
-      const res = await fetch(url, { cache: 'no-cache' });
-      if (!res.ok) throw new Error(`${url} (${res.status})`);
-      await cache.put(url, res.clone());
+      const cached = await cache.match(url);
+      if (!cached) {
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`${url} (${res.status})`);
+        await cache.put(url, res.clone());
+      }
 
       job.done += 1;
       await broadcastOfflineDownload({
@@ -345,6 +363,18 @@ async function downloadBookToCache(bookId, jobId, urls, job) {
     }
     throw err;
   }
+}
+
+async function enableOfflineDownloadNotification(bookId, bookTitle) {
+  const job = offlineDownloadJobs.get(bookId);
+  if (!job) {
+    offlineDownloadNotificationRequests.set(bookId, bookTitle);
+    return;
+  }
+
+  job.showNotification = true;
+  job.bookTitle = bookTitle;
+  await showOfflineDownloadNotification(bookTitle, bookId, job.done, job.total);
 }
 
 async function showOfflineDownloadNotification(bookTitle, bookId, done, total, status = 'downloading') {

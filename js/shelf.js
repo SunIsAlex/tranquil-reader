@@ -293,6 +293,9 @@ function maybeResumeLastReadOnAppLaunch() {
     if (params.has('noresume')) return false;
     if (!isStandaloneApp()) return false;
     if (sessionStorage.getItem('reader.resumeChecked') === '1') return false;
+    // Let the shelf rebuild interrupted Service Worker jobs before navigating
+    // back to the last reading position.
+    if (Offline.hasPendingDownloads()) return false;
 
     sessionStorage.setItem('reader.resumeChecked', '1');
 
@@ -359,6 +362,7 @@ function makeOfflineBtn(book) {
 
     if (saved.status === 'downloading') {
       setState('downloading', progressPercent(saved.done || 0, saved.total || 0));
+      resumeDownload();
       return true;
     }
 
@@ -373,6 +377,18 @@ function makeOfflineBtn(book) {
     }
 
     return false;
+  }
+
+  async function resumeDownload() {
+    try {
+      await Offline.download(book, (done, total) =>
+        setState('downloading', progressPercent(done, total)), {
+        showNotification: Offline.notificationPermissionGranted(),
+      });
+      setState('downloaded');
+    } catch (err) {
+      setState('error', String(err && err.message || err));
+    }
   }
 
   if ('serviceWorker' in navigator) {
@@ -403,7 +419,15 @@ function makeOfflineBtn(book) {
     }
     try {
       setState('downloading', 0);
-      const showNotification = await Offline.requestNotificationPermission();
+      const permissionRequest = Offline.requestNotificationPermission();
+      const showNotification = Offline.notificationPermissionGranted();
+      if (!showNotification) {
+        permissionRequest.then((granted) => {
+          if (granted && btn.dataset.state === 'downloading') {
+            Offline.enableDownloadNotification(book);
+          }
+        });
+      }
       await Offline.download(book, (done, total) =>
         setState('downloading', progressPercent(done, total)), { showNotification });
       setState('downloaded');

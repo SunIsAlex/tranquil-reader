@@ -185,6 +185,7 @@ const Offline = {
   STATE_PREFIX: 'reader.offlineDownload.',
   MSG_START: 'OFFLINE_DOWNLOAD_START',
   MSG_PROGRESS: 'OFFLINE_DOWNLOAD_PROGRESS',
+  MSG_ENABLE_NOTIFICATION: 'OFFLINE_DOWNLOAD_ENABLE_NOTIFICATION',
 
   // 浏览器是否支持（需 Cache API；非安全上下文下 caches 不可用）
   supported() { return typeof caches !== 'undefined'; },
@@ -209,6 +210,30 @@ const Offline = {
     } catch {
       return false;
     }
+  },
+
+  notificationPermissionGranted() {
+    return this.notificationSupported() && Notification.permission === 'granted';
+  },
+
+  async enableDownloadNotification(book) {
+    if (!this.notificationPermissionGranted()) return;
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const worker =
+        navigator.serviceWorker.controller ||
+        registration.active ||
+        registration.waiting ||
+        registration.installing;
+      if (!worker) return;
+
+      worker.postMessage({
+        type: this.MSG_ENABLE_NOTIFICATION,
+        bookId: String(book.id || ''),
+        bookTitle: String(book.title || book.name || book.id || ''),
+      });
+    } catch { /* notification is best-effort */ }
   },
 
   canDownload(book) {
@@ -450,13 +475,6 @@ const Offline = {
       const data = JSON.parse(localStorage.getItem(this.downloadStateKey(bookId)));
       if (!data || typeof data !== 'object') return null;
 
-      // Avoid leaving a dead "downloading" state forever if the browser killed
-      // the service worker or the app was closed mid-download.
-      if (data.status === 'downloading' && Date.now() - Number(data.time || 0) > 30 * 60 * 1000) {
-        this.clearDownloadState(bookId);
-        return null;
-      }
-
       return data;
     } catch {
       return null;
@@ -475,6 +493,20 @@ const Offline = {
   clearDownloadState(bookId) {
     try { localStorage.removeItem(this.downloadStateKey(bookId)); }
     catch { /* ignore storage failures */ }
+  },
+
+  hasPendingDownloads() {
+    try {
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith(this.STATE_PREFIX)) continue;
+        try {
+          const data = JSON.parse(localStorage.getItem(key));
+          if (data && data.status === 'downloading') return true;
+        } catch { /* ignore this malformed entry */ }
+      }
+    } catch { /* ignore inaccessible storage */ }
+    return false;
   },
 
   rememberDownloadMessage(msg) {
