@@ -7,7 +7,7 @@
    - 用户手动离线下载的书保存在 tranquil-books，不随版本升级删除
    ============================================================ */
 
-const VERSION = 'v20';
+const VERSION = 'v21';
 
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
@@ -77,9 +77,12 @@ self.addEventListener('fetch', (event) => {
   // Edge Function API: always pass through, never cache progress sync.
   if (url.pathname.endsWith('/api/progress')) return;
 
-  // PDF streams may be large and should keep native browser/network behavior.
-  if (url.pathname.endsWith('/api/pdf')) return;
-  if (url.pathname.toLowerCase().endsWith('.pdf')) return;
+  // Manually downloaded PDFs are served from the persistent book cache.
+  // Uncached PDFs keep their normal network/range behavior.
+  if (url.pathname.endsWith('/api/pdf') || url.pathname.toLowerCase().endsWith('.pdf')) {
+    event.respondWith(handlePDFRequest(req));
+    return;
+  }
 
   // 页面导航：联网优先，离线时回退到缓存页面
   if (req.mode === 'navigate') {
@@ -133,6 +136,69 @@ async function handleNavigation(req) {
       Response.error()
     );
   }
+}
+
+async function handlePDFRequest(req) {
+  const cache = await caches.open(BOOKS_CACHE);
+  const cached = await cache.match(req);
+
+  if (!cached) return fetch(req);
+
+  const range = req.headers.get('range');
+  if (!range) return cached;
+
+  return createRangeResponse(cached, range);
+}
+
+async function createRangeResponse(response, rangeHeader) {
+  const buffer = await response.arrayBuffer();
+  const size = buffer.byteLength;
+  const match = /^bytes=(\d*)-(\d*)$/i.exec(rangeHeader.trim());
+
+  if (!match) {
+    return new Response(null, {
+      status: 416,
+      headers: { 'content-range': `bytes */${size}` },
+    });
+  }
+
+  let start;
+  let end;
+
+  if (match[1]) {
+    start = Number(match[1]);
+    end = match[2] ? Number(match[2]) : size - 1;
+  } else {
+    const suffixLength = Number(match[2]);
+    if (!suffixLength) {
+      return new Response(null, {
+        status: 416,
+        headers: { 'content-range': `bytes */${size}` },
+      });
+    }
+    start = Math.max(0, size - suffixLength);
+    end = size - 1;
+  }
+
+  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || start >= size || end < start) {
+    return new Response(null, {
+      status: 416,
+      headers: { 'content-range': `bytes */${size}` },
+    });
+  }
+
+  end = Math.min(end, size - 1);
+  const body = buffer.slice(start, end + 1);
+  const headers = new Headers(response.headers);
+  headers.set('accept-ranges', 'bytes');
+  headers.set('content-length', String(body.byteLength));
+  headers.set('content-range', `bytes ${start}-${end}/${size}`);
+
+  return new Response(body, {
+    status: 206,
+    statusText: 'Partial Content',
+    headers,
+  });
 }
 
 async function networkFirst(req, cacheName) {

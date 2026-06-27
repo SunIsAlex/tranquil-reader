@@ -269,6 +269,7 @@
     let currentPage = initialPage;
     let zoom = 1;
     let renderTicket = 0;
+    let activeRenderTask = null;
     let resizeTimer = 0;
     let pinch = null;
     let zoomFocus = null;
@@ -393,7 +394,7 @@
 
     function handlePDFBackGesture(menuWasVisible) {
       if (menuWasVisible) {
-        location.href = 'index.html';
+        history.back();
         return true;
       }
       showPDFControls();
@@ -401,8 +402,12 @@
     }
 
     function handlePDFHistoryBack() {
-      if (document.body.classList.contains('pdf-controls-hidden')) showPDFControls();
-      history.pushState({ pdfReader: true, guard: pdfHistoryGuard }, '', location.href);
+      if (document.body.classList.contains('pdf-controls-hidden')) {
+        showPDFControls();
+        history.pushState({ pdfReader: true, guard: pdfHistoryGuard }, '', location.href);
+        return;
+      }
+      location.replace('index.html');
     }
 
     function hidePDFControls(rerender = true) {
@@ -518,6 +523,10 @@
     }
 
     async function renderPDFPage(part, page, ticket) {
+      if (activeRenderTask) {
+        activeRenderTask.cancel();
+        activeRenderTask = null;
+      }
       status.textContent = '正在加载 PDF...';
       viewer.classList.add('is-loading');
 
@@ -570,7 +579,13 @@
         context.fillStyle = '#fff';
         context.fillRect(0, 0, viewport.width, viewport.height);
 
-        await pdfPage.render({ canvasContext: context, viewport }).promise;
+        const renderTask = pdfPage.render({ canvasContext: context, viewport });
+        activeRenderTask = renderTask;
+        try {
+          await renderTask.promise;
+        } finally {
+          if (activeRenderTask === renderTask) activeRenderTask = null;
+        }
         if (ticket !== renderTicket) return;
 
         status.textContent = '';
@@ -1033,7 +1048,7 @@
   function handleTextBackGesture(menuWasVisible) {
     if (menuWasVisible) {
       history.scrollRestoration = originalScrollRestoration;
-      location.href = 'index.html';
+      history.back();
       return true;
     }
     const readingScrollY = getScrollY();
@@ -1174,8 +1189,13 @@
     }
 
     if (isMobileTextReader) {
-      if (topbarHidden) handleTextBackGesture(false);
-      history.pushState({ textReader: true, guard: textHistoryGuard }, '', location.href);
+      if (topbarHidden) {
+        handleTextBackGesture(false);
+        history.pushState({ textReader: true, guard: textHistoryGuard }, '', location.href);
+        return;
+      }
+      history.scrollRestoration = originalScrollRestoration;
+      location.replace('index.html');
     }
   });
 
@@ -2095,7 +2115,6 @@
         e.preventDefault();
         closeTOC(true);
         closeSearch(true);
-        closeSync(true);
         closeBookmarks(true);
       }
       return;

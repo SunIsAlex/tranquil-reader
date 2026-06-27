@@ -189,7 +189,29 @@ const Offline = {
   // 浏览器是否支持（需 Cache API；非安全上下文下 caches 不可用）
   supported() { return typeof caches !== 'undefined'; },
 
-  // 该书需要离线的全部 URL：共享的书目清单 + 封面 + 高亮文件 + 每一章正文
+  canDownload(book) {
+    const isPDF = book && (
+      book.type === 'pdf' ||
+      typeof book.pdfUrl === 'string' ||
+      typeof book.pdfKey === 'string' ||
+      Array.isArray(book.parts)
+    );
+    if (!isPDF) return true;
+
+    const sources = Array.isArray(book.parts) && book.parts.length
+      ? book.parts
+      : [book];
+
+    return sources.length > 0 && sources.every(source => {
+      if (!source || typeof source !== 'object') return false;
+      const pdfKey = typeof source.pdfKey === 'string' ? source.pdfKey.trim() : '';
+      if (pdfKey) return true;
+      const pdfUrl = typeof source.pdfUrl === 'string' ? source.pdfUrl.trim() : '';
+      return Boolean(pdfUrl && !isExternalURL(pdfUrl));
+    });
+  },
+
+  // 该书需要离线的全部 URL：清单、封面、高亮、章节正文和站内 PDF
   urls(book) {
     const list = ['books/manifest.json'];
 
@@ -216,10 +238,34 @@ const Offline = {
       list.push(`books/${book.id}/${ch.file}`);
     }
 
-    return list;
+    list.push(...this.pdfUrls(book));
+
+    return [...new Set(list)];
   },
 
-  // 是否已完整缓存（清单与每一章都在）
+  pdfUrls(book) {
+    const sources = Array.isArray(book.parts) && book.parts.length
+      ? book.parts
+      : [book];
+    const urls = [];
+
+    for (const source of sources) {
+      if (!source || typeof source !== 'object') continue;
+
+      const pdfUrl = typeof source.pdfUrl === 'string' ? source.pdfUrl.trim() : '';
+      if (pdfUrl && !isExternalURL(pdfUrl)) {
+        urls.push(pdfUrl);
+        continue;
+      }
+
+      const pdfKey = typeof source.pdfKey === 'string' ? source.pdfKey.trim() : '';
+      if (pdfKey) urls.push(`api/pdf?key=${encodeURIComponent(pdfKey)}`);
+    }
+
+    return urls;
+  },
+
+  // 是否已完整缓存（清单与该书的所有正文/PDF 资源都在）
   async isDownloaded(book) {
     if (!this.supported()) return false;
     try {
@@ -363,6 +409,9 @@ const Offline = {
 
     for (const ch of (book.chapters || [])) {
       await cache.delete(`books/${book.id}/${ch.file}`);
+    }
+    for (const url of this.pdfUrls(book)) {
+      await cache.delete(url);
     }
 
     this.clearDownloadState(book.id);
