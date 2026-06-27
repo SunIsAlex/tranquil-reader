@@ -1029,6 +1029,20 @@
       "highlightsFile": "highlights.json"
     },
     {
+      "id": "feynman-lectures",
+      "type": "pdf",
+      "title": "费曼物理学讲义（LaTeX 中文版）",
+      "author": "理查德·费曼",
+      "source": "https://github.com/RockLakeGrass/Feynman-Lectures-Latex",
+      "parts": [
+        {
+          "title": "第 1–10 章",
+          "pdfUrl": "books/feynman-lectures/latex-zh.pdf",
+          "pageCount": 148
+        }
+      ]
+    },
+    {
       "id": "clayden-chinese",
       "type": "pdf",
       "title": "有机化学（Clayden 原书第二版）",
