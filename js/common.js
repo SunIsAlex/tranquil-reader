@@ -189,6 +189,28 @@ const Offline = {
   // 浏览器是否支持（需 Cache API；非安全上下文下 caches 不可用）
   supported() { return typeof caches !== 'undefined'; },
 
+  notificationSupported() {
+    return (
+      isStandaloneApp() &&
+      'Notification' in window &&
+      'serviceWorker' in navigator
+    );
+  },
+
+  // 通知权限必须由用户手势触发。仅在已安装的 PWA/TWA 中请求，
+  // 普通浏览器仍使用书架按钮本身显示进度。
+  async requestNotificationPermission() {
+    if (!this.notificationSupported()) return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
+
+    try {
+      return await Notification.requestPermission() === 'granted';
+    } catch {
+      return false;
+    }
+  },
+
   canDownload(book) {
     const isPDF = book && (
       book.type === 'pdf' ||
@@ -278,9 +300,9 @@ const Offline = {
   },
 
   // 逐个抓取并写入缓存；onProgress(done, total) 用于显示进度
-  async download(book, onProgress) {
+  async download(book, onProgress, options = {}) {
     const urls = this.urls(book);
-    const background = await this.downloadInServiceWorker(book, urls, onProgress);
+    const background = await this.downloadInServiceWorker(book, urls, onProgress, options);
     if (background) return background;
 
     return this.downloadInPage(book, urls, onProgress);
@@ -314,7 +336,7 @@ const Offline = {
     });
   },
 
-  async downloadInServiceWorker(book, urls, onProgress) {
+  async downloadInServiceWorker(book, urls, onProgress, options = {}) {
     if (!('serviceWorker' in navigator)) return null;
 
     let registration;
@@ -374,6 +396,8 @@ const Offline = {
           type: this.MSG_START,
           jobId,
           bookId,
+          bookTitle: String(book.title || book.name || bookId),
+          showNotification: options.showNotification === true,
           urls,
         });
       } catch (err) {

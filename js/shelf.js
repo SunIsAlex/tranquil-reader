@@ -403,8 +403,9 @@ function makeOfflineBtn(book) {
     }
     try {
       setState('downloading', 0);
+      const showNotification = await Offline.requestNotificationPermission();
       await Offline.download(book, (done, total) =>
-        setState('downloading', progressPercent(done, total)));
+        setState('downloading', progressPercent(done, total)), { showNotification });
       setState('downloaded');
     } catch (err) {
       setState('error', String(err && err.message || err));
