@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "org.sunisalex.reader.twa",
-        "sha256_cert_fingerprints": ["43:A3:20:19:7D:77:D0:AD:42:35:40:08:19:BF:7E:FF:6E:17:5E:27:7F:68:25:A6:CD:5F:63:EE:43:24:40:C4"]
+        "sha256_cert_fingerprints": ["CF:1D:7D:5B:62:1F:8B:0D:A7:0F:9D:5A:8E:84:84:A7:FC:99:64:4B:4B:EE:FD:43:9B:03:03:63:12:3F:8D:BE"]
       }
     }]
