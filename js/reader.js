@@ -269,13 +269,10 @@
     let currentPage = initialPage;
     let zoom = 1;
     let renderTicket = 0;
-    let controlsTimer = 0;
     let resizeTimer = 0;
     let pinch = null;
     let zoomFocus = null;
     let edgeSwipe = null;
-    let edgeBackArmedUntil = 0;
-    let suppressNativeBackUntil = 0;
     let ignoreClickUntil = 0;
     const isMobilePDF = window.matchMedia('(pointer: coarse)').matches;
     const pdfHistoryGuard = 'pdf-reader-guard';
@@ -318,20 +315,14 @@
 
     partSelect.addEventListener('change', () => {
       setPDFLocation(parseInt(partSelect.value, 10) || 0, 1);
-      partSelect.blur();
-      hidePDFControls();
     });
     pageInput.addEventListener('change', () => {
       setPDFLocation(currentPart, parseInt(pageInput.value, 10) || 1);
-      pageInput.blur();
-      hidePDFControls();
     });
     pageInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         setPDFLocation(currentPart, parseInt(pageInput.value, 10) || 1);
-        pageInput.blur();
-        hidePDFControls();
       }
     });
 
@@ -344,11 +335,13 @@
       if (Date.now() < ignoreClickUntil || e.target.closest('.pdf-toolbar')) return;
       const rect = viewer.getBoundingClientRect();
       const position = (e.clientX - rect.left) / rect.width;
+      const controlsWereVisible = !document.body.classList.contains('pdf-controls-hidden');
+      if (controlsWereVisible) hidePDFControls();
       if (position < 0.3) {
         changePDFPage(-1);
       } else if (position > 0.7) {
         changePDFPage(1);
-      } else if (!isMobilePDF) {
+      } else if (!isMobilePDF && !controlsWereVisible) {
         togglePDFControls();
       }
     });
@@ -396,37 +389,26 @@
 
     function showPDFControls() {
       document.body.classList.remove('pdf-controls-hidden', 'reader-topbar-hidden');
-      clearTimeout(controlsTimer);
-      controlsTimer = window.setTimeout(() => {
-        if (!toolbar.matches(':focus-within')) hidePDFControls();
-      }, 1200);
     }
 
-    function handlePDFBackGesture() {
-      if (Date.now() < edgeBackArmedUntil) {
+    function handlePDFBackGesture(menuWasVisible) {
+      if (menuWasVisible) {
         location.href = 'index.html';
         return true;
       }
-      edgeBackArmedUntil = Date.now() + 4000;
       showPDFControls();
       return false;
     }
 
     function handlePDFHistoryBack() {
-      if (Date.now() < suppressNativeBackUntil) {
-        history.pushState({ pdfReader: true, guard: pdfHistoryGuard }, '', location.href);
-        return;
-      }
-      if (!handlePDFBackGesture()) {
-        history.pushState({ pdfReader: true, guard: pdfHistoryGuard }, '', location.href);
-      }
+      if (document.body.classList.contains('pdf-controls-hidden')) showPDFControls();
+      history.pushState({ pdfReader: true, guard: pdfHistoryGuard }, '', location.href);
     }
 
-    function hidePDFControls() {
-      clearTimeout(controlsTimer);
+    function hidePDFControls(rerender = true) {
       const wasVisible = !document.body.classList.contains('pdf-controls-hidden');
       document.body.classList.add('pdf-controls-hidden', 'reader-topbar-hidden');
-      if (wasVisible && canvas.width) {
+      if (rerender && wasVisible && canvas.width) {
         requestAnimationFrame(renderCurrentPDFPage);
       }
     }
@@ -454,11 +436,14 @@
           e.preventDefault();
           edgeSwipe = {
             side: touch.clientX <= edgeSize ? 'left' : 'right',
+            menuWasVisible: !document.body.classList.contains('pdf-controls-hidden'),
             x: touch.clientX,
             y: touch.clientY,
             lastX: touch.clientX,
             lastY: touch.clientY,
           };
+        } else {
+          hidePDFControls();
         }
         return;
       }
@@ -479,7 +464,7 @@
       };
       canvas.style.transformOrigin = `${pinch.focusX * 100}% ${pinch.focusY * 100}%`;
       canvas.classList.add('is-pinching');
-      clearTimeout(controlsTimer);
+      hidePDFControls(false);
       ignoreClickUntil = Date.now() + 500;
     }
 
@@ -501,14 +486,14 @@
 
     function handlePDFTouchEnd(e) {
       if (edgeSwipe && e.touches.length === 0) {
+        const menuWasVisible = edgeSwipe.menuWasVisible;
         const dx = edgeSwipe.lastX - edgeSwipe.x;
         const dy = edgeSwipe.lastY - edgeSwipe.y;
         const inward = edgeSwipe.side === 'left' ? dx : -dx;
         edgeSwipe = null;
         if (inward >= 56 && Math.abs(dx) > Math.abs(dy) * 1.25) {
           ignoreClickUntil = Date.now() + 500;
-          suppressNativeBackUntil = Date.now() + 800;
-          handlePDFBackGesture();
+          handlePDFBackGesture(menuWasVisible);
         }
         return;
       }
@@ -526,7 +511,6 @@
       canvas.style.transformOrigin = '';
       ignoreClickUntil = Date.now() + 500;
       renderCurrentPDFPage();
-      if (!isMobilePDF) showPDFControls();
     }
 
     function renderCurrentPDFPage() {
@@ -743,6 +727,10 @@
   let topbarTouchStartY = 0;
   let topbarTouchLastY = 0;
   let topbarTouchDistance = 0;
+  let textEdgeSwipe = null;
+  const isMobileTextReader = window.matchMedia('(pointer: coarse)').matches;
+  const textHistoryGuard = 'text-reader-guard';
+  const originalScrollRestoration = history.scrollRestoration;
   const topbar = document.querySelector('.topbar');
   let topbarOffsetValue = 64;
   let tocLinks = [];
@@ -1037,6 +1025,78 @@
   }
 
   setupTopbarSwipeAutoHide();
+
+  function handleTextBackGesture(menuWasVisible) {
+    if (menuWasVisible) {
+      history.scrollRestoration = originalScrollRestoration;
+      location.href = 'index.html';
+      return true;
+    }
+    const readingScrollY = getScrollY();
+    setTopbarHidden(false);
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: readingScrollY, behavior: 'instant' });
+    });
+    return false;
+  }
+
+  function setupTextEdgeNavigation() {
+    if (!isMobileTextReader) return;
+
+    history.scrollRestoration = 'manual';
+    history.replaceState({ ...(history.state || {}), textReader: true }, '', location.href);
+    history.pushState({ textReader: true, guard: textHistoryGuard }, '', location.href);
+    window.addEventListener('pagehide', () => {
+      history.scrollRestoration = originalScrollRestoration;
+    }, { once: true });
+
+    for (const side of ['left', 'right']) {
+      const edge = document.createElement('span');
+      edge.className = `reader-edge-gesture reader-edge-gesture-${side}`;
+      edge.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(edge);
+
+      edge.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        textEdgeSwipe = {
+          side,
+          menuWasVisible: !topbarHidden,
+          x: touch.clientX,
+          y: touch.clientY,
+          lastX: touch.clientX,
+          lastY: touch.clientY,
+        };
+      }, { passive: false });
+
+      edge.addEventListener('touchmove', (e) => {
+        if (!textEdgeSwipe || e.touches.length !== 1) return;
+        e.preventDefault();
+        textEdgeSwipe.lastX = e.touches[0].clientX;
+        textEdgeSwipe.lastY = e.touches[0].clientY;
+      }, { passive: false });
+
+      edge.addEventListener('touchend', () => {
+        if (!textEdgeSwipe) return;
+        const menuWasVisible = textEdgeSwipe.menuWasVisible;
+        const dx = textEdgeSwipe.lastX - textEdgeSwipe.x;
+        const dy = textEdgeSwipe.lastY - textEdgeSwipe.y;
+        const inward = textEdgeSwipe.side === 'left' ? dx : -dx;
+        textEdgeSwipe = null;
+        if (inward >= 56 && Math.abs(dx) > Math.abs(dy) * 1.25) {
+          handleTextBackGesture(menuWasVisible);
+        }
+      }, { passive: true });
+
+      edge.addEventListener('touchcancel', () => {
+        textEdgeSwipe = null;
+      }, { passive: true });
+    }
+  }
+
+  setupTextEdgeNavigation();
+
   function setupTOCSwipeClose() {
     els.toc.addEventListener('touchstart', (e) => {
       if (els.toc.hidden || e.touches.length !== 1) return;
@@ -1106,6 +1166,12 @@
     if (!els.bookmarks.hidden) {
       activeOverlayHistory = null;
       closeBookmarks(true, { fromHistory: true });
+      return;
+    }
+
+    if (isMobileTextReader) {
+      if (topbarHidden) handleTextBackGesture(false);
+      history.pushState({ textReader: true, guard: textHistoryGuard }, '', location.href);
     }
   });
 
