@@ -6,6 +6,7 @@
 const Store = {
   THEME_KEY: 'reader.theme',
   LAST_KEY: 'reader.lastProgress',
+  BOOKMARK_PREFIX: 'reader.bookmarks.',
   fontKey: 'reader.fontSize',
 
   // 进度键：每本书一份。结构 { chapter: number, para: number, scroll: number, time: number }
@@ -18,6 +19,39 @@ const Store = {
   getLastProgress() {
     try { return JSON.parse(localStorage.getItem(this.LAST_KEY)) || null; }
     catch { return null; }
+  },
+  bookmarkKey(bookId) { return `${this.BOOKMARK_PREFIX}${bookId}`; },
+  normalizeBookmark(item) {
+    if (!item || typeof item !== 'object') return null;
+    if (!Number.isInteger(item.chapter) || item.chapter < 0) return null;
+    if (!Number.isInteger(item.para) || item.para < 0) return null;
+
+    return {
+      id: String(item.id || `${item.chapter}:${item.para}`),
+      chapter: item.chapter,
+      para: item.para,
+      note: String(item.note || ''),
+      excerpt: String(item.excerpt || ''),
+      createdAt: Number.isFinite(item.createdAt) ? item.createdAt : Date.now(),
+      updatedAt: Number.isFinite(item.updatedAt) ? item.updatedAt : null,
+    };
+  },
+  getBookmarks(bookId) {
+    try {
+      const data = JSON.parse(localStorage.getItem(this.bookmarkKey(bookId)));
+      if (!Array.isArray(data)) return [];
+      return data.map(item => this.normalizeBookmark(item)).filter(Boolean);
+    } catch {
+      return [];
+    }
+  },
+  setBookmarks(bookId, items) {
+    try {
+      const normalized = Array.isArray(items)
+        ? items.map(item => this.normalizeBookmark(item)).filter(Boolean)
+        : [];
+      localStorage.setItem(this.bookmarkKey(bookId), JSON.stringify(normalized));
+    } catch { /* 隐私模式或配额满，静默失败 */ }
   },
   setProgress(bookId, data) {
     try {
@@ -59,6 +93,20 @@ const Store = {
 
     return progress;
   },
+  getAllBookmarks() {
+    const bookmarks = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith(this.BOOKMARK_PREFIX)) continue;
+        const bookId = key.slice(this.BOOKMARK_PREFIX.length);
+        if (!bookId) continue;
+        bookmarks[bookId] = this.getBookmarks(bookId);
+      }
+    } catch { /* ignore partial localStorage failures */ }
+
+    return bookmarks;
+  },
   applyProgressSnapshot(snapshot) {
     if (!snapshot || typeof snapshot !== 'object') return 0;
 
@@ -89,10 +137,29 @@ const Store = {
 
     return count;
   },
+  applyBookmarkSnapshot(snapshot) {
+    if (!snapshot || typeof snapshot !== 'object') return 0;
+    const bookmarkMap = snapshot.bookmarks;
+    // Old sync records do not contain this field. Leave local bookmarks untouched.
+    if (!bookmarkMap || typeof bookmarkMap !== 'object' || Array.isArray(bookmarkMap)) return 0;
+
+    let count = 0;
+    try {
+      for (const [bookId, items] of Object.entries(bookmarkMap)) {
+        if (!Array.isArray(items)) continue;
+        const normalized = items.map(item => this.normalizeBookmark(item)).filter(Boolean);
+        this.setBookmarks(bookId, normalized);
+        count += normalized.length;
+      }
+    } catch { /* ignore storage failures */ }
+
+    return count;
+  },
   progressSnapshot() {
     return {
       progress: this.getAllProgress(),
       lastProgress: this.getLastProgress(),
+      bookmarks: this.getAllBookmarks(),
     };
   },
   readerURL(bookId, progress = null) {
@@ -127,6 +194,8 @@ const ProgressSync = {
 
     const snapshot = Store.progressSnapshot();
     const count = Object.keys(snapshot.progress).length;
+    const bookmarkCount = Object.values(snapshot.bookmarks)
+      .reduce((total, items) => total + items.length, 0);
     if (!count) throw new Error('没有可保存的阅读进度');
 
     const res = await fetch(this.API, {
@@ -140,6 +209,7 @@ const ProgressSync = {
     return {
       code,
       count: data.count || count,
+      bookmarkCount: Number.isInteger(data.bookmarkCount) ? data.bookmarkCount : bookmarkCount,
       updatedAt: data.updatedAt || Date.now(),
     };
   },
@@ -154,11 +224,13 @@ const ProgressSync = {
 
     const data = await readSyncResponse(res);
     const count = Store.applyProgressSnapshot(data);
+    const bookmarkCount = Store.applyBookmarkSnapshot(data);
     if (!count) throw new Error('没有可恢复的阅读进度');
 
     return {
       code,
       count,
+      bookmarkCount,
       updatedAt: data.updatedAt || null,
       lastProgress: data.lastProgress || null,
     };
