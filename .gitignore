@@ -4,3 +4,7 @@
 .tef_dist/*
 dist/
 node_modules/
+
+# Local TWA build output and signing material
+.twa-build/
+Tranquil - Google Play package (*).zip
