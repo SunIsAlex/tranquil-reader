@@ -1031,14 +1031,209 @@
     {
       "id": "feynman-lectures",
       "type": "pdf",
-      "title": "费曼物理学讲义（LaTeX 中文版）",
+      "title": "费曼物理学讲义",
       "author": "理查德·费曼",
-      "source": "https://github.com/RockLakeGrass/Feynman-Lectures-Latex",
+      "source": "Feynman.Lectures.on.Physics.pdf",
       "parts": [
         {
-          "title": "第 1–10 章",
-          "pdfUrl": "books/feynman-lectures/latex-zh.pdf",
-          "pageCount": 148
+          "title": "第一章 原子的运动",
+          "pdfUrl": "books/feynman-lectures/01.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第二章 基本物理",
+          "pdfUrl": "books/feynman-lectures/02.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第三章 物理学与其他科学的关系",
+          "pdfUrl": "books/feynman-lectures/03.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第四章 能量守恒",
+          "pdfUrl": "books/feynman-lectures/04.pdf",
+          "pageCount": 10
+        },
+        {
+          "title": "第五章 时间与距离",
+          "pdfUrl": "books/feynman-lectures/05.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第六章 概率",
+          "pdfUrl": "books/feynman-lectures/06.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第七章 万有引力理论",
+          "pdfUrl": "books/feynman-lectures/07.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第八章 运动",
+          "pdfUrl": "books/feynman-lectures/08.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第九章 牛顿的动力学定律",
+          "pdfUrl": "books/feynman-lectures/09.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第十章 动量守恒",
+          "pdfUrl": "books/feynman-lectures/10.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第十一章 矢量",
+          "pdfUrl": "books/feynman-lectures/11.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第十二章 力的特性",
+          "pdfUrl": "books/feynman-lectures/12.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第十三章 功与势能（上）",
+          "pdfUrl": "books/feynman-lectures/13.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第十四章 功与势能（下）",
+          "pdfUrl": "books/feynman-lectures/14.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第十五章 狭义相对论",
+          "pdfUrl": "books/feynman-lectures/15.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第十六章 相对论中的能量与动量",
+          "pdfUrl": "books/feynman-lectures/16.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第十七章 时空",
+          "pdfUrl": "books/feynman-lectures/17.pdf",
+          "pageCount": 10
+        },
+        {
+          "title": "第十八章 二维空间中的转动",
+          "pdfUrl": "books/feynman-lectures/18.pdf",
+          "pageCount": 10
+        },
+        {
+          "title": "第十九章 质心、转动惯量",
+          "pdfUrl": "books/feynman-lectures/19.pdf",
+          "pageCount": 10
+        },
+        {
+          "title": "第二十章 空间转动",
+          "pdfUrl": "books/feynman-lectures/20.pdf",
+          "pageCount": 10
+        },
+        {
+          "title": "第二十一章 谐振子",
+          "pdfUrl": "books/feynman-lectures/21.pdf",
+          "pageCount": 8
+        },
+        {
+          "title": "第二十二章 代数学",
+          "pdfUrl": "books/feynman-lectures/22.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第二十三章 共振",
+          "pdfUrl": "books/feynman-lectures/23.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第二十四章 瞬变态",
+          "pdfUrl": "books/feynman-lectures/24.pdf",
+          "pageCount": 8
+        },
+        {
+          "title": "第二十五章 线性系统及其综述",
+          "pdfUrl": "books/feynman-lectures/25.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第二十六章 光学：最短时间原理",
+          "pdfUrl": "books/feynman-lectures/26.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第二十七章 几何光学",
+          "pdfUrl": "books/feynman-lectures/27.pdf",
+          "pageCount": 10
+        },
+        {
+          "title": "第二十八章 电磁辐射",
+          "pdfUrl": "books/feynman-lectures/28.pdf",
+          "pageCount": 8
+        },
+        {
+          "title": "第二十九章 干涉",
+          "pdfUrl": "books/feynman-lectures/29.pdf",
+          "pageCount": 10
+        },
+        {
+          "title": "第三十章 衍射",
+          "pdfUrl": "books/feynman-lectures/30.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第三十一章 折射率的起源",
+          "pdfUrl": "books/feynman-lectures/31.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第三十二章 辐射阻尼、光的散射",
+          "pdfUrl": "books/feynman-lectures/32.pdf",
+          "pageCount": 10
+        },
+        {
+          "title": "第三十三章 偏振",
+          "pdfUrl": "books/feynman-lectures/33.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第三十四章 辐射中的相对论性效应",
+          "pdfUrl": "books/feynman-lectures/34.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第三十五章 色视觉",
+          "pdfUrl": "books/feynman-lectures/35.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第三十六章 视觉的机制",
+          "pdfUrl": "books/feynman-lectures/36.pdf",
+          "pageCount": 18
+        },
+        {
+          "title": "第三十七章 量子行为",
+          "pdfUrl": "books/feynman-lectures/37.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第三十八章 波动观点与粒子观点的关系",
+          "pdfUrl": "books/feynman-lectures/38.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第三十九章 气体分子动理论",
+          "pdfUrl": "books/feynman-lectures/39.pdf",
+          "pageCount": 14
+        },
+        {
+          "title": "第四十章 统计力学原理",
+          "pdfUrl": "books/feynman-lectures/40.pdf",
+          "pageCount": 12
         }
       ]
     },
