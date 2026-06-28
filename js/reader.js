@@ -234,7 +234,6 @@
       els.fontDec,
       document.getElementById('hl-toggle'),
       els.searchToggle,
-      els.bookmarkToggle,
       els.tocToggle,
     ].forEach(el => { if (el) el.hidden = true; });
 
@@ -276,8 +275,11 @@
     let zoomFocus = null;
     let edgeSwipe = null;
     let ignoreClickUntil = 0;
+    let bookmarks = loadPDFBookmarks();
     const isMobilePDF = window.matchMedia('(pointer: coarse)').matches;
     const pdfHistoryGuard = 'pdf-reader-guard';
+
+    setupPDFBookmarks();
 
     if (isMobilePDF) {
       history.replaceState({ ...(history.state || {}), pdfReader: true }, '', location.href);
@@ -312,6 +314,7 @@
         scroll: 0,
         time: Date.now(),
       });
+      updatePDFBookmarkButton();
       renderPDFPage(part, nextPage, ++renderTicket);
     }
 
@@ -355,6 +358,11 @@
     viewer.addEventListener('wheel', handlePDFWheel, { passive: false });
 
     document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !els.bookmarks.hidden) {
+        e.preventDefault();
+        closePDFBookmarks();
+        return;
+      }
       if (e.target.matches('input, select')) return;
       if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
         e.preventDefault();
@@ -395,6 +403,10 @@
     }
 
     function handlePDFBackGesture(menuWasVisible) {
+      if (!els.bookmarks.hidden) {
+        closePDFBookmarks(false);
+        return true;
+      }
       if (menuWasVisible) {
         history.back();
         return true;
@@ -404,6 +416,11 @@
     }
 
     function handlePDFHistoryBack() {
+      if (!els.bookmarks.hidden) {
+        closePDFBookmarks(false);
+        history.pushState({ pdfReader: true, guard: pdfHistoryGuard }, '', location.href);
+        return;
+      }
       if (document.body.classList.contains('pdf-controls-hidden')) {
         showPDFControls();
         history.pushState({ pdfReader: true, guard: pdfHistoryGuard }, '', location.href);
@@ -630,6 +647,7 @@
         pageInput.value = String(nextPage);
         openLink.href = pdfURLWithPage(part.src, nextPage);
         zoomValue.textContent = `${Math.round(zoom * 100)}%`;
+        updatePDFBookmarkButton();
 
         if (nextPage !== page) {
           Store.setProgress(bookId, {
@@ -644,6 +662,167 @@
         console.warn('Failed to render PDF:', err);
         viewer.classList.remove('is-loading');
         status.textContent = `PDF 加载失败：${pdfErrorMessage(err)}。请用“新窗口打开”。`;
+      }
+    }
+
+    function loadPDFBookmarks() {
+      return Store.getBookmarks(bookId)
+        .filter(bookmark => {
+          if (bookmark.chapter < 0 || bookmark.chapter >= parts.length || bookmark.para < 1) {
+            return false;
+          }
+          const pageCount = parts[bookmark.chapter].pageCount;
+          return !Number.isInteger(pageCount) || bookmark.para <= pageCount;
+        });
+    }
+
+    function savePDFBookmarks() {
+      Store.setBookmarks(bookId, bookmarks);
+    }
+
+    function getPDFBookmark(partIndex = currentPart, page = currentPage) {
+      return bookmarks.find(
+        bookmark => bookmark.chapter === partIndex && bookmark.para === page
+      ) || null;
+    }
+
+    function updatePDFBookmarkButton() {
+      const marked = Boolean(getPDFBookmark());
+      els.bookmarkToggle.classList.toggle('active', marked);
+      els.bookmarkToggle.setAttribute('aria-pressed', String(marked));
+      els.bookmarkToggle.title = marked ? '当前页已加书签' : '书签和笔记';
+    }
+
+    function setupPDFBookmarks() {
+      els.bookmarkAdd.textContent = '＋ 当前页';
+      els.bookmarkToggle.hidden = false;
+      els.bookmarkToggle.setAttribute('aria-controls', 'bookmarks');
+      els.bookmarkToggle.setAttribute('aria-expanded', 'false');
+      els.bookmarkToggle.setAttribute('aria-label', '打开书签和笔记');
+      els.bookmarkToggle.setAttribute('aria-pressed', 'false');
+      els.bookmarks.setAttribute('role', 'dialog');
+      els.bookmarks.setAttribute('aria-label', '书签和笔记');
+      els.bookmarks.setAttribute('aria-hidden', 'true');
+      els.bookmarks.tabIndex = -1;
+
+      els.bookmarkToggle.addEventListener('click', () => {
+        if (els.bookmarks.hidden) openPDFBookmarks();
+        else closePDFBookmarks();
+      });
+      els.bookmarkAdd.addEventListener('click', addPDFBookmark);
+      document.addEventListener('click', (event) => {
+        if (
+          !els.bookmarks.hidden &&
+          !els.bookmarks.contains(event.target) &&
+          event.target !== els.bookmarkToggle
+        ) {
+          closePDFBookmarks(false);
+        }
+      });
+    }
+
+    function openPDFBookmarks() {
+      showPDFControls();
+      renderPDFBookmarks();
+      els.bookmarks.hidden = false;
+      els.bookmarks.setAttribute('aria-hidden', 'false');
+      els.bookmarkToggle.setAttribute('aria-expanded', 'true');
+      els.bookmarkToggle.setAttribute('aria-label', '关闭书签和笔记');
+      requestAnimationFrame(() => {
+        const target = els.bookmarkAdd || els.bookmarkList.querySelector('button') || els.bookmarks;
+        target.focus({ preventScroll: true });
+      });
+    }
+
+    function closePDFBookmarks(restoreFocus = true) {
+      if (els.bookmarks.hidden) return;
+      els.bookmarks.hidden = true;
+      els.bookmarks.setAttribute('aria-hidden', 'true');
+      els.bookmarkToggle.setAttribute('aria-expanded', 'false');
+      els.bookmarkToggle.setAttribute('aria-label', '打开书签和笔记');
+      if (restoreFocus) els.bookmarkToggle.focus({ preventScroll: true });
+    }
+
+    function addPDFBookmark() {
+      const existing = getPDFBookmark();
+      const note = prompt(
+        existing ? '编辑这个页面书签的备注（可留空）：' : '为当前页面添加书签备注（可留空）：',
+        existing ? existing.note : ''
+      );
+      if (note === null) return;
+
+      const now = Date.now();
+      if (existing) {
+        existing.note = note.trim();
+        existing.updatedAt = now;
+      } else {
+        bookmarks.push({
+          id: `${currentPart}:${currentPage}`,
+          chapter: currentPart,
+          para: currentPage,
+          note: note.trim(),
+          excerpt: `${parts[currentPart].title} · 第 ${currentPage} 页`,
+          createdAt: now,
+          updatedAt: null,
+        });
+      }
+      savePDFBookmarks();
+      updatePDFBookmarkButton();
+      renderPDFBookmarks();
+    }
+
+    function deletePDFBookmark(id) {
+      bookmarks = bookmarks.filter(bookmark => bookmark.id !== id);
+      savePDFBookmarks();
+      updatePDFBookmarkButton();
+      renderPDFBookmarks();
+    }
+
+    function jumpToPDFBookmark(id) {
+      const bookmark = bookmarks.find(item => item.id === id);
+      if (!bookmark) return;
+      closePDFBookmarks(false);
+      setPDFLocation(bookmark.chapter, bookmark.para);
+    }
+
+    function renderPDFBookmarks() {
+      const list = [...bookmarks].sort((a, b) =>
+        a.chapter - b.chapter || a.para - b.para || a.createdAt - b.createdAt
+      );
+      els.bookmarkList.innerHTML = '';
+
+      if (!list.length) {
+        const li = document.createElement('li');
+        li.className = 'bookmark-empty';
+        li.textContent = '还没有书签。翻到想保存的页面后，点“＋ 当前页”。';
+        els.bookmarkList.appendChild(li);
+        return;
+      }
+
+      for (const bookmark of list) {
+        const li = document.createElement('li');
+        li.className = 'bookmark-item';
+        li.dataset.id = bookmark.id;
+
+        const jump = document.createElement('button');
+        jump.type = 'button';
+        jump.className = 'bookmark-jump';
+        jump.innerHTML = `
+          <span class="bookmark-title">${escapeHTML(parts[bookmark.chapter]?.title || '未知章节')}</span>
+          <span class="bookmark-meta">第 ${bookmark.chapter + 1} 章 · 第 ${bookmark.para} 页</span>
+          ${bookmark.note ? `<span class="bookmark-note">${escapeHTML(bookmark.note)}</span>` : ''}
+        `;
+        jump.addEventListener('click', () => jumpToPDFBookmark(bookmark.id));
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'bookmark-delete';
+        del.textContent = '删除';
+        del.addEventListener('click', () => deletePDFBookmark(bookmark.id));
+
+        li.appendChild(jump);
+        li.appendChild(del);
+        els.bookmarkList.appendChild(li);
       }
     }
   }
@@ -1493,34 +1672,13 @@
   }
 
   // ---- 书签 / 笔记 ----
-  function bookmarkKey() {
-    return `reader.bookmarks.${bookId}`;
-  }
-
   function loadBookmarks() {
-    try {
-      const data = JSON.parse(localStorage.getItem(`reader.bookmarks.${bookId}`));
-      if (!Array.isArray(data)) return [];
-      return data
-        .filter(b => b && Number.isInteger(b.chapter) && Number.isInteger(b.para))
-        .map(b => ({
-          id: String(b.id || makeBookmarkId(b.chapter, b.para)),
-          chapter: b.chapter,
-          para: b.para,
-          note: String(b.note || ''),
-          excerpt: String(b.excerpt || ''),
-          createdAt: Number.isFinite(b.createdAt) ? b.createdAt : Date.now(),
-          updatedAt: Number.isFinite(b.updatedAt) ? b.updatedAt : null,
-        }))
-        .filter(b => b.chapter >= 0 && b.chapter < book.chapters.length && b.para >= 0);
-    } catch {
-      return [];
-    }
+    return Store.getBookmarks(bookId)
+      .filter(b => b.chapter >= 0 && b.chapter < book.chapters.length && b.para >= 0);
   }
 
   function saveBookmarks() {
-    try { localStorage.setItem(bookmarkKey(), JSON.stringify(bookmarks)); }
-    catch { /* 隐私模式或配额满，静默失败 */ }
+    Store.setBookmarks(bookId, bookmarks);
   }
 
   function makeBookmarkId(chapter, para) {

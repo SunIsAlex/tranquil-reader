@@ -197,7 +197,10 @@ function setupShelfSync() {
     setStatus('正在保存阅读进度…');
     try {
       const result = await ProgressSync.save(code);
-      setStatus(`已保存 ${result.count} 本书的阅读进度。`, 'ok');
+      const bookmarks = result.bookmarkCount
+        ? `及 ${result.bookmarkCount} 个书签`
+        : '';
+      setStatus(`已保存 ${result.count} 本书的阅读进度${bookmarks}。`, 'ok');
     } catch (err) {
       setStatus(String(err && err.message || err || '保存失败'), 'error');
     } finally {
@@ -218,7 +221,10 @@ function setupShelfSync() {
     setStatus('正在恢复阅读进度…');
     try {
       const result = await ProgressSync.restore(code);
-      setStatus(`已恢复 ${result.count} 本书的阅读进度。`, 'ok');
+      const bookmarks = result.bookmarkCount
+        ? `及 ${result.bookmarkCount} 个书签`
+        : '';
+      setStatus(`已恢复 ${result.count} 本书的阅读进度${bookmarks}。`, 'ok');
       window.setTimeout(() => location.reload(), 350);
     } catch (err) {
       setStatus(String(err && err.message || err || '恢复失败'), 'error');
