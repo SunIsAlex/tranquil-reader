@@ -829,9 +829,16 @@
 
   async function loadPDFJS() {
     if (!pdfjsLoadPromise) {
+      const compatibility = window.PDFCompat
+        ? window.PDFCompat.install()
+        : { supported: false, reason: 'PDF 兼容组件未加载' };
+      if (!compatibility.supported) {
+        throw new Error(compatibility.reason);
+      }
+
       // Use .js extensions so static hosts return a JavaScript MIME type.
       const pdfjsURL = new URL('vendor/pdfjs/pdf.min.js', location.href).href;
-      const workerURL = new URL('vendor/pdfjs/pdf.worker.min.js', location.href).href;
+      const workerURL = new URL('vendor/pdfjs/pdf.worker.compat.js', location.href).href;
       pdfjsLoadPromise = import(pdfjsURL).then(pdfjs => {
         pdfjs.GlobalWorkerOptions.workerSrc = workerURL;
         return pdfjs;
