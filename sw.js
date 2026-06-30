@@ -7,7 +7,7 @@
    - 用户手动离线下载的书保存在 tranquil-books，不随版本升级删除
    ============================================================ */
 
-const VERSION = 'v26';
+const VERSION = 'v27';
 
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
@@ -28,9 +28,7 @@ const SHELL = [
   'css/style.css',
   'js/common.js',
   'js/shelf.js',
-  'js/pdf-compat.js',
   'js/reader.js',
-  'vendor/pdfjs/pdf.compat.js',
   'manifest.webmanifest',
   'favicon.png',
   'icons/icon-192.png',
