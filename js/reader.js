@@ -48,7 +48,11 @@
   els.title.textContent = book.title;
   document.title = `${book.title} · 静读`;
 
-  let pdfjsLoadPromise = null;
+  const pdfjsLoadPromises = {
+    modern: null,
+    legacy: null,
+  };
+  let pdfjsBuild = 'modern';
   const pdfDocumentCache = new Map();
 
   if (isPDFBook(book)) {
@@ -580,7 +584,9 @@
         activeRenderTask.cancel();
         activeRenderTask = null;
       }
-      status.textContent = '正在加载 PDF...';
+      status.textContent = pdfjsBuild === 'legacy'
+        ? '正在使用兼容模式加载 PDF...'
+        : '正在加载 PDF...';
       viewer.classList.add('is-loading');
 
       try {
@@ -659,6 +665,16 @@
         }
       } catch (err) {
         if (ticket !== renderTicket) return;
+        if (isPDFRenderCancellation(err)) {
+          viewer.classList.remove('is-loading');
+          return;
+        }
+        if (pdfjsBuild !== 'legacy') {
+          console.warn('Modern PDF.js failed; retrying with the legacy build:', err);
+          pdfjsBuild = 'legacy';
+          await renderPDFPage(part, page, ticket);
+          return;
+        }
         console.warn('Failed to render PDF:', err);
         viewer.classList.remove('is-loading');
         status.textContent = `PDF 加载失败：${pdfErrorMessage(err)}。请用“新窗口打开”。`;
@@ -827,29 +843,31 @@
     }
   }
 
-  async function loadPDFJS() {
-    if (!pdfjsLoadPromise) {
-      const compatibility = window.PDFCompat
-        ? window.PDFCompat.install()
-        : { supported: false, reason: 'PDF 兼容组件未加载' };
-      if (!compatibility.supported) {
-        throw new Error(compatibility.reason);
-      }
-
+  async function loadPDFJS(build = pdfjsBuild) {
+    if (!pdfjsLoadPromises[build]) {
+      const legacy = build === 'legacy';
       // Use .js extensions so static hosts return a JavaScript MIME type.
-      const pdfjsURL = new URL('vendor/pdfjs/pdf.min.js', location.href).href;
-      const workerURL = new URL('vendor/pdfjs/pdf.worker.compat.js', location.href).href;
-      pdfjsLoadPromise = import(pdfjsURL).then(pdfjs => {
+      const pdfjsURL = new URL(
+        legacy ? 'vendor/pdfjs/pdf.legacy.min.js' : 'vendor/pdfjs/pdf.min.js',
+        location.href
+      ).href;
+      const workerURL = new URL(
+        legacy ? 'vendor/pdfjs/pdf.worker.legacy.min.js' : 'vendor/pdfjs/pdf.worker.min.js',
+        location.href
+      ).href;
+      pdfjsLoadPromises[build] = import(pdfjsURL).then(pdfjs => {
         pdfjs.GlobalWorkerOptions.workerSrc = workerURL;
         return pdfjs;
       });
     }
-    return pdfjsLoadPromise;
+    return pdfjsLoadPromises[build];
   }
 
   async function loadPDFDocument(src) {
-    if (!pdfDocumentCache.has(src)) {
-      pdfDocumentCache.set(src, loadPDFJS().then(pdfjs => pdfjs.getDocument({
+    const build = pdfjsBuild;
+    const cacheKey = `${build}:${src}`;
+    if (!pdfDocumentCache.has(cacheKey)) {
+      pdfDocumentCache.set(cacheKey, loadPDFJS(build).then(pdfjs => pdfjs.getDocument({
         url: src,
         disableRange: false,
         disableStream: true,
@@ -864,7 +882,14 @@
         isImageDecoderSupported: false,
       }).promise));
     }
-    return pdfDocumentCache.get(src);
+    return pdfDocumentCache.get(cacheKey);
+  }
+
+  function isPDFRenderCancellation(err) {
+    return Boolean(err && (
+      err.name === 'RenderingCancelledException' ||
+      /rendering cancelled/i.test(String(err.message || ''))
+    ));
   }
 
   function pdfErrorMessage(err) {
