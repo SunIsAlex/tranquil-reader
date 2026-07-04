@@ -2,12 +2,13 @@
    sw.js · Service Worker
    让「静读」可离线：
    - 预缓存应用外壳
-   - books/*.json 使用 network-first，避免书架/高亮长期显示旧数据
+   - 手动离线下载的书优先读取 tranquil-books
+   - 未离线下载的 books/*.json 使用 network-first，避免书架/高亮长期显示旧数据
    - 章节正文使用 stale-while-revalidate，读过后可离线重读
    - 用户手动离线下载的书保存在 tranquil-books，不随版本升级删除
    ============================================================ */
 
-const VERSION = 'v27';
+const VERSION = 'v28';
 
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
@@ -86,16 +87,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 页面导航：联网优先，离线时回退到缓存页面
-  if (req.mode === 'navigate') {
-    event.respondWith(handleNavigation(req));
+  // 手动离线下载的书籍资源始终优先使用持久缓存。
+  // 未命中时再按资源类型沿用正常的联网/运行时缓存策略。
+  if (url.pathname.includes('/books/')) {
+    event.respondWith(handleBookRequest(req, url));
     return;
   }
 
-  // 书籍 JSON：network-first
-  // 包括 books/manifest.json 和 books/<id>/highlights.json。
-  if (url.pathname.includes('/books/') && url.pathname.endsWith('.json')) {
-    event.respondWith(networkFirst(req, RUNTIME_CACHE));
+  // 页面导航：联网优先，离线时回退到缓存页面
+  if (req.mode === 'navigate') {
+    event.respondWith(handleNavigation(req));
     return;
   }
 
@@ -153,6 +154,21 @@ async function handleNavigation(req) {
       Response.error()
     );
   }
+}
+
+async function handleBookRequest(req, url) {
+  const booksCache = await caches.open(BOOKS_CACHE);
+  const offlineResponse = await booksCache.match(req);
+
+  if (offlineResponse) return offlineResponse;
+
+  // 未手动离线下载的书籍 JSON 仍然联网优先。
+  if (url.pathname.endsWith('.json')) {
+    return networkFirst(req, RUNTIME_CACHE);
+  }
+
+  // 章节和封面等其它书籍资源保持原有的 SWR 行为。
+  return staleWhileRevalidate(req, RUNTIME_CACHE);
 }
 
 async function handlePDFRequest(req) {
