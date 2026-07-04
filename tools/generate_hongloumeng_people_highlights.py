@@ -225,6 +225,8 @@ def update_manifest(root: Path, book_id: str) -> None:
     for book in manifest.get("books", []):
         if book.get("id") == book_id:
             book["highlightsFile"] = "highlights.json"
+            old_version = book.get("version")
+            book["version"] = old_version + 1 if isinstance(old_version, int) else 1
             break
     else:
         sys.exit(f"错误：manifest 中找不到 {book_id}")

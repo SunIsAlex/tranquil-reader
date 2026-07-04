@@ -232,12 +232,15 @@ def update_manifest(root: Path, chapters: list[dict[str, str]], book_id: str) ->
     books = manifest.setdefault("books", [])
     entry = {
         "id": book_id,
+        "version": 1,
         "title": "红楼梦",
         "author": "曹雪芹、高鹗",
         "chapters": chapters,
     }
     for index, book in enumerate(books):
         if book.get("id") == book_id:
+            old_version = book.get("version")
+            entry["version"] = old_version + 1 if isinstance(old_version, int) else 1
             for key, value in book.items():
                 if key not in entry:
                     entry[key] = value

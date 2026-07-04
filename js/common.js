@@ -330,9 +330,10 @@ const Offline = {
     });
   },
 
-  // 该书需要离线的全部 URL：清单、封面、高亮、章节正文和站内 PDF
+  // 该书需要离线的全部 URL。manifest 由运行时缓存单独维护，
+  // 其它资源使用书籍版本号生成精确、可失效的缓存键。
   urls(book) {
-    const list = ['books/manifest.json'];
+    const list = [];
 
     const coverFile = typeof book.cover === 'string' ? book.cover : '';
     const coverThumbFile = typeof book.coverThumb === 'string' ? book.coverThumb : '';
@@ -341,7 +342,7 @@ const Offline = {
     // Cache the small shelf thumbnail. The full cover still opens on demand,
     // but is not downloaded automatically when a thumbnail exists.
     if (shelfCoverFile && !isExternalURL(shelfCoverFile)) {
-      list.push(`books/${book.id}/${shelfCoverFile}`);
+      list.push(withBookVersion(`books/${book.id}/${shelfCoverFile}`, book));
     }
 
     const highlightsFile =
@@ -350,11 +351,11 @@ const Offline = {
       '';
 
     if (highlightsFile) {
-      list.push(`books/${book.id}/${highlightsFile}`);
+      list.push(withBookVersion(`books/${book.id}/${highlightsFile}`, book));
     }
 
     for (const ch of (book.chapters || [])) {
-      list.push(`books/${book.id}/${ch.file}`);
+      list.push(withBookVersion(`books/${book.id}/${ch.file}`, book, ch));
     }
 
     list.push(...this.pdfUrls(book));
@@ -373,18 +374,24 @@ const Offline = {
 
       const pdfUrl = typeof source.pdfUrl === 'string' ? source.pdfUrl.trim() : '';
       if (pdfUrl && !isExternalURL(pdfUrl)) {
-        urls.push(pdfUrl);
+        urls.push(withBookVersion(pdfUrl, book, source));
         continue;
       }
 
       const pdfKey = typeof source.pdfKey === 'string' ? source.pdfKey.trim() : '';
-      if (pdfKey) urls.push(`api/pdf?key=${encodeURIComponent(pdfKey)}`);
+      if (pdfKey) {
+        urls.push(withBookVersion(
+          `api/pdf?key=${encodeURIComponent(pdfKey)}`,
+          book,
+          source
+        ));
+      }
     }
 
     return urls;
   },
 
-  // 是否已完整缓存（清单与该书的所有正文/PDF 资源都在）
+  // 是否已完整缓存当前版本的正文/PDF 等书籍资源。
   async isDownloaded(book) {
     if (!this.supported()) return false;
     try {
@@ -504,7 +511,7 @@ const Offline = {
     });
   },
 
-  // 移除本书章节缓存、封面缓存和该书高亮缓存。清单是多本书共享的，留着不删。
+  // 移除本书当前版本的章节、PDF、封面和高亮缓存。
   async remove(book) {
     if (!this.supported()) return;
     const cache = await caches.open(this.CACHE);
@@ -513,10 +520,10 @@ const Offline = {
     const coverThumbFile = typeof book.coverThumb === 'string' ? book.coverThumb : '';
 
     if (coverFile && !isExternalURL(coverFile)) {
-      await cache.delete(`books/${book.id}/${coverFile}`);
+      await cache.delete(withBookVersion(`books/${book.id}/${coverFile}`, book));
     }
     if (coverThumbFile && !isExternalURL(coverThumbFile)) {
-      await cache.delete(`books/${book.id}/${coverThumbFile}`);
+      await cache.delete(withBookVersion(`books/${book.id}/${coverThumbFile}`, book));
     }
 
     const highlightsFile =
@@ -525,11 +532,11 @@ const Offline = {
       '';
 
     if (highlightsFile) {
-      await cache.delete(`books/${book.id}/${highlightsFile}`);
+      await cache.delete(withBookVersion(`books/${book.id}/${highlightsFile}`, book));
     }
 
     for (const ch of (book.chapters || [])) {
-      await cache.delete(`books/${book.id}/${ch.file}`);
+      await cache.delete(withBookVersion(`books/${book.id}/${ch.file}`, book, ch));
     }
     for (const url of this.pdfUrls(book)) {
       await cache.delete(url);
@@ -666,6 +673,23 @@ function isExternalURL(url) {
   return /^(?:https?:)?\/\//i.test(String(url || '')) ||
     String(url || '').startsWith('data:') ||
     String(url || '').startsWith('blob:');
+}
+
+// 书籍资源以版本化 URL 作为缓存键。章节或 PDF 分卷可单独声明
+// version；未声明时继承书籍 version。
+function withBookVersion(url, book, resource = null) {
+  const source = resource && resource.version != null ? resource : book;
+  const version = source && source.version;
+  if (version == null || String(version).trim() === '' || isExternalURL(url)) {
+    return url;
+  }
+
+  const value = encodeURIComponent(String(version).trim());
+  const hashAt = url.indexOf('#');
+  const base = hashAt >= 0 ? url.slice(0, hashAt) : url;
+  const hash = hashAt >= 0 ? url.slice(hashAt) : '';
+  const separator = base.includes('?') ? '&' : '?';
+  return `${base}${separator}v=${value}${hash}`;
 }
 
 /* ---------- 主题 ---------- */

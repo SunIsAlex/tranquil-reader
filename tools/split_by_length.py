@@ -166,11 +166,19 @@ def main() -> None:
     # 更新 manifest：同 id 替换，否则追加
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     books = manifest.setdefault("books", [])
-    entry = {"id": args.id, "title": args.title, "author": args.author, "chapters": chapters}
+    entry = {
+        "id": args.id,
+        "version": 1,
+        "title": args.title,
+        "author": args.author,
+        "chapters": chapters,
+    }
 
     # 保留旧条目里的 highlights 等额外字段
     for idx, b in enumerate(books):
         if b.get("id") == args.id:
+            old_version = b.get("version")
+            entry["version"] = old_version + 1 if isinstance(old_version, int) else 1
             for key, val in b.items():
                 if key not in entry:
                     entry[key] = val

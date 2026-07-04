@@ -33,6 +33,8 @@ def main() -> None:
         sys.exit(f"错误：找不到 {book_dir}")
 
     cc = OpenCC("t2s")
+    old_version = book.get("version")
+    book["version"] = old_version + 1 if isinstance(old_version, int) else 1
     book["title"] = cc.convert(book.get("title", ""))
     book["author"] = cc.convert(book.get("author", ""))
 

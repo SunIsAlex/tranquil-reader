@@ -198,6 +198,7 @@ novel-reader/
   "books": [
     {
       "id": "chaoxinxingjiyuan",
+      "version": 1,
       "title": "超新星纪元",
       "author": "刘慈欣",
       "cover": "cover.png",
@@ -223,6 +224,7 @@ novel-reader/
 | 字段 | 说明 |
 | --- | --- |
 | `id` | 书籍目录名，对应 `books/<id>/` |
+| `version` | 书籍资源版本。更新正文、封面或 PDF 后递增，使客户端旧缓存失效 |
 | `title` | 书名 |
 | `author` | 作者 |
 | `cover` | 完整封面图 |
@@ -234,6 +236,10 @@ novel-reader/
 | `pdfKey` | 可选。EdgeOne Blob 中的 PDF key，例如 `pdfs/example.pdf` |
 | `pageCount` | 可选。PDF 页数，用于页码输入上限和书架显示 |
 | `parts` | 可选。PDF 分卷列表，每项可配置 `title`、`pdfUrl` 或 `pdfKey`、`pageCount` |
+
+章节和 PDF 分卷默认继承书籍的 `version`。如果只更新一个章节或一个 PDF
+分卷，可以在对应 `chapters` / `parts` 项上单独设置 `version`；客户端只会
+失效并重新缓存该资源。
 
 ### PDF 书籍
 
@@ -266,6 +272,7 @@ pdfs/example.pdf
 ```json
 {
   "id": "example-pdf",
+  "version": 1,
   "type": "pdf",
   "title": "示例 PDF",
   "author": "作者",
@@ -280,6 +287,7 @@ pdfs/example.pdf
 ```json
 {
   "id": "local-pdf",
+  "version": 1,
   "type": "pdf",
   "title": "本地 PDF",
   "author": "作者",
@@ -293,6 +301,7 @@ pdfs/example.pdf
 ```json
 {
   "id": "example-pdf-parts",
+  "version": 1,
   "type": "pdf",
   "title": "分卷 PDF",
   "author": "作者",

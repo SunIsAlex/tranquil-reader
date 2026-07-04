@@ -2,6 +2,7 @@
   "books": [
     {
       "id": "santi-1",
+      "version": 1,
       "title": "三体",
       "author": "刘慈欣",
       "cover": "cover.png",
@@ -151,6 +152,7 @@
     },
     {
       "id": "shanyangrenlei",
+      "version": 1,
       "title": "赡养人类",
       "author": "刘慈欣",
       "cover": "cover.png",
@@ -177,6 +179,7 @@
     },
     {
       "id": "zhongguo2185",
+      "version": 1,
       "title": "中国2185",
       "author": "刘慈欣",
       "cover": "cover.png",
@@ -243,6 +246,7 @@
     },
     {
       "id": "chaoxinxingjiyuan",
+      "version": 1,
       "title": "超新星纪元",
       "author": "刘慈欣",
       "highlightsFile": "highlights.json",
@@ -377,6 +381,7 @@
     },
     {
       "id": "santi-2",
+      "version": 1,
       "title": "三体2-黑暗森林",
       "author": "刘慈欣",
       "cover": "cover.png",
@@ -542,6 +547,7 @@
     },
     {
       "id": "hongloumeng",
+      "version": 1,
       "title": "红楼梦",
       "author": "曹雪芹、高鹗",
       "chapters": [
@@ -1030,6 +1036,7 @@
     },
     {
       "id": "feynman-lectures",
+      "version": 1,
       "type": "pdf",
       "title": "费曼物理学讲义",
       "author": "理查德·费曼",
@@ -1239,6 +1246,7 @@
     },
     {
       "id": "clayden-chinese",
+      "version": 1,
       "type": "pdf",
       "title": "有机化学（Clayden 原书第二版）",
       "author": "Jonathan Clayden / Nick Greeves / Stuart Warren；delay 译",
@@ -1462,6 +1470,7 @@
     },
     {
       "id": "inorganic-chemistry-zhang-zude",
+      "version": 1,
       "type": "pdf",
       "title": "无机化学",
       "author": "张祖德",

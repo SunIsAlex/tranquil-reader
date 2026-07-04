@@ -91,6 +91,14 @@ def validate_project(root: Path) -> None:
             errors.append(f"{label}: duplicate id {book_id!r}.")
         seen_ids.add(book_id)
 
+        version = book.get("version")
+        if (
+            isinstance(version, bool) or
+            not isinstance(version, (str, int)) or
+            not str(version).strip()
+        ):
+            errors.append(f"{label}: version must be a non-empty string or integer.")
+
         is_pdf = is_pdf_book(book)
         book_dir = root / "books" / book_id
         needs_book_dir = not is_pdf

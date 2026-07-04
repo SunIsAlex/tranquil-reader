@@ -373,8 +373,9 @@ function makeOfflineBtn(book) {
     }
 
     if (saved.status === 'done') {
-      setState('downloaded');
-      return true;
+      // 版本更新后旧缓存不能继续显示为“已离线”，交给 isDownloaded
+      // 使用当前 manifest 中的版本化 URL 重新核验。
+      return false;
     }
 
     if (saved.status === 'error') {
@@ -525,7 +526,10 @@ function resolveBookAsset(book, file) {
 
   // Encode each segment so Chinese names/spaces work safely in URLs.
   const encoded = s.split('/').map(part => encodeURIComponent(part)).join('/');
-  return `books/${encodeURIComponent(book.id)}/${encoded}`;
+  return withBookVersion(
+    `books/${encodeURIComponent(book.id)}/${encoded}`,
+    book
+  );
 }
 
 function escapeHTML(s) {

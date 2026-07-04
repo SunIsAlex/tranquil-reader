@@ -160,9 +160,17 @@ def main() -> None:
     # 5) 更新 manifest（同 id 替换，保留 highlights 等字段）
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     books = manifest.setdefault("books", [])
-    entry = {"id": args.id, "title": args.title, "author": args.author, "chapters": chapters}
+    entry = {
+        "id": args.id,
+        "version": 1,
+        "title": args.title,
+        "author": args.author,
+        "chapters": chapters,
+    }
     for i, b in enumerate(books):
         if b.get("id") == args.id:
+            old_version = b.get("version")
+            entry["version"] = old_version + 1 if isinstance(old_version, int) else 1
             for key, val in b.items():
                 if key not in entry:
                     entry[key] = val

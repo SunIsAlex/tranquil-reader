@@ -8,7 +8,7 @@
    - 用户手动离线下载的书保存在 tranquil-books，不随版本升级删除
    ============================================================ */
 
-const VERSION = 'v28';
+const VERSION = 'v29';
 
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
@@ -60,6 +60,11 @@ self.addEventListener('activate', (event) => {
         .map((key) => caches.delete(key))
     );
 
+    // 旧版本曾把 manifest 放进持久书籍缓存；迁移后删除，避免断网
+    // 回退时遮蔽 runtime cache 中更新过的 manifest。
+    const booksCache = await caches.open(BOOKS_CACHE);
+    await booksCache.delete('books/manifest.json', { ignoreSearch: true });
+
     await self.clients.claim();
   })());
 });
@@ -84,6 +89,13 @@ self.addEventListener('fetch', (event) => {
   // Uncached PDFs keep their normal network/range behavior.
   if (url.pathname.endsWith('/api/pdf') || url.pathname.toLowerCase().endsWith('.pdf')) {
     event.respondWith(handlePDFRequest(req));
+    return;
+  }
+
+  // manifest 必须优先获取服务器新版本，不能被持久离线缓存长期遮蔽。
+  // 断网时 networkFirst 仍会回退到已有缓存。
+  if (url.pathname.endsWith('/books/manifest.json')) {
+    event.respondWith(networkFirst(req, RUNTIME_CACHE));
     return;
   }
 
@@ -247,6 +259,7 @@ async function networkFirst(req, cacheName) {
     return res;
   } catch {
     return (
+      await cache.match(req) ||
       await caches.match(req) ||
       Response.error()
     );

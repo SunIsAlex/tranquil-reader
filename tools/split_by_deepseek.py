@@ -622,6 +622,7 @@ def write_split_files(
 
     manifest_book = {
         "id": book_id,
+        "version": 1,
         "title": book_title,
         "author": author,
         "chapters": chapters,

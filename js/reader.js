@@ -129,7 +129,8 @@
     }
 
     try {
-      const res = await fetch(`books/${book.id}/${file}`, { cache: 'no-cache' });
+      const url = withBookVersion(`books/${book.id}/${file}`, book);
+      const res = await fetch(url, { cache: 'no-cache' });
       if (!res.ok) throw new Error(res.status);
 
       const data = await res.json();
@@ -904,7 +905,7 @@
 
     return rawParts
       .map((part, index) => {
-        const src = resolvePDFSource(part);
+        const src = resolvePDFSource(part, book);
         if (!src) return null;
         const title = typeof part.title === 'string' && part.title.trim()
           ? part.title.trim()
@@ -917,12 +918,18 @@
       .filter(Boolean);
   }
 
-  function resolvePDFSource(source) {
+  function resolvePDFSource(source, book) {
     const pdfUrl = typeof source.pdfUrl === 'string' ? source.pdfUrl.trim() : '';
-    if (pdfUrl) return pdfUrl;
+    if (pdfUrl) return withBookVersion(pdfUrl, book, source);
 
     const pdfKey = typeof source.pdfKey === 'string' ? source.pdfKey.trim() : '';
-    if (pdfKey) return `api/pdf?key=${encodeURIComponent(pdfKey)}`;
+    if (pdfKey) {
+      return withBookVersion(
+        `api/pdf?key=${encodeURIComponent(pdfKey)}`,
+        book,
+        source
+      );
+    }
 
     return '';
   }
@@ -1929,7 +1936,7 @@
   // 没有 Service Worker 时，也能利用浏览器 HTTP cache。
   function chapterURL(index) {
     const ch = book.chapters[index];
-    return `books/${book.id}/${ch.file}`;
+    return withBookVersion(`books/${book.id}/${ch.file}`, book, ch);
   }
 
   function shouldPrefetch() {
