@@ -1459,6 +1459,125 @@
           "pageCount": 13
         }
       ]
+    },
+    {
+      "id": "inorganic-chemistry-zhang-zude",
+      "type": "pdf",
+      "title": "无机化学",
+      "author": "张祖德",
+      "source": "无机化学（张祖德）.pdf",
+      "parts": [
+        {
+          "title": "封面、前言与目录",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/00.pdf",
+          "pageCount": 19
+        },
+        {
+          "title": "第1章 气体、液体和溶液的性质",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/01.pdf",
+          "pageCount": 34
+        },
+        {
+          "title": "第2章 化学热力学基础与化学平衡",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/02.pdf",
+          "pageCount": 33
+        },
+        {
+          "title": "第3章 酸碱理论与电离平衡",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/03.pdf",
+          "pageCount": 21
+        },
+        {
+          "title": "第4章 沉淀反应",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/04.pdf",
+          "pageCount": 11
+        },
+        {
+          "title": "第5章 氧化-还原反应和电化学",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/05.pdf",
+          "pageCount": 26
+        },
+        {
+          "title": "第6章 化学动力学基础",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/06.pdf",
+          "pageCount": 29
+        },
+        {
+          "title": "第7章 原子结构和元素周期律",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/07.pdf",
+          "pageCount": 41
+        },
+        {
+          "title": "第8章 化学键和分子、晶体结构",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/08.pdf",
+          "pageCount": 60
+        },
+        {
+          "title": "第9章 配位化合物",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/09.pdf",
+          "pageCount": 63
+        },
+        {
+          "title": "第10章 稀有气体",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/10.pdf",
+          "pageCount": 15
+        },
+        {
+          "title": "第11章 氢、碱金属和碱土金属",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/11.pdf",
+          "pageCount": 23
+        },
+        {
+          "title": "第12章 卤素",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/12.pdf",
+          "pageCount": 21
+        },
+        {
+          "title": "第13章 氧族元素",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/13.pdf",
+          "pageCount": 22
+        },
+        {
+          "title": "第14章 氮族元素",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/14.pdf",
+          "pageCount": 24
+        },
+        {
+          "title": "第15章 碳族元素",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/15.pdf",
+          "pageCount": 18
+        },
+        {
+          "title": "第16章 硼族元素",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/16.pdf",
+          "pageCount": 20
+        },
+        {
+          "title": "第17章 铜、锌分族",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/17.pdf",
+          "pageCount": 16
+        },
+        {
+          "title": "第18章 过渡元素1",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/18.pdf",
+          "pageCount": 33
+        },
+        {
+          "title": "第19章 过渡元素2",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/19.pdf",
+          "pageCount": 19
+        },
+        {
+          "title": "第20章 镧系元素和锕系元素",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/20.pdf",
+          "pageCount": 23
+        },
+        {
+          "title": "附录",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/21.pdf",
+          "pageCount": 44
+        }
+      ]
     }
   ]
 }
