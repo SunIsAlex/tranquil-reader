@@ -8,7 +8,7 @@
    - 用户手动离线下载的书保存在 tranquil-books，不随版本升级删除
    ============================================================ */
 
-const VERSION = 'v29';
+const VERSION = 'v30';
 
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
@@ -170,7 +170,7 @@ async function handleNavigation(req) {
 
 async function handleBookRequest(req, url) {
   const booksCache = await caches.open(BOOKS_CACHE);
-  const offlineResponse = await booksCache.match(req);
+  const offlineResponse = await matchOfflineBookCache(booksCache, req);
 
   if (offlineResponse) return offlineResponse;
 
@@ -185,7 +185,7 @@ async function handleBookRequest(req, url) {
 
 async function handlePDFRequest(req) {
   const cache = await caches.open(BOOKS_CACHE);
-  const cached = await cache.match(req);
+  const cached = await matchOfflineBookCache(cache, req);
 
   if (!cached) return fetch(req);
 
@@ -193,6 +193,41 @@ async function handlePDFRequest(req) {
   if (!range) return cached;
 
   return createRangeResponse(cached, range);
+}
+
+async function matchOfflineBookCache(cache, req) {
+  const exact = await cache.match(req);
+  if (exact) return exact;
+
+  const requestKey = offlineBookCacheKey(req.url);
+  if (!requestKey) return null;
+
+  const keys = await cache.keys();
+  for (const key of keys) {
+    if (offlineBookCacheKey(key.url) === requestKey) {
+      return cache.match(key);
+    }
+  }
+
+  return null;
+}
+
+function offlineBookCacheKey(rawUrl) {
+  const url = new URL(rawUrl, self.location.origin);
+  if (url.origin !== self.location.origin) return '';
+
+  const version = url.searchParams.get('v') || '';
+  if (url.pathname.endsWith('/api/pdf')) {
+    const key = url.searchParams.get('key') || '';
+    if (!key) return '';
+    return `${url.pathname}?key=${key}&v=${version}`;
+  }
+
+  if (url.pathname.includes('/books/')) {
+    return `${url.pathname}?v=${version}`;
+  }
+
+  return '';
 }
 
 async function createRangeResponse(response, rangeHeader) {

@@ -274,6 +274,7 @@
     let zoom = 1;
     let renderTicket = 0;
     let activeRenderTask = null;
+    let hasRenderedPDFPage = false;
     let resizeTimer = 0;
     let wheelZoomTimer = 0;
     let pinch = null;
@@ -585,9 +586,9 @@
         activeRenderTask.cancel();
         activeRenderTask = null;
       }
-      status.textContent = pdfjsBuild === 'legacy'
-        ? '正在使用兼容模式加载 PDF...'
-        : '正在加载 PDF...';
+      status.textContent = hasRenderedPDFPage
+        ? ''
+        : (pdfjsBuild === 'legacy' ? '正在使用兼容模式加载 PDF...' : '正在加载 PDF...');
       viewer.classList.add('is-loading');
 
       try {
@@ -648,6 +649,7 @@
         }
         if (ticket !== renderTicket) return;
 
+        hasRenderedPDFPage = true;
         status.textContent = '';
         viewer.classList.remove('is-loading');
         currentPage = nextPage;
