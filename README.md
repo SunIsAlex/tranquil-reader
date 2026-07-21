@@ -179,6 +179,7 @@ novel-reader/
 │   ├── make_cover_thumb.py
 │   ├── import_hongloumeng_wikisource.py
 │   ├── convert_book_to_simplified.py
+│   ├── upload_pdfs_to_blob.mjs
 │   └── build_release.py
 │
 └── app/
@@ -266,6 +267,21 @@ tranquil-reader-pdfs
 ```text
 pdfs/example.pdf
 ```
+
+仓库自带的批量上传脚本会把 `books/manifest.json` 中本地 `pdfUrl` 引用的 PDF
+全部上传到 Blob（key 规则：`books/<book-id>/<file>.pdf` →
+`pdfs/<book-id>/<file>.pdf`），已存在的 key 自动跳过，可反复重跑：
+
+```bash
+EDGEONE_PAGES_PROJECT_ID=pages-xxx EDGEONE_PAGES_TOKEN=xxx \
+  node tools/upload_pdfs_to_blob.mjs --dry-run   # 先预览，不上传
+
+EDGEONE_PAGES_PROJECT_ID=pages-xxx EDGEONE_PAGES_TOKEN=xxx \
+  node tools/upload_pdfs_to_blob.mjs             # 实际上传
+```
+
+上传完成后，把对应书籍条目的 `pdfUrl` 改为 `pdfKey`，并把 PDF 文件从 Git
+中移除（`books/**/*.pdf` 已在 `.gitignore` 中忽略）。
 
 然后在 `books/manifest.json` 中注册：
 

@@ -9,6 +9,8 @@ node_modules/
 .twa-build/
 Tranquil - Google Play package (*).zip
 
-# Local source PDFs (generated chapter PDFs are tracked)
+# PDFs are served from EdgeOne Blob (see tools/upload_pdfs_to_blob.mjs), not tracked in git
+books/**/*.pdf
+
+# Local source PDFs
 /Feynman.Lectures.on.Physics.pdf
-/books/feynman-lectures/latex-zh.pdf
