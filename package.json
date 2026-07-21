@@ -6,7 +6,6 @@
     "validate": "python3 tools/build_release.py --validate-only"
   },
   "dependencies": {
-    "@edgeone/pages-blob": "^0.0.14",
     "pdfjs-dist": "^6.0.227"
   },
   "devDependencies": {

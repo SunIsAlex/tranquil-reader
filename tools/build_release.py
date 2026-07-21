@@ -26,7 +26,6 @@ DEPLOY_PATHS = [
     "app",
     "books",
     "css",
-    "edge-functions",
     "icons",
     "js",
     "favicon.ico",
@@ -105,7 +104,7 @@ def validate_project(root: Path) -> None:
 
         if is_pdf:
             if not validate_pdf_sources(root, book, label, errors):
-                errors.append(f"{label}: PDF books require pdfUrl, pdfKey, or a non-empty parts array.")
+                errors.append(f"{label}: PDF books require pdfUrl or a non-empty parts array.")
 
         for key in ("cover", "coverThumb", "highlightsFile"):
             value = book.get(key)
@@ -315,20 +314,16 @@ def validate_pdf_sources(root: Path, book: dict, label: str, errors: list[str]) 
 
 def validate_pdf_source(root: Path, source: dict, label: str, errors: list[str]) -> bool:
     pdf_url = source.get("pdfUrl")
-    pdf_key = source.get("pdfKey")
     has_pdf_url = isinstance(pdf_url, str) and bool(pdf_url.strip())
-    has_pdf_key = isinstance(pdf_key, str) and bool(pdf_key.strip())
 
     if has_pdf_url:
         validate_pdf_url(root, pdf_url, f"{label}: pdfUrl", errors)
-    if has_pdf_key and not is_valid_pdf_key(pdf_key):
-        errors.append(f"{label}: pdfKey must start with pdfs/, end with .pdf, and avoid traversal.")
 
     page_count = source.get("pageCount")
     if page_count is not None and (not isinstance(page_count, int) or page_count <= 0):
         errors.append(f"{label}: pageCount must be a positive integer.")
 
-    return has_pdf_url or has_pdf_key
+    return has_pdf_url
 
 
 def validate_pdf_url(root: Path, value: str, label: str, errors: list[str]) -> None:
@@ -349,19 +344,7 @@ def is_pdf_book(book: dict) -> bool:
     return (
         book.get("type") == "pdf" or
         isinstance(book.get("pdfUrl"), str) or
-        isinstance(book.get("pdfKey"), str) or
         isinstance(book.get("parts"), list)
-    )
-
-
-def is_valid_pdf_key(value: str) -> bool:
-    key = value.strip().lstrip("/")
-    return (
-        key.startswith("pdfs/") and
-        key.lower().endswith(".pdf") and
-        ".." not in key and
-        "\\" not in key and
-        bool(re.match(r"^[A-Za-z0-9/_ .-]+$", key))
     )
 
 

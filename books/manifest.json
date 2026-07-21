@@ -1044,202 +1044,202 @@
       "parts": [
         {
           "title": "第一章 原子的运动",
-          "pdfKey": "pdfs/feynman-lectures/01.pdf",
+          "pdfUrl": "books/feynman-lectures/01.pdf",
           "pageCount": 12
         },
         {
           "title": "第二章 基本物理",
-          "pdfKey": "pdfs/feynman-lectures/02.pdf",
+          "pdfUrl": "books/feynman-lectures/02.pdf",
           "pageCount": 14
         },
         {
           "title": "第三章 物理学与其他科学的关系",
-          "pdfKey": "pdfs/feynman-lectures/03.pdf",
+          "pdfUrl": "books/feynman-lectures/03.pdf",
           "pageCount": 12
         },
         {
           "title": "第四章 能量守恒",
-          "pdfKey": "pdfs/feynman-lectures/04.pdf",
+          "pdfUrl": "books/feynman-lectures/04.pdf",
           "pageCount": 10
         },
         {
           "title": "第五章 时间与距离",
-          "pdfKey": "pdfs/feynman-lectures/05.pdf",
+          "pdfUrl": "books/feynman-lectures/05.pdf",
           "pageCount": 12
         },
         {
           "title": "第六章 概率",
-          "pdfKey": "pdfs/feynman-lectures/06.pdf",
+          "pdfUrl": "books/feynman-lectures/06.pdf",
           "pageCount": 14
         },
         {
           "title": "第七章 万有引力理论",
-          "pdfKey": "pdfs/feynman-lectures/07.pdf",
+          "pdfUrl": "books/feynman-lectures/07.pdf",
           "pageCount": 14
         },
         {
           "title": "第八章 运动",
-          "pdfKey": "pdfs/feynman-lectures/08.pdf",
+          "pdfUrl": "books/feynman-lectures/08.pdf",
           "pageCount": 14
         },
         {
           "title": "第九章 牛顿的动力学定律",
-          "pdfKey": "pdfs/feynman-lectures/09.pdf",
+          "pdfUrl": "books/feynman-lectures/09.pdf",
           "pageCount": 14
         },
         {
           "title": "第十章 动量守恒",
-          "pdfKey": "pdfs/feynman-lectures/10.pdf",
+          "pdfUrl": "books/feynman-lectures/10.pdf",
           "pageCount": 12
         },
         {
           "title": "第十一章 矢量",
-          "pdfKey": "pdfs/feynman-lectures/11.pdf",
+          "pdfUrl": "books/feynman-lectures/11.pdf",
           "pageCount": 14
         },
         {
           "title": "第十二章 力的特性",
-          "pdfKey": "pdfs/feynman-lectures/12.pdf",
+          "pdfUrl": "books/feynman-lectures/12.pdf",
           "pageCount": 14
         },
         {
           "title": "第十三章 功与势能（上）",
-          "pdfKey": "pdfs/feynman-lectures/13.pdf",
+          "pdfUrl": "books/feynman-lectures/13.pdf",
           "pageCount": 12
         },
         {
           "title": "第十四章 功与势能（下）",
-          "pdfKey": "pdfs/feynman-lectures/14.pdf",
+          "pdfUrl": "books/feynman-lectures/14.pdf",
           "pageCount": 12
         },
         {
           "title": "第十五章 狭义相对论",
-          "pdfKey": "pdfs/feynman-lectures/15.pdf",
+          "pdfUrl": "books/feynman-lectures/15.pdf",
           "pageCount": 14
         },
         {
           "title": "第十六章 相对论中的能量与动量",
-          "pdfKey": "pdfs/feynman-lectures/16.pdf",
+          "pdfUrl": "books/feynman-lectures/16.pdf",
           "pageCount": 12
         },
         {
           "title": "第十七章 时空",
-          "pdfKey": "pdfs/feynman-lectures/17.pdf",
+          "pdfUrl": "books/feynman-lectures/17.pdf",
           "pageCount": 10
         },
         {
           "title": "第十八章 二维空间中的转动",
-          "pdfKey": "pdfs/feynman-lectures/18.pdf",
+          "pdfUrl": "books/feynman-lectures/18.pdf",
           "pageCount": 10
         },
         {
           "title": "第十九章 质心、转动惯量",
-          "pdfKey": "pdfs/feynman-lectures/19.pdf",
+          "pdfUrl": "books/feynman-lectures/19.pdf",
           "pageCount": 10
         },
         {
           "title": "第二十章 空间转动",
-          "pdfKey": "pdfs/feynman-lectures/20.pdf",
+          "pdfUrl": "books/feynman-lectures/20.pdf",
           "pageCount": 10
         },
         {
           "title": "第二十一章 谐振子",
-          "pdfKey": "pdfs/feynman-lectures/21.pdf",
+          "pdfUrl": "books/feynman-lectures/21.pdf",
           "pageCount": 8
         },
         {
           "title": "第二十二章 代数学",
-          "pdfKey": "pdfs/feynman-lectures/22.pdf",
+          "pdfUrl": "books/feynman-lectures/22.pdf",
           "pageCount": 14
         },
         {
           "title": "第二十三章 共振",
-          "pdfKey": "pdfs/feynman-lectures/23.pdf",
+          "pdfUrl": "books/feynman-lectures/23.pdf",
           "pageCount": 12
         },
         {
           "title": "第二十四章 瞬变态",
-          "pdfKey": "pdfs/feynman-lectures/24.pdf",
+          "pdfUrl": "books/feynman-lectures/24.pdf",
           "pageCount": 8
         },
         {
           "title": "第二十五章 线性系统及其综述",
-          "pdfKey": "pdfs/feynman-lectures/25.pdf",
+          "pdfUrl": "books/feynman-lectures/25.pdf",
           "pageCount": 12
         },
         {
           "title": "第二十六章 光学：最短时间原理",
-          "pdfKey": "pdfs/feynman-lectures/26.pdf",
+          "pdfUrl": "books/feynman-lectures/26.pdf",
           "pageCount": 12
         },
         {
           "title": "第二十七章 几何光学",
-          "pdfKey": "pdfs/feynman-lectures/27.pdf",
+          "pdfUrl": "books/feynman-lectures/27.pdf",
           "pageCount": 10
         },
         {
           "title": "第二十八章 电磁辐射",
-          "pdfKey": "pdfs/feynman-lectures/28.pdf",
+          "pdfUrl": "books/feynman-lectures/28.pdf",
           "pageCount": 8
         },
         {
           "title": "第二十九章 干涉",
-          "pdfKey": "pdfs/feynman-lectures/29.pdf",
+          "pdfUrl": "books/feynman-lectures/29.pdf",
           "pageCount": 10
         },
         {
           "title": "第三十章 衍射",
-          "pdfKey": "pdfs/feynman-lectures/30.pdf",
+          "pdfUrl": "books/feynman-lectures/30.pdf",
           "pageCount": 14
         },
         {
           "title": "第三十一章 折射率的起源",
-          "pdfKey": "pdfs/feynman-lectures/31.pdf",
+          "pdfUrl": "books/feynman-lectures/31.pdf",
           "pageCount": 14
         },
         {
           "title": "第三十二章 辐射阻尼、光的散射",
-          "pdfKey": "pdfs/feynman-lectures/32.pdf",
+          "pdfUrl": "books/feynman-lectures/32.pdf",
           "pageCount": 10
         },
         {
           "title": "第三十三章 偏振",
-          "pdfKey": "pdfs/feynman-lectures/33.pdf",
+          "pdfUrl": "books/feynman-lectures/33.pdf",
           "pageCount": 12
         },
         {
           "title": "第三十四章 辐射中的相对论性效应",
-          "pdfKey": "pdfs/feynman-lectures/34.pdf",
+          "pdfUrl": "books/feynman-lectures/34.pdf",
           "pageCount": 14
         },
         {
           "title": "第三十五章 色视觉",
-          "pdfKey": "pdfs/feynman-lectures/35.pdf",
+          "pdfUrl": "books/feynman-lectures/35.pdf",
           "pageCount": 14
         },
         {
           "title": "第三十六章 视觉的机制",
-          "pdfKey": "pdfs/feynman-lectures/36.pdf",
+          "pdfUrl": "books/feynman-lectures/36.pdf",
           "pageCount": 18
         },
         {
           "title": "第三十七章 量子行为",
-          "pdfKey": "pdfs/feynman-lectures/37.pdf",
+          "pdfUrl": "books/feynman-lectures/37.pdf",
           "pageCount": 14
         },
         {
           "title": "第三十八章 波动观点与粒子观点的关系",
-          "pdfKey": "pdfs/feynman-lectures/38.pdf",
+          "pdfUrl": "books/feynman-lectures/38.pdf",
           "pageCount": 12
         },
         {
           "title": "第三十九章 气体分子动理论",
-          "pdfKey": "pdfs/feynman-lectures/39.pdf",
+          "pdfUrl": "books/feynman-lectures/39.pdf",
           "pageCount": 14
         },
         {
           "title": "第四十章 统计力学原理",
-          "pdfKey": "pdfs/feynman-lectures/40.pdf",
+          "pdfUrl": "books/feynman-lectures/40.pdf",
           "pageCount": 12
         }
       ]
@@ -1253,217 +1253,217 @@
       "parts": [
         {
           "title": "1 什么是有机化学?",
-          "pdfKey": "pdfs/clayden-chinese/01.pdf",
+          "pdfUrl": "books/clayden-chinese/01.pdf",
           "pageCount": 14
         },
         {
           "title": "2 有机结构",
-          "pdfKey": "pdfs/clayden-chinese/02.pdf",
+          "pdfUrl": "books/clayden-chinese/02.pdf",
           "pageCount": 28
         },
         {
           "title": "3 有机结构的确定",
-          "pdfKey": "pdfs/clayden-chinese/03.pdf",
+          "pdfUrl": "books/clayden-chinese/03.pdf",
           "pageCount": 37
         },
         {
           "title": "4 分子结构",
-          "pdfKey": "pdfs/clayden-chinese/04.pdf",
+          "pdfUrl": "books/clayden-chinese/04.pdf",
           "pageCount": 27
         },
         {
           "title": "5 有机反应",
-          "pdfKey": "pdfs/clayden-chinese/05.pdf",
+          "pdfUrl": "books/clayden-chinese/05.pdf",
           "pageCount": 18
         },
         {
           "title": "6 对羰基的亲核加成",
-          "pdfKey": "pdfs/clayden-chinese/06.pdf",
+          "pdfUrl": "books/clayden-chinese/06.pdf",
           "pageCount": 16
         },
         {
           "title": "7 离域与共轭",
-          "pdfKey": "pdfs/clayden-chinese/07.pdf",
+          "pdfUrl": "books/clayden-chinese/07.pdf",
           "pageCount": 22
         },
         {
           "title": "8 酸性、碱性和 pKa",
-          "pdfKey": "pdfs/clayden-chinese/08.pdf",
+          "pdfUrl": "books/clayden-chinese/08.pdf",
           "pageCount": 19
         },
         {
           "title": "9 使用有机金属试剂构建 C-C 键",
-          "pdfKey": "pdfs/clayden-chinese/09.pdf",
+          "pdfUrl": "books/clayden-chinese/09.pdf",
           "pageCount": 15
         },
         {
           "title": "10 羰基上的亲核取代",
-          "pdfKey": "pdfs/clayden-chinese/10.pdf",
+          "pdfUrl": "books/clayden-chinese/10.pdf",
           "pageCount": 25
         },
         {
           "title": "11 伴随羰基氧失去的羰基亲核取代",
-          "pdfKey": "pdfs/clayden-chinese/11.pdf",
+          "pdfUrl": "books/clayden-chinese/11.pdf",
           "pageCount": 18
         },
         {
           "title": "12 平衡、速率和机理",
-          "pdfKey": "pdfs/clayden-chinese/12.pdf",
+          "pdfUrl": "books/clayden-chinese/12.pdf",
           "pageCount": 29
         },
         {
           "title": "13 1H NMR: 核磁共振氢谱",
-          "pdfKey": "pdfs/clayden-chinese/13.pdf",
+          "pdfUrl": "books/clayden-chinese/13.pdf",
           "pageCount": 33
         },
         {
           "title": "14 立体化学",
-          "pdfKey": "pdfs/clayden-chinese/14.pdf",
+          "pdfUrl": "books/clayden-chinese/14.pdf",
           "pageCount": 26
         },
         {
           "title": "15 饱和碳上的亲核取代",
-          "pdfKey": "pdfs/clayden-chinese/15.pdf",
+          "pdfUrl": "books/clayden-chinese/15.pdf",
           "pageCount": 32
         },
         {
           "title": "16 构象分析",
-          "pdfKey": "pdfs/clayden-chinese/16.pdf",
+          "pdfUrl": "books/clayden-chinese/16.pdf",
           "pageCount": 22
         },
         {
           "title": "17 消除反应",
-          "pdfKey": "pdfs/clayden-chinese/17.pdf",
+          "pdfUrl": "books/clayden-chinese/17.pdf",
           "pageCount": 25
         },
         {
           "title": "18 光谱分析综述",
-          "pdfKey": "pdfs/clayden-chinese/18.pdf",
+          "pdfUrl": "books/clayden-chinese/18.pdf",
           "pageCount": 20
         },
         {
           "title": "19 烯烃的亲电加成",
-          "pdfKey": "pdfs/clayden-chinese/19.pdf",
+          "pdfUrl": "books/clayden-chinese/19.pdf",
           "pageCount": 22
         },
         {
           "title": "20 烯醇和烯醇盐的形成和反应",
-          "pdfKey": "pdfs/clayden-chinese/20.pdf",
+          "pdfUrl": "books/clayden-chinese/20.pdf",
           "pageCount": 22
         },
         {
           "title": "21 芳香亲电取代",
-          "pdfKey": "pdfs/clayden-chinese/21.pdf",
+          "pdfUrl": "books/clayden-chinese/21.pdf",
           "pageCount": 27
         },
         {
           "title": "22 共轭加成和芳香亲核取代",
-          "pdfKey": "pdfs/clayden-chinese/22.pdf",
+          "pdfUrl": "books/clayden-chinese/22.pdf",
           "pageCount": 30
         },
         {
           "title": "23 化学选择性和保护基",
-          "pdfKey": "pdfs/clayden-chinese/23.pdf",
+          "pdfUrl": "books/clayden-chinese/23.pdf",
           "pageCount": 34
         },
         {
           "title": "24 区域选择性",
-          "pdfKey": "pdfs/clayden-chinese/24.pdf",
+          "pdfUrl": "books/clayden-chinese/24.pdf",
           "pageCount": 22
         },
         {
           "title": "25 烯醇盐的烷基化",
-          "pdfKey": "pdfs/clayden-chinese/25.pdf",
+          "pdfUrl": "books/clayden-chinese/25.pdf",
           "pageCount": 30
         },
         {
           "title": "26 烯醇盐和羰基化合物的反应：羟醛反应和 Claisen 反应",
-          "pdfKey": "pdfs/clayden-chinese/26.pdf",
+          "pdfUrl": "books/clayden-chinese/26.pdf",
           "pageCount": 42
         },
         {
           "title": "27 有机化学中的硫、硅和磷",
-          "pdfKey": "pdfs/clayden-chinese/27.pdf",
+          "pdfUrl": "books/clayden-chinese/27.pdf",
           "pageCount": 38
         },
         {
           "title": "28 逆合成分析",
-          "pdfKey": "pdfs/clayden-chinese/28.pdf",
+          "pdfUrl": "books/clayden-chinese/28.pdf",
           "pageCount": 29
         },
         {
           "title": "29 芳杂环 1: 反应",
-          "pdfKey": "pdfs/clayden-chinese/29.pdf",
+          "pdfUrl": "books/clayden-chinese/29.pdf",
           "pageCount": 34
         },
         {
           "title": "30 芳杂环 2: 合成",
-          "pdfKey": "pdfs/clayden-chinese/30.pdf",
+          "pdfUrl": "books/clayden-chinese/30.pdf",
           "pageCount": 32
         },
         {
           "title": "31 饱和杂环和立体电子效应",
-          "pdfKey": "pdfs/clayden-chinese/31.pdf",
+          "pdfUrl": "books/clayden-chinese/31.pdf",
           "pageCount": 36
         },
         {
           "title": "32 环状分子中的立体选择性",
-          "pdfKey": "pdfs/clayden-chinese/32.pdf",
+          "pdfUrl": "books/clayden-chinese/32.pdf",
           "pageCount": 27
         },
         {
           "title": "33 非对映选择性",
-          "pdfKey": "pdfs/clayden-chinese/33.pdf",
+          "pdfUrl": "books/clayden-chinese/33.pdf",
           "pageCount": 25
         },
         {
           "title": "34 周环反应 1: 环加成",
-          "pdfKey": "pdfs/clayden-chinese/34.pdf",
+          "pdfUrl": "books/clayden-chinese/34.pdf",
           "pageCount": 32
         },
         {
           "title": "35 周环反应 2: σ 重排和电环化反应",
-          "pdfKey": "pdfs/clayden-chinese/35.pdf",
+          "pdfUrl": "books/clayden-chinese/35.pdf",
           "pageCount": 22
         },
         {
           "title": "36 参与、重排和碎片化",
-          "pdfKey": "pdfs/clayden-chinese/36.pdf",
+          "pdfUrl": "books/clayden-chinese/36.pdf",
           "pageCount": 39
         },
         {
           "title": "37 自由基反应",
-          "pdfKey": "pdfs/clayden-chinese/37.pdf",
+          "pdfUrl": "books/clayden-chinese/37.pdf",
           "pageCount": 33
         },
         {
           "title": "38 卡宾的合成与反应",
-          "pdfKey": "pdfs/clayden-chinese/38.pdf",
+          "pdfUrl": "books/clayden-chinese/38.pdf",
           "pageCount": 26
         },
         {
           "title": "39 探寻反应机理",
-          "pdfKey": "pdfs/clayden-chinese/39.pdf",
+          "pdfUrl": "books/clayden-chinese/39.pdf",
           "pageCount": 40
         },
         {
           "title": "40 金属有机化学",
-          "pdfKey": "pdfs/clayden-chinese/40.pdf",
+          "pdfUrl": "books/clayden-chinese/40.pdf",
           "pageCount": 33
         },
         {
           "title": "41 不对称合成",
-          "pdfKey": "pdfs/clayden-chinese/41.pdf",
+          "pdfUrl": "books/clayden-chinese/41.pdf",
           "pageCount": 32
         },
         {
           "title": "42 生命中的有机化学",
-          "pdfKey": "pdfs/clayden-chinese/42.pdf",
+          "pdfUrl": "books/clayden-chinese/42.pdf",
           "pageCount": 35
         },
         {
           "title": "43 当今的有机化学",
-          "pdfKey": "pdfs/clayden-chinese/43.pdf",
+          "pdfUrl": "books/clayden-chinese/43.pdf",
           "pageCount": 13
         }
       ]
@@ -1478,112 +1478,112 @@
       "parts": [
         {
           "title": "封面、前言与目录",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/00.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/00.pdf",
           "pageCount": 19
         },
         {
           "title": "第1章 气体、液体和溶液的性质",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/01.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/01.pdf",
           "pageCount": 34
         },
         {
           "title": "第2章 化学热力学基础与化学平衡",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/02.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/02.pdf",
           "pageCount": 33
         },
         {
           "title": "第3章 酸碱理论与电离平衡",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/03.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/03.pdf",
           "pageCount": 21
         },
         {
           "title": "第4章 沉淀反应",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/04.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/04.pdf",
           "pageCount": 11
         },
         {
           "title": "第5章 氧化-还原反应和电化学",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/05.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/05.pdf",
           "pageCount": 26
         },
         {
           "title": "第6章 化学动力学基础",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/06.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/06.pdf",
           "pageCount": 29
         },
         {
           "title": "第7章 原子结构和元素周期律",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/07.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/07.pdf",
           "pageCount": 41
         },
         {
           "title": "第8章 化学键和分子、晶体结构",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/08.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/08.pdf",
           "pageCount": 60
         },
         {
           "title": "第9章 配位化合物",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/09.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/09.pdf",
           "pageCount": 63
         },
         {
           "title": "第10章 稀有气体",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/10.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/10.pdf",
           "pageCount": 15
         },
         {
           "title": "第11章 氢、碱金属和碱土金属",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/11.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/11.pdf",
           "pageCount": 23
         },
         {
           "title": "第12章 卤素",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/12.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/12.pdf",
           "pageCount": 21
         },
         {
           "title": "第13章 氧族元素",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/13.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/13.pdf",
           "pageCount": 22
         },
         {
           "title": "第14章 氮族元素",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/14.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/14.pdf",
           "pageCount": 24
         },
         {
           "title": "第15章 碳族元素",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/15.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/15.pdf",
           "pageCount": 18
         },
         {
           "title": "第16章 硼族元素",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/16.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/16.pdf",
           "pageCount": 20
         },
         {
           "title": "第17章 铜、锌分族",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/17.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/17.pdf",
           "pageCount": 16
         },
         {
           "title": "第18章 过渡元素1",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/18.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/18.pdf",
           "pageCount": 33
         },
         {
           "title": "第19章 过渡元素2",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/19.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/19.pdf",
           "pageCount": 19
         },
         {
           "title": "第20章 镧系元素和锕系元素",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/20.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/20.pdf",
           "pageCount": 23
         },
         {
           "title": "附录",
-          "pdfKey": "pdfs/inorganic-chemistry-zhang-zude/21.pdf",
+          "pdfUrl": "books/inorganic-chemistry-zhang-zude/21.pdf",
           "pageCount": 44
         }
       ]
@@ -1596,29 +1596,29 @@
       "author": "邢其毅、裴伟伟、徐瑞秋、裴坚",
       "source": "基础有机化学（第4版 ）上册.pdf",
       "parts": [
-        { "title": "第1章 绪论", "pdfKey": "pdfs/xing-basic-organic-4-upper/01.pdf", "pageCount": 28 },
-        { "title": "第2章 有机化合物的分类、表示方式、命名", "pdfKey": "pdfs/xing-basic-organic-4-upper/02.pdf", "pageCount": 40 },
-        { "title": "第3章 立体化学（1/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/03-1.pdf", "pageCount": 22 },
-        { "title": "第3章 立体化学（2/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/03-2.pdf", "pageCount": 22 },
-        { "title": "第4章 烷烃、自由基取代反应", "pdfKey": "pdfs/xing-basic-organic-4-upper/04.pdf", "pageCount": 24 },
-        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（1/3）", "pdfKey": "pdfs/xing-basic-organic-4-upper/05-1.pdf", "pageCount": 27 },
-        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（2/3）", "pdfKey": "pdfs/xing-basic-organic-4-upper/05-2.pdf", "pageCount": 26 },
-        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（3/3）", "pdfKey": "pdfs/xing-basic-organic-4-upper/05-3.pdf", "pageCount": 26 },
-        { "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应（1/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/06-1.pdf", "pageCount": 31 },
-        { "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应（2/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/06-2.pdf", "pageCount": 31 },
-        { "title": "第7章 醇和醚（1/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/07-1.pdf", "pageCount": 29 },
-        { "title": "第7章 醇和醚（2/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/07-2.pdf", "pageCount": 29 },
-        { "title": "第8章 烯烃、炔烃、加成反应（一）（1/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/08-1.pdf", "pageCount": 30 },
-        { "title": "第8章 烯烃、炔烃、加成反应（一）（2/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/08-2.pdf", "pageCount": 30 },
-        { "title": "第9章 共轭烯烃、周环反应（1/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/09-1.pdf", "pageCount": 28 },
-        { "title": "第9章 共轭烯烃、周环反应（2/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/09-2.pdf", "pageCount": 28 },
-        { "title": "第10章 醛和酮、加成反应（二）（1/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/10-1.pdf", "pageCount": 34 },
-        { "title": "第10章 醛和酮、加成反应（二）（2/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/10-2.pdf", "pageCount": 33 },
-        { "title": "第11章 羧酸", "pdfKey": "pdfs/xing-basic-organic-4-upper/11.pdf", "pageCount": 33 },
-        { "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应（1/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/12-1.pdf", "pageCount": 30 },
-        { "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应（2/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/12-2.pdf", "pageCount": 30 },
-        { "title": "第13章 缩合反应（1/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/13-1.pdf", "pageCount": 25 },
-        { "title": "第13章 缩合反应（2/2）", "pdfKey": "pdfs/xing-basic-organic-4-upper/13-2.pdf", "pageCount": 26 }
+        { "title": "第1章 绪论", "pdfUrl": "books/xing-basic-organic-4-upper/01.pdf", "pageCount": 28 },
+        { "title": "第2章 有机化合物的分类、表示方式、命名", "pdfUrl": "books/xing-basic-organic-4-upper/02.pdf", "pageCount": 40 },
+        { "title": "第3章 立体化学（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/03-1.pdf", "pageCount": 22 },
+        { "title": "第3章 立体化学（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/03-2.pdf", "pageCount": 22 },
+        { "title": "第4章 烷烃、自由基取代反应", "pdfUrl": "books/xing-basic-organic-4-upper/04.pdf", "pageCount": 24 },
+        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（1/3）", "pdfUrl": "books/xing-basic-organic-4-upper/05-1.pdf", "pageCount": 27 },
+        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（2/3）", "pdfUrl": "books/xing-basic-organic-4-upper/05-2.pdf", "pageCount": 26 },
+        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（3/3）", "pdfUrl": "books/xing-basic-organic-4-upper/05-3.pdf", "pageCount": 26 },
+        { "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/06-1.pdf", "pageCount": 31 },
+        { "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/06-2.pdf", "pageCount": 31 },
+        { "title": "第7章 醇和醚（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/07-1.pdf", "pageCount": 29 },
+        { "title": "第7章 醇和醚（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/07-2.pdf", "pageCount": 29 },
+        { "title": "第8章 烯烃、炔烃、加成反应（一）（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/08-1.pdf", "pageCount": 30 },
+        { "title": "第8章 烯烃、炔烃、加成反应（一）（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/08-2.pdf", "pageCount": 30 },
+        { "title": "第9章 共轭烯烃、周环反应（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/09-1.pdf", "pageCount": 28 },
+        { "title": "第9章 共轭烯烃、周环反应（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/09-2.pdf", "pageCount": 28 },
+        { "title": "第10章 醛和酮、加成反应（二）（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/10-1.pdf", "pageCount": 34 },
+        { "title": "第10章 醛和酮、加成反应（二）（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/10-2.pdf", "pageCount": 33 },
+        { "title": "第11章 羧酸", "pdfUrl": "books/xing-basic-organic-4-upper/11.pdf", "pageCount": 33 },
+        { "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/12-1.pdf", "pageCount": 30 },
+        { "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/12-2.pdf", "pageCount": 30 },
+        { "title": "第13章 缩合反应（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/13-1.pdf", "pageCount": 25 },
+        { "title": "第13章 缩合反应（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/13-2.pdf", "pageCount": 26 }
       ]
     },
     {
@@ -1629,21 +1629,21 @@
       "author": "邢其毅、裴伟伟、徐瑞秋、裴坚",
       "source": "基础有机化学（第4版）下册.pdf",
       "parts": [
-        { "title": "封面、版权与目录", "pdfKey": "pdfs/xing-basic-organic-4-lower/00.pdf", "pageCount": 9 },
-        { "title": "第14章 脂肪胺", "pdfKey": "pdfs/xing-basic-organic-4-lower/14.pdf", "pageCount": 47 },
-        { "title": "第15章 苯、芳烃、芳香性", "pdfKey": "pdfs/xing-basic-organic-4-lower/15.pdf", "pageCount": 49 },
-        { "title": "第16章 芳环上的取代反应", "pdfKey": "pdfs/xing-basic-organic-4-lower/16.pdf", "pageCount": 51 },
-        { "title": "第17章 烷基苯衍生物、酚、醌", "pdfKey": "pdfs/xing-basic-organic-4-lower/17.pdf", "pageCount": 46 },
-        { "title": "第18章 含氮芳香化合物、芳炔", "pdfKey": "pdfs/xing-basic-organic-4-lower/18.pdf", "pageCount": 43 },
-        { "title": "第19章 杂环化合物", "pdfKey": "pdfs/xing-basic-organic-4-lower/19.pdf", "pageCount": 54 },
-        { "title": "第20章 糖类化合物", "pdfKey": "pdfs/xing-basic-organic-4-lower/20.pdf", "pageCount": 35 },
-        { "title": "第21章 氨基酸、多肽、蛋白质以及核酸", "pdfKey": "pdfs/xing-basic-organic-4-lower/21.pdf", "pageCount": 41 },
-        { "title": "第22章 脂类、萜类和甾族化合物", "pdfKey": "pdfs/xing-basic-organic-4-lower/22.pdf", "pageCount": 33 },
-        { "title": "第23章 氧化反应", "pdfKey": "pdfs/xing-basic-organic-4-lower/23.pdf", "pageCount": 33 },
-        { "title": "第24章 重排反应", "pdfKey": "pdfs/xing-basic-organic-4-lower/24.pdf", "pageCount": 35 },
-        { "title": "第25章 过渡金属催化的有机反应", "pdfKey": "pdfs/xing-basic-organic-4-lower/25.pdf", "pageCount": 37 },
-        { "title": "第26章 有机合成与逆合成分析", "pdfKey": "pdfs/xing-basic-organic-4-lower/26.pdf", "pageCount": 39 },
-        { "title": "第27章 化学文献与网络检索", "pdfKey": "pdfs/xing-basic-organic-4-lower/27.pdf", "pageCount": 66 }
+        { "title": "封面、版权与目录", "pdfUrl": "books/xing-basic-organic-4-lower/00.pdf", "pageCount": 9 },
+        { "title": "第14章 脂肪胺", "pdfUrl": "books/xing-basic-organic-4-lower/14.pdf", "pageCount": 47 },
+        { "title": "第15章 苯、芳烃、芳香性", "pdfUrl": "books/xing-basic-organic-4-lower/15.pdf", "pageCount": 49 },
+        { "title": "第16章 芳环上的取代反应", "pdfUrl": "books/xing-basic-organic-4-lower/16.pdf", "pageCount": 51 },
+        { "title": "第17章 烷基苯衍生物、酚、醌", "pdfUrl": "books/xing-basic-organic-4-lower/17.pdf", "pageCount": 46 },
+        { "title": "第18章 含氮芳香化合物、芳炔", "pdfUrl": "books/xing-basic-organic-4-lower/18.pdf", "pageCount": 43 },
+        { "title": "第19章 杂环化合物", "pdfUrl": "books/xing-basic-organic-4-lower/19.pdf", "pageCount": 54 },
+        { "title": "第20章 糖类化合物", "pdfUrl": "books/xing-basic-organic-4-lower/20.pdf", "pageCount": 35 },
+        { "title": "第21章 氨基酸、多肽、蛋白质以及核酸", "pdfUrl": "books/xing-basic-organic-4-lower/21.pdf", "pageCount": 41 },
+        { "title": "第22章 脂类、萜类和甾族化合物", "pdfUrl": "books/xing-basic-organic-4-lower/22.pdf", "pageCount": 33 },
+        { "title": "第23章 氧化反应", "pdfUrl": "books/xing-basic-organic-4-lower/23.pdf", "pageCount": 33 },
+        { "title": "第24章 重排反应", "pdfUrl": "books/xing-basic-organic-4-lower/24.pdf", "pageCount": 35 },
+        { "title": "第25章 过渡金属催化的有机反应", "pdfUrl": "books/xing-basic-organic-4-lower/25.pdf", "pageCount": 37 },
+        { "title": "第26章 有机合成与逆合成分析", "pdfUrl": "books/xing-basic-organic-4-lower/26.pdf", "pageCount": 39 },
+        { "title": "第27章 化学文献与网络检索", "pdfUrl": "books/xing-basic-organic-4-lower/27.pdf", "pageCount": 66 }
       ]
     },
     {
@@ -1654,34 +1654,34 @@
       "author": "裴伟伟、裴坚",
       "source": "基础有机化学习题解析.pdf",
       "parts": [
-        { "title": "封面、版权、前言与目录", "pdfKey": "pdfs/xing-basic-organic-4-solutions/00.pdf", "pageCount": 6 },
-        { "title": "第1章 绪论", "pdfKey": "pdfs/xing-basic-organic-4-solutions/01.pdf", "pageCount": 6 },
-        { "title": "第2章 有机化合物的分类、表示方式、命名", "pdfKey": "pdfs/xing-basic-organic-4-solutions/02.pdf", "pageCount": 18 },
-        { "title": "第3章 立体化学", "pdfKey": "pdfs/xing-basic-organic-4-solutions/03.pdf", "pageCount": 17 },
-        { "title": "第4章 烷烃、自由基取代反应", "pdfKey": "pdfs/xing-basic-organic-4-solutions/04.pdf", "pageCount": 10 },
-        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱", "pdfKey": "pdfs/xing-basic-organic-4-solutions/05.pdf", "pageCount": 27 },
-        { "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应", "pdfKey": "pdfs/xing-basic-organic-4-solutions/06.pdf", "pageCount": 21 },
-        { "title": "第7章 醇和醚", "pdfKey": "pdfs/xing-basic-organic-4-solutions/07.pdf", "pageCount": 26 },
-        { "title": "第8章 烯烃、炔烃、加成反应（一）", "pdfKey": "pdfs/xing-basic-organic-4-solutions/08.pdf", "pageCount": 30 },
-        { "title": "第9章 共轭烯烃、周环反应", "pdfKey": "pdfs/xing-basic-organic-4-solutions/09.pdf", "pageCount": 24 },
-        { "title": "第10章 醛和酮、加成反应（二）", "pdfKey": "pdfs/xing-basic-organic-4-solutions/10.pdf", "pageCount": 32 },
-        { "title": "第11章 羧酸", "pdfKey": "pdfs/xing-basic-organic-4-solutions/11.pdf", "pageCount": 17 },
-        { "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应", "pdfKey": "pdfs/xing-basic-organic-4-solutions/12.pdf", "pageCount": 24 },
-        { "title": "第13章 缩合反应", "pdfKey": "pdfs/xing-basic-organic-4-solutions/13.pdf", "pageCount": 29 },
-        { "title": "第14章 脂肪胺", "pdfKey": "pdfs/xing-basic-organic-4-solutions/14.pdf", "pageCount": 26 },
-        { "title": "第15章 苯、芳烃、芳香性", "pdfKey": "pdfs/xing-basic-organic-4-solutions/15.pdf", "pageCount": 13 },
-        { "title": "第16章 芳环上的取代反应", "pdfKey": "pdfs/xing-basic-organic-4-solutions/16.pdf", "pageCount": 20 },
-        { "title": "第17章 烷基苯衍生物、酚、醌", "pdfKey": "pdfs/xing-basic-organic-4-solutions/17.pdf", "pageCount": 21 },
-        { "title": "第18章 含氮芳香化合物、芳炔", "pdfKey": "pdfs/xing-basic-organic-4-solutions/18.pdf", "pageCount": 18 },
-        { "title": "第19章 杂环化合物", "pdfKey": "pdfs/xing-basic-organic-4-solutions/19.pdf", "pageCount": 26 },
-        { "title": "第20章 糖类化合物", "pdfKey": "pdfs/xing-basic-organic-4-solutions/20.pdf", "pageCount": 17 },
-        { "title": "第21章 氨基酸、多肽、蛋白质以及核酸", "pdfKey": "pdfs/xing-basic-organic-4-solutions/21.pdf", "pageCount": 12 },
-        { "title": "第22章 脂类、萜类和甾族化合物", "pdfKey": "pdfs/xing-basic-organic-4-solutions/22.pdf", "pageCount": 16 },
-        { "title": "第23章 氧化反应", "pdfKey": "pdfs/xing-basic-organic-4-solutions/23.pdf", "pageCount": 6 },
-        { "title": "第24章 重排反应", "pdfKey": "pdfs/xing-basic-organic-4-solutions/24.pdf", "pageCount": 9 },
-        { "title": "第25章 过渡金属催化的有机反应", "pdfKey": "pdfs/xing-basic-organic-4-solutions/25.pdf", "pageCount": 5 },
-        { "title": "第26章 有机合成与逆合成分析", "pdfKey": "pdfs/xing-basic-organic-4-solutions/26.pdf", "pageCount": 8 },
-        { "title": "第27章 化学文献与网络检索", "pdfKey": "pdfs/xing-basic-organic-4-solutions/27.pdf", "pageCount": 5 }
+        { "title": "封面、版权、前言与目录", "pdfUrl": "books/xing-basic-organic-4-solutions/00.pdf", "pageCount": 6 },
+        { "title": "第1章 绪论", "pdfUrl": "books/xing-basic-organic-4-solutions/01.pdf", "pageCount": 6 },
+        { "title": "第2章 有机化合物的分类、表示方式、命名", "pdfUrl": "books/xing-basic-organic-4-solutions/02.pdf", "pageCount": 18 },
+        { "title": "第3章 立体化学", "pdfUrl": "books/xing-basic-organic-4-solutions/03.pdf", "pageCount": 17 },
+        { "title": "第4章 烷烃、自由基取代反应", "pdfUrl": "books/xing-basic-organic-4-solutions/04.pdf", "pageCount": 10 },
+        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱", "pdfUrl": "books/xing-basic-organic-4-solutions/05.pdf", "pageCount": 27 },
+        { "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应", "pdfUrl": "books/xing-basic-organic-4-solutions/06.pdf", "pageCount": 21 },
+        { "title": "第7章 醇和醚", "pdfUrl": "books/xing-basic-organic-4-solutions/07.pdf", "pageCount": 26 },
+        { "title": "第8章 烯烃、炔烃、加成反应（一）", "pdfUrl": "books/xing-basic-organic-4-solutions/08.pdf", "pageCount": 30 },
+        { "title": "第9章 共轭烯烃、周环反应", "pdfUrl": "books/xing-basic-organic-4-solutions/09.pdf", "pageCount": 24 },
+        { "title": "第10章 醛和酮、加成反应（二）", "pdfUrl": "books/xing-basic-organic-4-solutions/10.pdf", "pageCount": 32 },
+        { "title": "第11章 羧酸", "pdfUrl": "books/xing-basic-organic-4-solutions/11.pdf", "pageCount": 17 },
+        { "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应", "pdfUrl": "books/xing-basic-organic-4-solutions/12.pdf", "pageCount": 24 },
+        { "title": "第13章 缩合反应", "pdfUrl": "books/xing-basic-organic-4-solutions/13.pdf", "pageCount": 29 },
+        { "title": "第14章 脂肪胺", "pdfUrl": "books/xing-basic-organic-4-solutions/14.pdf", "pageCount": 26 },
+        { "title": "第15章 苯、芳烃、芳香性", "pdfUrl": "books/xing-basic-organic-4-solutions/15.pdf", "pageCount": 13 },
+        { "title": "第16章 芳环上的取代反应", "pdfUrl": "books/xing-basic-organic-4-solutions/16.pdf", "pageCount": 20 },
+        { "title": "第17章 烷基苯衍生物、酚、醌", "pdfUrl": "books/xing-basic-organic-4-solutions/17.pdf", "pageCount": 21 },
+        { "title": "第18章 含氮芳香化合物、芳炔", "pdfUrl": "books/xing-basic-organic-4-solutions/18.pdf", "pageCount": 18 },
+        { "title": "第19章 杂环化合物", "pdfUrl": "books/xing-basic-organic-4-solutions/19.pdf", "pageCount": 26 },
+        { "title": "第20章 糖类化合物", "pdfUrl": "books/xing-basic-organic-4-solutions/20.pdf", "pageCount": 17 },
+        { "title": "第21章 氨基酸、多肽、蛋白质以及核酸", "pdfUrl": "books/xing-basic-organic-4-solutions/21.pdf", "pageCount": 12 },
+        { "title": "第22章 脂类、萜类和甾族化合物", "pdfUrl": "books/xing-basic-organic-4-solutions/22.pdf", "pageCount": 16 },
+        { "title": "第23章 氧化反应", "pdfUrl": "books/xing-basic-organic-4-solutions/23.pdf", "pageCount": 6 },
+        { "title": "第24章 重排反应", "pdfUrl": "books/xing-basic-organic-4-solutions/24.pdf", "pageCount": 9 },
+        { "title": "第25章 过渡金属催化的有机反应", "pdfUrl": "books/xing-basic-organic-4-solutions/25.pdf", "pageCount": 5 },
+        { "title": "第26章 有机合成与逆合成分析", "pdfUrl": "books/xing-basic-organic-4-solutions/26.pdf", "pageCount": 8 },
+        { "title": "第27章 化学文献与网络检索", "pdfUrl": "books/xing-basic-organic-4-solutions/27.pdf", "pageCount": 5 }
       ]
     }
   ]

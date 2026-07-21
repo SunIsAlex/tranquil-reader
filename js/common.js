@@ -69,99 +69,6 @@ const Store = {
       }));
     } catch { /* 隐私模式或配额满，静默失败 */ }
   },
-  getAllProgress() {
-    const progress = {};
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (!key || !key.startsWith('reader.progress.')) continue;
-        const bookId = key.slice('reader.progress.'.length);
-        if (!bookId) continue;
-
-        const item = JSON.parse(localStorage.getItem(key));
-        if (!item || typeof item !== 'object') continue;
-        if (!Number.isInteger(item.chapter)) continue;
-
-        progress[bookId] = {
-          chapter: item.chapter,
-          para: Number.isInteger(item.para) ? item.para : 0,
-          scroll: Number.isFinite(item.scroll) ? item.scroll : 0,
-          time: Number.isFinite(item.time) ? item.time : Date.now(),
-        };
-      }
-    } catch { /* ignore partial localStorage failures */ }
-
-    return progress;
-  },
-  getAllBookmarks() {
-    const bookmarks = {};
-    try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (!key || !key.startsWith(this.BOOKMARK_PREFIX)) continue;
-        const bookId = key.slice(this.BOOKMARK_PREFIX.length);
-        if (!bookId) continue;
-        bookmarks[bookId] = this.getBookmarks(bookId);
-      }
-    } catch { /* ignore partial localStorage failures */ }
-
-    return bookmarks;
-  },
-  applyProgressSnapshot(snapshot) {
-    if (!snapshot || typeof snapshot !== 'object') return 0;
-
-    const progress = snapshot.progress || {};
-    let count = 0;
-
-    try {
-      for (const [bookId, item] of Object.entries(progress)) {
-        if (!item || typeof item !== 'object') continue;
-        if (!Number.isInteger(item.chapter)) continue;
-        localStorage.setItem(this.progressKey(bookId), JSON.stringify({
-          chapter: item.chapter,
-          para: Number.isInteger(item.para) ? item.para : 0,
-          scroll: Number.isFinite(item.scroll) ? item.scroll : 0,
-          time: Number.isFinite(item.time) ? item.time : Date.now(),
-        }));
-        count += 1;
-      }
-
-      const last = snapshot.lastProgress;
-      if (last && last.book && progress[last.book]) {
-        localStorage.setItem(this.LAST_KEY, JSON.stringify({
-          book: String(last.book),
-          ...progress[last.book],
-        }));
-      }
-    } catch { /* ignore storage failures */ }
-
-    return count;
-  },
-  applyBookmarkSnapshot(snapshot) {
-    if (!snapshot || typeof snapshot !== 'object') return 0;
-    const bookmarkMap = snapshot.bookmarks;
-    // Old sync records do not contain this field. Leave local bookmarks untouched.
-    if (!bookmarkMap || typeof bookmarkMap !== 'object' || Array.isArray(bookmarkMap)) return 0;
-
-    let count = 0;
-    try {
-      for (const [bookId, items] of Object.entries(bookmarkMap)) {
-        if (!Array.isArray(items)) continue;
-        const normalized = items.map(item => this.normalizeBookmark(item)).filter(Boolean);
-        this.setBookmarks(bookId, normalized);
-        count += normalized.length;
-      }
-    } catch { /* ignore storage failures */ }
-
-    return count;
-  },
-  progressSnapshot() {
-    return {
-      progress: this.getAllProgress(),
-      lastProgress: this.getLastProgress(),
-      bookmarks: this.getAllBookmarks(),
-    };
-  },
   readerURL(bookId, progress = null) {
     const p = progress || this.getProgress(bookId) || {};
     const chapter = Number.isInteger(p.chapter) ? p.chapter : 0;
@@ -175,79 +82,6 @@ const Store = {
   },
   setFontSize(rem) { localStorage.setItem(this.fontKey, String(rem)); },
 };
-
-/* ---------- 阅读进度同步 ---------- */
-const ProgressSync = {
-  API: 'api/progress',
-
-  normalizeCode(code) {
-    return String(code || '').trim().toLowerCase();
-  },
-
-  validCode(code) {
-    return /^[a-z0-9][a-z0-9_]{3,31}$/.test(this.normalizeCode(code));
-  },
-
-  async save(code) {
-    code = this.normalizeCode(code);
-    if (!this.validCode(code)) throw new Error('同步码需为 4-32 位字母、数字或下划线');
-
-    const snapshot = Store.progressSnapshot();
-    const count = Object.keys(snapshot.progress).length;
-    const bookmarkCount = Object.values(snapshot.bookmarks)
-      .reduce((total, items) => total + items.length, 0);
-    if (!count) throw new Error('没有可保存的阅读进度');
-
-    const res = await fetch(this.API, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      cache: 'no-store',
-      body: JSON.stringify({ code, ...snapshot }),
-    });
-
-    const data = await readSyncResponse(res);
-    return {
-      code,
-      count: data.count || count,
-      bookmarkCount: Number.isInteger(data.bookmarkCount) ? data.bookmarkCount : bookmarkCount,
-      updatedAt: data.updatedAt || Date.now(),
-    };
-  },
-
-  async restore(code) {
-    code = this.normalizeCode(code);
-    if (!this.validCode(code)) throw new Error('同步码需为 4-32 位字母、数字或下划线');
-
-    const res = await fetch(`${this.API}?code=${encodeURIComponent(code)}`, {
-      cache: 'no-store',
-    });
-
-    const data = await readSyncResponse(res);
-    const count = Store.applyProgressSnapshot(data);
-    const bookmarkCount = Store.applyBookmarkSnapshot(data);
-    if (!count) throw new Error('没有可恢复的阅读进度');
-
-    return {
-      code,
-      count,
-      bookmarkCount,
-      updatedAt: data.updatedAt || null,
-      lastProgress: data.lastProgress || null,
-    };
-  },
-};
-
-async function readSyncResponse(res) {
-  let data = null;
-  try { data = await res.json(); }
-  catch { /* ignore invalid response body */ }
-
-  if (!res.ok || !data || data.ok === false) {
-    throw new Error((data && data.error) || `同步请求失败（${res.status}）`);
-  }
-
-  return data;
-}
 
 /* ---------- 离线下载 ---------- */
 // 把整本书（清单 + 各章正文）写入持久缓存 tranquil-books，
@@ -312,7 +146,6 @@ const Offline = {
     const isPDF = book && (
       book.type === 'pdf' ||
       typeof book.pdfUrl === 'string' ||
-      typeof book.pdfKey === 'string' ||
       Array.isArray(book.parts)
     );
     if (!isPDF) return true;
@@ -323,8 +156,6 @@ const Offline = {
 
     return sources.length > 0 && sources.every(source => {
       if (!source || typeof source !== 'object') return false;
-      const pdfKey = typeof source.pdfKey === 'string' ? source.pdfKey.trim() : '';
-      if (pdfKey) return true;
       const pdfUrl = typeof source.pdfUrl === 'string' ? source.pdfUrl.trim() : '';
       return Boolean(pdfUrl && !isExternalURL(pdfUrl));
     });
@@ -375,16 +206,6 @@ const Offline = {
       const pdfUrl = typeof source.pdfUrl === 'string' ? source.pdfUrl.trim() : '';
       if (pdfUrl && !isExternalURL(pdfUrl)) {
         urls.push(withBookVersion(pdfUrl, book, source));
-        continue;
-      }
-
-      const pdfKey = typeof source.pdfKey === 'string' ? source.pdfKey.trim() : '';
-      if (pdfKey) {
-        urls.push(withBookVersion(
-          `api/pdf?key=${encodeURIComponent(pdfKey)}`,
-          book,
-          source
-        ));
       }
     }
 

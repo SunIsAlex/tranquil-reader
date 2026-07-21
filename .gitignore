@@ -1,7 +1,4 @@
-# Tencent Cloud EdgeOne
 .env
-.edgeone/*
-.tef_dist/*
 dist/
 node_modules/
 
@@ -9,7 +6,7 @@ node_modules/
 .twa-build/
 Tranquil - Google Play package (*).zip
 
-# PDFs are served from EdgeOne Blob (see tools/upload_pdfs_to_blob.mjs), not tracked in git
+# PDFs are deployed to the server directly, not tracked in git
 books/**/*.pdf
 
 # Local source PDFs

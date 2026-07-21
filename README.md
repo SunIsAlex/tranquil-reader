@@ -55,7 +55,7 @@
 - 点击书签快速跳转到对应段落
 - PDF 书签精确到分卷/章节和页码
 - 返回键优先关闭书签抽屉
-- 数据存储在本地浏览器中，也可随阅读进度同步
+- 数据存储在本地浏览器中
 
 ### 高亮系统
 
@@ -234,9 +234,8 @@ novel-reader/
 | `chapters` | 章节列表 |
 | `type` | 可选。`"pdf"` 表示 PDF 书籍 |
 | `pdfUrl` | 可选。PDF URL，可以是外部 URL 或站内路径 |
-| `pdfKey` | 可选。EdgeOne Blob 中的 PDF key，例如 `pdfs/example.pdf` |
 | `pageCount` | 可选。PDF 页数，用于页码输入上限和书架显示 |
-| `parts` | 可选。PDF 分卷列表，每项可配置 `title`、`pdfUrl` 或 `pdfKey`、`pageCount` |
+| `parts` | 可选。PDF 分卷列表，每项可配置 `title`、`pdfUrl`、`pageCount` |
 
 章节和 PDF 分卷默认继承书籍的 `version`。如果只更新一个章节或一个 PDF
 分卷，可以在对应 `chapters` / `parts` 项上单独设置 `version`；客户端只会
@@ -244,61 +243,8 @@ novel-reader/
 
 ### PDF 书籍
 
-PDF 文件不建议放进 Git 仓库。推荐的免备案方案是使用 EdgeOne Blob 保存 PDF，并通过 Pages Edge Function 读取：
-
-```text
-edge-functions/api/pdf.js
-```
-
-部署后读取路由为：
-
-```text
-/api/pdf?key=pdfs/example.pdf
-```
-
-EdgeOne Blob 的 namespace 固定为：
-
-```text
-tranquil-reader-pdfs
-```
-
-上传 PDF 时建议使用 Blob SDK 或临时上传 URL，把对象 key 放在 `pdfs/` 目录下，例如：
-
-```text
-pdfs/example.pdf
-```
-
-仓库自带的批量上传脚本会把 `books/manifest.json` 中本地 `pdfUrl` 引用的 PDF
-全部上传到 Blob（key 规则：`books/<book-id>/<file>.pdf` →
-`pdfs/<book-id>/<file>.pdf`），已存在的 key 自动跳过，可反复重跑：
-
-```bash
-EDGEONE_PAGES_PROJECT_ID=pages-xxx EDGEONE_PAGES_TOKEN=xxx \
-  node tools/upload_pdfs_to_blob.mjs --dry-run   # 先预览，不上传
-
-EDGEONE_PAGES_PROJECT_ID=pages-xxx EDGEONE_PAGES_TOKEN=xxx \
-  node tools/upload_pdfs_to_blob.mjs             # 实际上传
-```
-
-上传完成后，把对应书籍条目的 `pdfUrl` 改为 `pdfKey`，并把 PDF 文件从 Git
-中移除（`books/**/*.pdf` 已在 `.gitignore` 中忽略）。
-
-然后在 `books/manifest.json` 中注册：
-
-```json
-{
-  "id": "example-pdf",
-  "version": 1,
-  "type": "pdf",
-  "title": "示例 PDF",
-  "author": "作者",
-  "cover": "https://example.com/example-cover.jpg",
-  "pdfKey": "pdfs/example.pdf",
-  "pageCount": 320
-}
-```
-
-也可以不用 Blob，直接引用外部 PDF 或站内 PDF：
+PDF 文件不放进 Git 仓库（`books/**/*.pdf` 已在 `.gitignore` 中忽略），部署时
+把 `books/` 目录连同 PDF 一起上传到服务器即可。可以直接引用站内 PDF 或外部 URL：
 
 ```json
 {
@@ -629,33 +575,6 @@ python3 tools/convert_book_to_simplified.py hongloumeng
 | 书签数据 | 每本书的书签和笔记 |
 
 正文、封面缩略图、离线书籍等资源使用 Cache API 保存。
-
-## 阅读进度同步
-
-项目包含一个 EdgeOne Pages Edge Function：
-
-```text
-edge-functions/api/progress.js
-```
-
-部署后路由为：
-
-```text
-/api/progress
-```
-
-书架页顶部的「同步」按钮会使用该接口保存或恢复全局阅读进度。用户输入 4-32 位同步码后，可以：
-
-- 保存：把本设备的 `reader.progress.*`、`reader.lastProgress` 和 `reader.bookmarks.*` 写入 KV
-- 恢复：从 KV 读取同一同步码下的进度与书签并写回本设备
-
-EdgeOne KV 命名空间需要绑定到项目，变量名必须设置为：
-
-```text
-KV
-```
-
-同步码只允许字母、数字和下划线，以匹配 EdgeOne KV 的 key 限制。同步数据包含书籍 id、章节、段落/页码、滚动位置、时间戳、书签摘录和书签备注，不上传正文。旧同步码记录没有书签字段时仍可正常恢复，并会保留本地已有书签。同一个同步码会覆盖之前保存的数据；KV 读取可能有最多约 60 秒的边缘缓存延迟。
 
 ## 浏览器支持
 

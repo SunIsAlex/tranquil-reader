@@ -224,7 +224,6 @@
     return book && (
       book.type === 'pdf' ||
       typeof book.pdfUrl === 'string' ||
-      typeof book.pdfKey === 'string' ||
       Array.isArray(book.parts)
     );
   }
@@ -244,7 +243,7 @@
 
     if (!parts.length) {
       els.chapTitle.textContent = book.title;
-      els.body.innerHTML = `<p class="empty">这本 PDF 没有配置 pdfUrl、pdfKey 或 parts。</p>`;
+      els.body.innerHTML = `<p class="empty">这本 PDF 没有配置 pdfUrl 或 parts。</p>`;
       document.querySelector('.chapter-nav')?.remove();
       return;
     }
@@ -923,15 +922,6 @@
   function resolvePDFSource(source, book) {
     const pdfUrl = typeof source.pdfUrl === 'string' ? source.pdfUrl.trim() : '';
     if (pdfUrl) return withBookVersion(pdfUrl, book, source);
-
-    const pdfKey = typeof source.pdfKey === 'string' ? source.pdfKey.trim() : '';
-    if (pdfKey) {
-      return withBookVersion(
-        `api/pdf?key=${encodeURIComponent(pdfKey)}`,
-        book,
-        source
-      );
-    }
 
     return '';
   }

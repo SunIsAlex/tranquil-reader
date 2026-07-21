@@ -8,7 +8,7 @@
    - 用户手动离线下载的书保存在 tranquil-books，不随版本升级删除
    ============================================================ */
 
-const VERSION = 'v30';
+const VERSION = 'v31';
 
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
@@ -82,12 +82,9 @@ self.addEventListener('fetch', (event) => {
   // APK 安装包直连下载，不放进运行时缓存
   if (url.pathname.endsWith('.apk')) return;
 
-  // Edge Function API: always pass through, never cache progress sync.
-  if (url.pathname.endsWith('/api/progress')) return;
-
   // Manually downloaded PDFs are served from the persistent book cache.
   // Uncached PDFs keep their normal network/range behavior.
-  if (url.pathname.endsWith('/api/pdf') || url.pathname.toLowerCase().endsWith('.pdf')) {
+  if (url.pathname.toLowerCase().endsWith('.pdf')) {
     event.respondWith(handlePDFRequest(req));
     return;
   }
@@ -217,12 +214,6 @@ function offlineBookCacheKey(rawUrl) {
   if (url.origin !== self.location.origin) return '';
 
   const version = url.searchParams.get('v') || '';
-  if (url.pathname.endsWith('/api/pdf')) {
-    const key = url.searchParams.get('key') || '';
-    if (!key) return '';
-    return `${url.pathname}?key=${key}&v=${version}`;
-  }
-
   if (url.pathname.includes('/books/')) {
     return `${url.pathname}?v=${version}`;
   }
