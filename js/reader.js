@@ -380,7 +380,10 @@
 
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(renderCurrentPDFPage, 180);
+      resizeTimer = window.setTimeout(() => {
+        clearPageBitmaps();
+        renderCurrentPDFPage();
+      }, 180);
     });
 
     showPDFControls();
@@ -487,6 +490,7 @@
       clearTimeout(wheelZoomTimer);
       wheelZoomTimer = window.setTimeout(() => {
         wheelZoomTimer = 0;
+        clearPageBitmaps();
         renderCurrentPDFPage();
       }, 100);
     }
@@ -573,6 +577,7 @@
       canvas.style.transform = '';
       canvas.style.transformOrigin = '';
       ignoreClickUntil = Date.now() + 500;
+      clearPageBitmaps();
       renderCurrentPDFPage();
     }
 
@@ -580,11 +585,143 @@
       renderPDFPage(parts[currentPart], currentPage, ++renderTicket);
     }
 
+    /* ---------- 页位图缓存与相邻页预取 ----------
+       已渲染的页（含预取页）以离屏 canvas 形式缓存：
+       - 前进/后退命中缓存时零网络、零渲染等待
+       - 新页先在离屏渲染完成后再上屏，翻页不再白屏
+       键包含缩放与视口尺寸，缩放/旋转后自然失效并由 LRU 回收。 */
+    const PAGE_BITMAP_LIMIT = 4;
+    const pageBitmapCache = new Map();
+    const pageBitmapInflight = new Set();
+    const prefetchRenderTasks = new Set();
+
+    function bitmapKey(partIndex, pageNumber) {
+      const w = viewer.clientWidth || window.innerWidth || 360;
+      const h = viewer.clientHeight || window.innerHeight || 640;
+      return `${partIndex}:${pageNumber}:${zoom.toFixed(3)}:${w}x${h}`;
+    }
+
+    function cachePageBitmap(key, bitmap) {
+      if (pageBitmapCache.has(key)) pageBitmapCache.delete(key);
+      pageBitmapCache.set(key, bitmap);
+      while (pageBitmapCache.size > PAGE_BITMAP_LIMIT) {
+        pageBitmapCache.delete(pageBitmapCache.keys().next().value);
+      }
+    }
+
+    function clearPageBitmaps() {
+      pageBitmapCache.clear();
+    }
+
+    function cancelPrefetchTasks() {
+      prefetchRenderTasks.forEach(task => { try { task.cancel(); } catch { /* 忽略 */ } });
+      prefetchRenderTasks.clear();
+    }
+
+    // 渲染参数：正式渲染与预取共用，保证同一页的位图尺寸一致
+    function pageRenderParams(pdfPage) {
+      const baseViewport = pdfPage.getViewport({ scale: 1 });
+      const availableWidth = Math.max(280, viewer.clientWidth || window.innerWidth || 360);
+      const availableHeight = Math.max(320, viewer.clientHeight || window.innerHeight || 640);
+      const fitScale = Math.min(
+        availableWidth / baseViewport.width,
+        availableHeight / baseViewport.height
+      );
+      const cssScale = Math.max(0.25, fitScale * zoom);
+      const viewport = pdfPage.getViewport({ scale: cssScale });
+      const deviceScale = Math.min(window.devicePixelRatio || 1, 3);
+      const maxPixels = 24 * 1024 * 1024;
+      const pixelScale = Math.min(
+        deviceScale,
+        Math.sqrt(maxPixels / Math.max(1, viewport.width * viewport.height))
+      );
+      return { viewport, pixelScale };
+    }
+
+    // 把一页渲染进离屏 canvas；tracking 区分主渲染（可被取消）与预取渲染
+    async function renderPageBitmap(pdf, pageNumber, ticket, tracking) {
+      const pdfPage = await pdf.getPage(pageNumber);
+      if (ticket !== renderTicket) return null;
+
+      const { viewport, pixelScale } = pageRenderParams(pdfPage);
+      const off = document.createElement('canvas');
+      off.width = Math.floor(viewport.width * pixelScale);
+      off.height = Math.floor(viewport.height * pixelScale);
+      const context = off.getContext('2d', { alpha: false });
+      context.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
+      context.fillStyle = '#fff';
+      context.fillRect(0, 0, viewport.width, viewport.height);
+
+      const renderTask = pdfPage.render({ canvasContext: context, viewport });
+      if (tracking === 'active') activeRenderTask = renderTask;
+      else prefetchRenderTasks.add(renderTask);
+      try {
+        await renderTask.promise;
+      } finally {
+        if (tracking === 'active') {
+          if (activeRenderTask === renderTask) activeRenderTask = null;
+        } else {
+          prefetchRenderTasks.delete(renderTask);
+        }
+      }
+      if (ticket !== renderTicket) return null;
+
+      return {
+        canvas: off,
+        cssW: Math.floor(viewport.width),
+        cssH: Math.floor(viewport.height),
+      };
+    }
+
+    // 渲染完成后才替换画面：旧页在新页就绪前保持显示，避免白屏闪烁
+    function blitPageBitmap(bitmap) {
+      canvas.width = bitmap.canvas.width;
+      canvas.height = bitmap.canvas.height;
+      canvas.style.width = `${bitmap.cssW}px`;
+      canvas.style.height = `${bitmap.cssH}px`;
+      const context = canvas.getContext('2d', { alpha: false });
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.drawImage(bitmap.canvas, 0, 0);
+
+      if (zoomFocus) {
+        const focus = zoomFocus;
+        zoomFocus = null;
+        requestAnimationFrame(() => {
+          viewer.scrollLeft = canvas.offsetLeft + bitmap.cssW * focus.x - focus.viewerX;
+          viewer.scrollTop = canvas.offsetTop + bitmap.cssH * focus.y - focus.viewerY;
+        });
+      }
+    }
+
+    // 预取前后各一页：翻页时直接命中缓存
+    function prefetchAdjacentPages(pdf, pageNumber, ticket) {
+      const pageCount = pdf.numPages;
+      [pageNumber + 1, pageNumber - 1].forEach((target) => {
+        if (target < 1 || target > pageCount) return;
+        const key = bitmapKey(currentPart, target);
+        if (pageBitmapCache.has(key) || pageBitmapInflight.has(key)) return;
+        pageBitmapInflight.add(key);
+        (async () => {
+          try {
+            const bitmap = await renderPageBitmap(pdf, target, ticket, 'prefetch');
+            if (bitmap && ticket === renderTicket) cachePageBitmap(key, bitmap);
+          } catch (err) {
+            if (ticket === renderTicket && !isPDFRenderCancellation(err)) {
+              console.warn('PDF 相邻页预取失败:', err);
+            }
+          } finally {
+            pageBitmapInflight.delete(key);
+          }
+        })();
+      });
+    }
+
     async function renderPDFPage(part, page, ticket) {
       if (activeRenderTask) {
         activeRenderTask.cancel();
         activeRenderTask = null;
       }
+      cancelPrefetchTasks();
       status.textContent = hasRenderedPDFPage
         ? ''
         : (pdfjsBuild === 'legacy' ? '正在使用兼容模式加载 PDF...' : '正在加载 PDF...');
@@ -601,53 +738,17 @@
         pageInput.value = String(nextPage);
         pageTotal.textContent = `/ ${pageCount}`;
 
-        const pdfPage = await pdf.getPage(nextPage);
-        if (ticket !== renderTicket) return;
-
-        const baseViewport = pdfPage.getViewport({ scale: 1 });
-        const availableWidth = Math.max(280, viewer.clientWidth || window.innerWidth || 360);
-        const availableHeight = Math.max(320, viewer.clientHeight || window.innerHeight || 640);
-        const fitScale = Math.min(
-          availableWidth / baseViewport.width,
-          availableHeight / baseViewport.height
-        );
-        const cssScale = Math.max(0.25, fitScale * zoom);
-        const viewport = pdfPage.getViewport({ scale: cssScale });
-        const deviceScale = Math.min(window.devicePixelRatio || 1, 3);
-        const maxPixels = 24 * 1024 * 1024;
-        const pixelScale = Math.min(
-          deviceScale,
-          Math.sqrt(maxPixels / Math.max(1, viewport.width * viewport.height))
-        );
-
-        canvas.width = Math.floor(viewport.width * pixelScale);
-        canvas.height = Math.floor(viewport.height * pixelScale);
-        canvas.style.width = `${Math.floor(viewport.width)}px`;
-        canvas.style.height = `${Math.floor(viewport.height)}px`;
-
-        if (zoomFocus) {
-          const focus = zoomFocus;
-          zoomFocus = null;
-          requestAnimationFrame(() => {
-            viewer.scrollLeft = canvas.offsetLeft + viewport.width * focus.x - focus.viewerX;
-            viewer.scrollTop = canvas.offsetTop + viewport.height * focus.y - focus.viewerY;
-          });
-        }
-
-        const context = canvas.getContext('2d', { alpha: false });
-        context.setTransform(pixelScale, 0, 0, pixelScale, 0, 0);
-        context.fillStyle = '#fff';
-        context.fillRect(0, 0, viewport.width, viewport.height);
-
-        const renderTask = pdfPage.render({ canvasContext: context, viewport });
-        activeRenderTask = renderTask;
-        try {
-          await renderTask.promise;
-        } finally {
-          if (activeRenderTask === renderTask) activeRenderTask = null;
+        const key = bitmapKey(currentPart, nextPage);
+        let bitmap = pageBitmapCache.get(key);
+        if (!bitmap) {
+          bitmap = await renderPageBitmap(pdf, nextPage, ticket, 'active');
+          if (ticket !== renderTicket) return;
+          if (!bitmap) return; // 渲染被更新的请求取代
+          cachePageBitmap(key, bitmap);
         }
         if (ticket !== renderTicket) return;
 
+        blitPageBitmap(bitmap);
         hasRenderedPDFPage = true;
         status.textContent = '';
         viewer.classList.remove('is-loading');
@@ -665,6 +766,8 @@
             time: Date.now(),
           });
         }
+
+        prefetchAdjacentPages(pdf, nextPage, ticket);
       } catch (err) {
         if (ticket !== renderTicket) return;
         if (isPDFRenderCancellation(err)) {
@@ -868,22 +971,39 @@
   async function loadPDFDocument(src) {
     const build = pdfjsBuild;
     const cacheKey = `${build}:${src}`;
-    if (!pdfDocumentCache.has(cacheKey)) {
-      pdfDocumentCache.set(cacheKey, loadPDFJS(build).then(pdfjs => pdfjs.getDocument({
-        url: src,
-        disableRange: false,
-        disableStream: true,
-        disableAutoFetch: true,
-        rangeChunkSize: 256 * 1024,
-        cMapUrl: new URL('vendor/pdfjs/cmaps/', location.href).href,
-        cMapPacked: true,
-        standardFontDataUrl: new URL('vendor/pdfjs/standard_fonts/', location.href).href,
-        wasmUrl: new URL('vendor/pdfjs/wasm/', location.href).href,
-        useWorkerFetch: false,
-        isOffscreenCanvasSupported: false,
-        isImageDecoderSupported: false,
-      }).promise));
+    if (pdfDocumentCache.has(cacheKey)) {
+      // LRU：刷新为最近使用
+      const cached = pdfDocumentCache.get(cacheKey);
+      pdfDocumentCache.delete(cacheKey);
+      pdfDocumentCache.set(cacheKey, cached);
+      return cached;
     }
+
+    // 每个文档独占一个 pdf.js worker，多卷书不能无限累积：
+    // 最多保留 3 个，销毁最久未使用的。
+    // 说明：所有进行中的渲染都属于本次请求的 src（预取仅限当前卷相邻页），
+    // 而它尚未入缓存，永远不会成为被淘汰的候选，因此销毁是安全的。
+    while (pdfDocumentCache.size >= 3) {
+      const oldestKey = pdfDocumentCache.keys().next().value;
+      const stale = pdfDocumentCache.get(oldestKey);
+      pdfDocumentCache.delete(oldestKey);
+      stale.then(pdf => pdf.destroy()).catch(() => {});
+    }
+
+    pdfDocumentCache.set(cacheKey, loadPDFJS(build).then(pdfjs => pdfjs.getDocument({
+      url: src,
+      disableRange: false,
+      disableStream: true,
+      disableAutoFetch: true,
+      rangeChunkSize: 256 * 1024,
+      cMapUrl: new URL('vendor/pdfjs/cmaps/', location.href).href,
+      cMapPacked: true,
+      standardFontDataUrl: new URL('vendor/pdfjs/standard_fonts/', location.href).href,
+      wasmUrl: new URL('vendor/pdfjs/wasm/', location.href).href,
+      useWorkerFetch: false,
+      isOffscreenCanvasSupported: false,
+      isImageDecoderSupported: false,
+    }).promise));
     return pdfDocumentCache.get(cacheKey);
   }
 

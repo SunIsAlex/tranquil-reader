@@ -526,6 +526,13 @@ body {
 .pdf-canvas.is-pinching {
   will-change: transform;
 }
+/* 翻页加载中新页未就绪时旧页保持显示，仅轻微变暗提示 */
+.pdf-canvas {
+  transition: opacity .12s ease;
+}
+.pdf-canvas-wrap.is-loading .pdf-canvas {
+  opacity: .55;
+}
 .pdf-edge-gesture {
   display: none;
 }

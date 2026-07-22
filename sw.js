@@ -85,6 +85,14 @@ self.addEventListener('fetch', (event) => {
   // 进度同步 API：始终直连网络，绝不缓存
   if (url.pathname.startsWith('/api/')) return;
 
+  // PDF.js 引擎及资源（pdf.min.js / worker / wasm / cmaps / 字体）是纯静态文件，
+  // 内容只随部署变化，而 RUNTIME_CACHE 名自带版本号会随之失效：
+  // cache-first，避免每次打开阅读器都重新下载约 1.7MB。
+  if (url.pathname.startsWith('/vendor/pdfjs/')) {
+    event.respondWith(cacheFirst(req, RUNTIME_CACHE));
+    return;
+  }
+
   // Manually downloaded PDFs are served from the persistent book cache.
   // Uncached PDFs keep their normal network/range behavior.
   if (url.pathname.toLowerCase().endsWith('.pdf')) {
@@ -273,6 +281,18 @@ async function createRangeResponse(response, rangeHeader) {
     statusText: 'Partial Content',
     headers,
   });
+}
+
+async function cacheFirst(req, cacheName) {
+  const cached = await caches.match(req);
+  if (cached) return cached;
+
+  const res = await fetch(req);
+  if (res && res.ok) {
+    const cache = await caches.open(cacheName);
+    await cache.put(req, res.clone());
+  }
+  return res;
 }
 
 async function networkFirst(req, cacheName) {
