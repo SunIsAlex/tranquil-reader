@@ -82,6 +82,9 @@ self.addEventListener('fetch', (event) => {
   // APK 安装包直连下载，不放进运行时缓存
   if (url.pathname.endsWith('.apk')) return;
 
+  // 进度同步 API：始终直连网络，绝不缓存
+  if (url.pathname.startsWith('/api/')) return;
+
   // Manually downloaded PDFs are served from the persistent book cache.
   // Uncached PDFs keep their normal network/range behavior.
   if (url.pathname.toLowerCase().endsWith('.pdf')) {

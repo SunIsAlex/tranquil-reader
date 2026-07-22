@@ -1,0 +1,24 @@
+[Unit]
+Description=Tranquil Reader progress sync API
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/node /opt/reader-sync/progress-api.js
+Restart=always
+RestartSec=2
+Environment=HOST=127.0.0.1
+Environment=PORT=8787
+Environment=DATA_DIR=/var/lib/reader-sync
+
+# 运行身份与文件系统隔离：只需要数据目录可写
+User=reader-sync
+Group=reader-sync
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/reader-sync
+
+[Install]
+WantedBy=multi-user.target
