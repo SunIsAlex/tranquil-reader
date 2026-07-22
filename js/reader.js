@@ -716,7 +716,7 @@
       });
     }
 
-    async function renderPDFPage(part, page, ticket) {
+    async function renderPDFPage(part, page, ticket, autoRetried = false) {
       if (activeRenderTask) {
         activeRenderTask.cancel();
         activeRenderTask = null;
@@ -727,6 +727,25 @@
         : (pdfjsBuild === 'legacy' ? '正在使用兼容模式加载 PDF...' : '正在加载 PDF...');
       viewer.classList.add('is-loading');
 
+      // 看门狗：pdf.js worker 崩溃、SW 更新竞争等会让渲染链静默悬挂（无异常、
+      // 无回调、永远白屏）。超时后丢弃缓存的文档引用并重试一次。
+      let settled = false;
+      const watchdog = autoRetried ? 0 : window.setTimeout(() => {
+        if (settled || ticket !== renderTicket) return;
+        console.warn('PDF 渲染超时，自动重试');
+        pdfDocumentCache.delete(`${pdfjsBuild}:${part.src}`);
+        renderPDFPage(part, page, ticket, true);
+      }, 15000);
+
+      try {
+        await renderPDFPageOnce(part, page, ticket);
+      } finally {
+        settled = true;
+        if (watchdog) window.clearTimeout(watchdog);
+      }
+    }
+
+    async function renderPDFPageOnce(part, page, ticket) {
       try {
         const pdf = await loadPDFDocument(part.src);
         if (ticket !== renderTicket) return;
@@ -777,7 +796,14 @@
         if (pdfjsBuild !== 'legacy') {
           console.warn('Modern PDF.js failed; retrying with the legacy build:', err);
           pdfjsBuild = 'legacy';
-          await renderPDFPage(part, page, ticket);
+          try {
+            await renderPDFPageOnce(part, page, ticket);
+          } catch (retryErr) {
+            if (ticket !== renderTicket) return;
+            console.warn('Legacy PDF.js also failed:', retryErr);
+            viewer.classList.remove('is-loading');
+            status.textContent = `PDF 加载失败：${pdfErrorMessage(retryErr)}。请用“新窗口打开”。`;
+          }
           return;
         }
         console.warn('Failed to render PDF:', err);
@@ -960,10 +986,22 @@
         legacy ? 'vendor/pdfjs/pdf.worker.legacy.min.js' : 'vendor/pdfjs/pdf.worker.min.js',
         location.href
       ).href;
-      pdfjsLoadPromises[build] = import(pdfjsURL).then(pdfjs => {
+      const promise = import(pdfjsURL).then((module) => {
+        // 现代构建是 ESM；legacy 构建是 UMD，全局挂在 window.pdfjsLib
+        const pdfjs = module.getDocument
+          ? module
+          : (module.default && module.default.getDocument ? module.default : window.pdfjsLib);
+        if (!pdfjs || !pdfjs.GlobalWorkerOptions || !pdfjs.getDocument) {
+          throw new Error('PDF.js 引擎加载失败');
+        }
         pdfjs.GlobalWorkerOptions.workerSrc = workerURL;
         return pdfjs;
       });
+      // 加载失败不缓存 promise：否则一次网络抖动/SW 更新竞争会造成永久白屏
+      promise.catch(() => {
+        if (pdfjsLoadPromises[build] === promise) pdfjsLoadPromises[build] = null;
+      });
+      pdfjsLoadPromises[build] = promise;
     }
     return pdfjsLoadPromises[build];
   }
