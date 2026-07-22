@@ -1231,9 +1231,9 @@
   els.bookmarkAdd.addEventListener('click', addBookmarkAtCurrentPara);
   // 点击目录外部关闭。这里不强行归还焦点，避免打断用户点击页面其他控件。
   document.addEventListener('click', (e) => {
-    if (!els.toc.hidden && !els.toc.contains(e.target) && e.target !== els.tocToggle) closeTOC(false);
-    if (!els.searchPanel.hidden && !els.searchPanel.contains(e.target) && e.target !== els.searchToggle) closeSearch(false);
-    if (!els.bookmarks.hidden && !els.bookmarks.contains(e.target) && e.target !== els.bookmarkToggle) closeBookmarks(false);
+    if (!els.toc.hidden && !els.toc.contains(e.target) && !els.tocToggle.contains(e.target)) closeTOC(false);
+    if (!els.searchPanel.hidden && !els.searchPanel.contains(e.target) && !els.searchToggle.contains(e.target)) closeSearch(false);
+    if (!els.bookmarks.hidden && !els.bookmarks.contains(e.target) && !els.bookmarkToggle.contains(e.target)) closeBookmarks(false);
   });
   document.querySelector('.topbar')?.addEventListener('focusin', () => {
     setTopbarHidden(false);

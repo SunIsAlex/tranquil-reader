@@ -5,23 +5,27 @@
    ============================================================ */
 
 :root {
-  /* 浅色：温暖的米白底，墨黑字，赤陶色强调 */
+  /* 浅色：温暖的米白底，墨黑字，赤陶色强调
+     --text-dim / --accent 取值已按 WCAG AA 校准：在 --bg/--surface 上正文对比度 ≥ 4.5:1，
+     --accent-btn 上的白字对比度 ≥ 4.5:1 */
   --bg:        #faf9f5;
   --surface:   #ffffff;
   --surface-2: #f3f1ea;
   --border:    #e8e4d9;
   --text:      #2b2a27;
   --text-soft: #6b6a64;
-  --text-dim:  #97958c;
-  --accent:    #c45a36;   /* 赤陶 */
+  --text-dim:  #6f6e66;
+  --accent:    #b8522f;   /* 赤陶（加深版，小字直接可用） */
+  --accent-btn:  #b8522f; /* 实心按钮底色：白字 ≥ 4.5:1 */
   --accent-soft: #e9d9cf;
   --shadow:    0 1px 3px rgba(40, 38, 33, .06), 0 6px 24px rgba(40, 38, 33, .05);
+  --shadow-lg: 0 2px 6px rgba(40, 38, 33, .07), 0 14px 36px rgba(40, 38, 33, .09);
 
   --serif: "Noto Serif SC", "Songti SC", "Source Han Serif SC", "Source Han Serif CN", STSong, SimSun, Georgia, serif;
   --sans:  -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
 
   --reader-width: 38rem;
-  --topbar-height: 3.25rem;
+  --topbar-height: 3.5rem;
   --radius: 12px;
 }
 
@@ -33,25 +37,29 @@
     --border:    #3a3733;
     --text:      #ece9e2;
     --text-soft: #aba89f;
-    --text-dim:  #7d7a72;
+    --text-dim:  #918e85;
     --accent:    #e08a63;
+    --accent-btn:  #b8522f;
     --accent-soft: #45342b;
     --shadow:    0 1px 3px rgba(0, 0, 0, .3), 0 6px 24px rgba(0, 0, 0, .25);
+    --shadow-lg: 0 2px 6px rgba(0, 0, 0, .35), 0 14px 36px rgba(0, 0, 0, .32);
   }
 }
 
 /* 手动主题覆盖（data-theme 优先于系统偏好） */
 :root[data-theme="light"] {
   --bg: #faf9f5; --surface: #ffffff; --surface-2: #f3f1ea; --border: #e8e4d9;
-  --text: #2b2a27; --text-soft: #6b6a64; --text-dim: #97958c;
-  --accent: #c45a36; --accent-soft: #e9d9cf;
+  --text: #2b2a27; --text-soft: #6b6a64; --text-dim: #6f6e66;
+  --accent: #b8522f; --accent-btn: #b8522f; --accent-soft: #e9d9cf;
   --shadow: 0 1px 3px rgba(40,38,33,.06), 0 6px 24px rgba(40,38,33,.05);
+  --shadow-lg: 0 2px 6px rgba(40,38,33,.07), 0 14px 36px rgba(40,38,33,.09);
 }
 :root[data-theme="dark"] {
   --bg: #1f1e1c; --surface: #272523; --surface-2: #2f2d2a; --border: #3a3733;
-  --text: #ece9e2; --text-soft: #aba89f; --text-dim: #7d7a72;
-  --accent: #e08a63; --accent-soft: #45342b;
+  --text: #ece9e2; --text-soft: #aba89f; --text-dim: #918e85;
+  --accent: #e08a63; --accent-btn: #b8522f; --accent-soft: #45342b;
   --shadow: 0 1px 3px rgba(0,0,0,.3), 0 6px 24px rgba(0,0,0,.25);
+  --shadow-lg: 0 2px 6px rgba(0,0,0,.35), 0 14px 36px rgba(0,0,0,.32);
 }
 
 * { box-sizing: border-box; }
@@ -66,6 +74,39 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* 跳到主要内容：默认隐藏，键盘聚焦时浮现 */
+.skip-link {
+  position: fixed;
+  top: .5rem;
+  left: .5rem;
+  z-index: 100;
+  padding: .55rem .9rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  font-size: .9rem;
+  text-decoration: none;
+  transform: translate3d(0, -300%, 0);
+  transition: transform .18s ease;
+}
+.skip-link:focus-visible {
+  transform: translate3d(0, 0, 0);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 统一焦点环：覆盖所有可交互元素，个别组件的更大偏移量规则仍然有效 */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 html {
@@ -103,7 +144,7 @@ body {
   display: flex;
   align-items: center;
   gap: .75rem;
-  padding: .7rem 1.1rem;
+  padding: .5rem 1.1rem;
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: saturate(180%) blur(12px);
   -webkit-backdrop-filter: saturate(180%) blur(12px);
@@ -135,11 +176,16 @@ body {
 
 .icon-btn {
   appearance: none;
+  display: inline-grid;
+  place-items: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 .4rem;
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-soft);
   font-size: .85rem;
-  padding: .38rem .6rem;
+  font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
   font-family: inherit;
@@ -147,6 +193,25 @@ body {
 }
 .icon-btn:hover { background: var(--surface-2); color: var(--text); }
 .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.icon-btn svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 主题按钮日/月图标：浅色显示月亮（点击入夜），深色显示太阳 */
+.icon-btn .icon-sun { display: none; }
+:root[data-theme="dark"] .icon-btn .icon-sun { display: block; }
+:root[data-theme="dark"] .icon-btn .icon-moon { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .icon-btn .icon-sun { display: block; }
+  :root:not([data-theme="light"]) .icon-btn .icon-moon { display: none; }
+}
 
 /* ---------- 书架 ---------- */
 .shelf {
@@ -177,9 +242,16 @@ body {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   color: inherit;
-  transition: transform .18s ease, border-color .18s ease;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
-.book-card:hover { transform: translateY(-2px); border-color: var(--accent-soft); }
+.book-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-soft);
+  box-shadow: var(--shadow-lg);
+}
+.book-card:focus-within {
+  border-color: var(--accent-soft);
+}
 .book-card.has-cover {
   --cover-w: 6rem;
   padding: 1.05rem 1.15rem;
@@ -272,7 +344,7 @@ body {
 .app-banner-text span { font-size: .85rem; color: var(--text-soft); }
 .app-banner-get {
   flex-shrink: 0;
-  background: var(--accent); color: #fff;
+  background: var(--accent-btn); color: #fff;
   font-size: .9rem; text-decoration: none; white-space: nowrap;
   padding: .5rem 1.1rem; border-radius: 999px;
   transition: filter .15s ease;
@@ -572,13 +644,13 @@ body.no-hl mark.hl {
   margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
 }
 .nav-btn {
-  appearance: none; font-family: inherit; font-size: .92rem;
+  appearance: none; font-family: inherit; font-size: .92rem; font-weight: 500;
   padding: .65rem 1.1rem; border-radius: 10px; cursor: pointer;
   background: var(--surface); color: var(--text);
   border: 1px solid var(--border);
-  transition: background .15s ease, border-color .15s ease;
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
-.nav-btn:hover:not(:disabled) { background: var(--surface-2); border-color: var(--accent-soft); }
+.nav-btn:hover:not(:disabled) { background: var(--surface-2); border-color: var(--accent-soft); box-shadow: var(--shadow); }
 .nav-btn:disabled { opacity: .4; cursor: default; }
 .nav-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
@@ -623,7 +695,7 @@ body.no-hl mark.hl {
 }
 .toc-list a:hover { background: var(--surface-2); color: var(--text); }
 .toc-list a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.toc-list a.current { color: var(--accent); background: var(--accent-soft); }
+.toc-list a.current { color: var(--text); background: var(--accent-soft); font-weight: 600; }
 .toc:focus { outline: none; }
 
 /* ---------- 页脚 ---------- */
@@ -857,7 +929,7 @@ body.no-hl mark.hl {
 .search-submit {
   appearance: none;
   border: 1px solid var(--accent-soft);
-  background: var(--accent);
+  background: var(--accent-btn);
   color: #fff;
   border-radius: 10px;
   padding: .55rem .75rem;
@@ -991,11 +1063,12 @@ body.no-hl mark.hl {
 
 @media (max-width: 520px) {
   :root { --topbar-height: 3rem; }
-  .topbar { gap: .45rem; padding: .62rem .75rem; }
+  .topbar { gap: .45rem; padding: .4rem .75rem; }
   .topbar-title { display: none; }
   .topbar-actions { gap: .25rem; overflow-x: auto; scrollbar-width: none; }
   .topbar-actions::-webkit-scrollbar { display: none; }
-  .icon-btn { font-size: .78rem; padding: .34rem .46rem; }
+  .icon-btn { min-width: 2rem; height: 2rem; padding: 0 .3rem; font-size: .78rem; }
+  .icon-btn svg { width: 1.05rem; height: 1.05rem; }
 }
 
 

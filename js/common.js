@@ -522,6 +522,7 @@ const Theme = {
     }
     const btn = document.getElementById('theme-toggle');
     if (btn) btn.addEventListener('click', () => this.toggle());
+    this.syncButton();
   },
   current() {
     const attr = document.documentElement.getAttribute('data-theme');
@@ -532,6 +533,15 @@ const Theme = {
     const next = this.current() === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem(Store.THEME_KEY, next);
+    this.syncButton();
+  },
+  // 按钮文案跟随当前主题：提示点击后会切到哪一边
+  syncButton() {
+    const btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+    const label = this.current() === 'dark' ? '切换到浅色模式' : '切换到深色模式';
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
   },
 };
 
