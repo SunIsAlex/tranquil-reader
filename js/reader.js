@@ -387,7 +387,16 @@
     });
 
     showPDFControls();
-    setPDFLocation(savedPart, initialPage);
+
+    // 新插入的阅读器 DOM 要到下一帧才有稳定尺寸。首屏若立即开始渲染，
+    // 部分移动端 WebView 会把离屏 canvas 画好却不提交到画面，直到翻页等
+    // 后续交互触发下一次绘制。等一次布局/绘制后再加载第一页；若用户已经
+    // 通过键盘或控件发起了别的请求，则不再用保存的页码覆盖它。
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (renderTicket === 0) setPDFLocation(savedPart, initialPage);
+      });
+    });
 
     function changePDFPage(delta) {
       const part = parts[currentPart];
