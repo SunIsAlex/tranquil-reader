@@ -288,6 +288,13 @@ const Offline = {
     return this.notificationSupported() && Notification.permission === 'granted';
   },
 
+  backgroundFetchSupported() {
+    return (
+      'serviceWorker' in navigator &&
+      'BackgroundFetchManager' in window
+    );
+  },
+
   async enableDownloadNotification(book) {
     if (!this.notificationPermissionGranted()) return;
 
@@ -393,10 +400,200 @@ const Offline = {
   // 逐个抓取并写入缓存；onProgress(done, total) 用于显示进度
   async download(book, onProgress, options = {}) {
     const urls = this.urls(book);
-    const background = await this.downloadInServiceWorker(book, urls, onProgress, options);
-    if (background) return background;
+    const nativeBackground = await this.downloadInBackgroundFetch(book, urls, onProgress);
+    if (nativeBackground !== null) return;
+
+    const serviceWorkerDownload =
+      await this.downloadInServiceWorker(book, urls, onProgress, options);
+    if (serviceWorkerDownload) return;
 
     return this.downloadInPage(book, urls, onProgress);
+  },
+
+  // Background Fetch 由浏览器/系统接管传输，即使页面关闭或 Service Worker
+  // 被回收也能继续下载。Chrome/Android 支持时优先使用；其它浏览器仍走
+  // 下方可断点续传的 Service Worker / 页面兼容路径。
+  async downloadInBackgroundFetch(book, urls, onProgress) {
+    if (!this.backgroundFetchSupported()) return null;
+
+    let registration;
+    try {
+      registration = await navigator.serviceWorker.ready;
+    } catch {
+      return null;
+    }
+    const manager = registration.backgroundFetch;
+    if (!manager || typeof manager.fetch !== 'function') return null;
+
+    const cache = await caches.open(this.CACHE);
+    const missingUrls = [];
+    for (const url of urls) {
+      if (!(await cache.match(url))) missingUrls.push(url);
+    }
+
+    if (!missingUrls.length) {
+      this.setDownloadState(book.id, {
+        status: 'done',
+        done: urls.length,
+        total: urls.length,
+      });
+      if (onProgress) onProgress(urls.length, urls.length);
+      return true;
+    }
+
+    const bookId = String(book.id || '');
+    const cachedDone = urls.length - missingUrls.length;
+    const scope = this.backgroundFetchScope(bookId, urls);
+    let background = null;
+    let backgroundFetchId = '';
+
+    try {
+      const saved = this.getDownloadState(bookId);
+      if (
+        saved &&
+        saved.status === 'downloading' &&
+        typeof saved.backgroundFetchId === 'string' &&
+        saved.backgroundFetchId.startsWith(scope)
+      ) {
+        backgroundFetchId = saved.backgroundFetchId;
+        background = await manager.get(backgroundFetchId);
+      }
+
+      // localStorage may have been cleared while the browser-owned download
+      // is still active. Recover it from the registration instead of starting
+      // a duplicate transfer.
+      if (!background && typeof manager.getIds === 'function') {
+        const existingId = (await manager.getIds()).find(id => id.startsWith(scope));
+        if (existingId) {
+          backgroundFetchId = existingId;
+          background = await manager.get(existingId);
+        }
+      }
+
+      if (!background) {
+        const jobId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        backgroundFetchId =
+          `${scope}${cachedDone}:${urls.length}:${jobId}`;
+        const requests = missingUrls.map(url => new URL(url, location.href).href);
+        background = await manager.fetch(backgroundFetchId, requests, {
+          title: `离线下载《${book.title || book.name || bookId}》`,
+          icons: [{
+            src: new URL('icons/icon-192.png', location.href).href,
+            sizes: '192x192',
+            type: 'image/png',
+          }],
+        });
+      }
+    } catch (err) {
+      // Permission denial or an incomplete implementation should not make
+      // offline download unavailable; transparently use the existing path.
+      console.warn('Background Fetch unavailable, using fallback:', err);
+      return null;
+    }
+
+    this.setDownloadState(bookId, {
+      backgroundFetchId,
+      status: 'downloading',
+      done: cachedDone,
+      total: urls.length,
+    });
+    if (onProgress) {
+      onProgress(cachedDone, urls.length, { background: true });
+    }
+
+    await this.waitForBackgroundFetch(
+      book,
+      background,
+      backgroundFetchId,
+      cachedDone,
+      urls.length,
+      onProgress
+    );
+    return true;
+  },
+
+  backgroundFetchScope(bookId, urls) {
+    // Stable, non-cryptographic fingerprint: only used to associate an active
+    // browser download with the current versioned URL list.
+    let hash = 2166136261;
+    for (const char of urls.join('\n')) {
+      hash ^= char.charCodeAt(0);
+      hash = Math.imul(hash, 16777619);
+    }
+    return `offline-book:${encodeURIComponent(bookId)}:${(hash >>> 0).toString(36)}:`;
+  },
+
+  waitForBackgroundFetch(book, background, backgroundFetchId, done, total, onProgress) {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      let checkingCache = false;
+
+      const cleanup = () => {
+        navigator.serviceWorker.removeEventListener('message', onMessage);
+        background.removeEventListener('progress', onNativeProgress);
+        clearInterval(cacheTimer);
+      };
+      const finish = (err) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        if (err) reject(err);
+        else resolve();
+      };
+      const checkCache = async () => {
+        if (checkingCache || settled) return;
+        checkingCache = true;
+        try {
+          if (await this.isDownloaded(book)) {
+            this.setDownloadState(book.id, {
+              backgroundFetchId,
+              status: 'done',
+              done: total,
+              total,
+            });
+            if (onProgress) onProgress(total, total);
+            finish();
+          } else if (background.result === 'failure') {
+            finish(new Error(background.failureReason || '后台下载失败'));
+          }
+        } finally {
+          checkingCache = false;
+        }
+      };
+      const onNativeProgress = () => {
+        if (background.result === 'failure') {
+          finish(new Error(background.failureReason || '后台下载失败'));
+          return;
+        }
+        if (onProgress) {
+          onProgress(done, total, {
+            background: true,
+            downloaded: background.downloaded || 0,
+          });
+        }
+        if (background.result === 'success') checkCache();
+      };
+      const onMessage = (event) => {
+        const msg = event.data || {};
+        if (
+          msg.type !== this.MSG_PROGRESS ||
+          msg.backgroundFetchId !== backgroundFetchId
+        ) return;
+
+        this.rememberDownloadMessage(msg);
+        if (msg.status === 'done') {
+          if (onProgress) onProgress(total, total);
+          finish();
+        } else if (msg.status === 'error') {
+          finish(new Error(msg.error || '后台下载失败'));
+        }
+      };
+
+      navigator.serviceWorker.addEventListener('message', onMessage);
+      background.addEventListener('progress', onNativeProgress);
+      const cacheTimer = window.setInterval(checkCache, 1500);
+      checkCache();
+    });
   },
 
   async downloadInPage(book, urls, onProgress) {
@@ -409,9 +606,11 @@ const Offline = {
     });
 
     for (const u of urls) {
-      const res = await fetch(u, { cache: 'no-cache' });
-      if (!res.ok) throw new Error(`${u}（${res.status}）`);
-      await cache.put(u, res);
+      if (!(await cache.match(u))) {
+        const res = await fetch(u, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`${u}（${res.status}）`);
+        await cache.put(u, res);
+      }
       done += 1;
       this.setDownloadState(book.id, {
         status: 'downloading',
@@ -455,15 +654,41 @@ const Offline = {
       total: urls.length,
     });
 
-    return new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
+      let lastMessageAt = Date.now();
+      const payload = {
+        type: this.MSG_START,
+        jobId,
+        bookId,
+        bookTitle: String(book.title || book.name || bookId),
+        showNotification: options.showNotification === true,
+        urls,
+      };
+      const postStart = () => {
+        const currentWorker =
+          navigator.serviceWorker.controller ||
+          registration.active ||
+          worker;
+        currentWorker.postMessage(payload);
+      };
+      const retryIfStalled = () => {
+        if (!document.hidden && Date.now() - lastMessageAt >= 15000) {
+          lastMessageAt = Date.now();
+          try { postStart(); }
+          catch { /* the next visibility/interval tick retries */ }
+        }
+      };
       const cleanup = () => {
         navigator.serviceWorker.removeEventListener('message', onMessage);
+        document.removeEventListener('visibilitychange', retryIfStalled);
+        clearInterval(retryTimer);
       };
 
       const onMessage = (event) => {
         const msg = event.data || {};
         if (msg.type !== this.MSG_PROGRESS || msg.bookId !== bookId) return;
 
+        lastMessageAt = Date.now();
         this.rememberDownloadMessage(msg);
 
         if (msg.status === 'downloading') {
@@ -481,21 +706,17 @@ const Offline = {
       };
 
       navigator.serviceWorker.addEventListener('message', onMessage);
+      document.addEventListener('visibilitychange', retryIfStalled);
+      const retryTimer = window.setInterval(retryIfStalled, 15000);
 
       try {
-        worker.postMessage({
-          type: this.MSG_START,
-          jobId,
-          bookId,
-          bookTitle: String(book.title || book.name || bookId),
-          showNotification: options.showNotification === true,
-          urls,
-        });
+        postStart();
       } catch (err) {
         cleanup();
         reject(err);
       }
     });
+    return true;
   },
 
   // 移除本书当前版本的章节、PDF、封面和高亮缓存。
@@ -580,6 +801,7 @@ const Offline = {
 
     if (msg.status === 'done') {
       this.setDownloadState(msg.bookId, {
+        backgroundFetchId: msg.backgroundFetchId || '',
         jobId: msg.jobId || '',
         status: 'done',
         done: msg.total || 0,
@@ -590,6 +812,7 @@ const Offline = {
 
     if (msg.status === 'error') {
       this.setDownloadState(msg.bookId, {
+        backgroundFetchId: msg.backgroundFetchId || '',
         jobId: msg.jobId || '',
         status: 'error',
         done: msg.done || 0,
@@ -601,6 +824,7 @@ const Offline = {
 
     if (msg.status === 'downloading') {
       this.setDownloadState(msg.bookId, {
+        backgroundFetchId: msg.backgroundFetchId || '',
         jobId: msg.jobId || '',
         status: 'downloading',
         done: msg.done || 0,

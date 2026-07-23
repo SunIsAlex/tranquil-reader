@@ -356,7 +356,9 @@ function makeOfflineBtn(book) {
     switch (state) {
       case 'checking':    btn.textContent = '…'; break;
       case 'idle':        btn.textContent = '⬇ 离线'; btn.title = '下载到本地，无网络也能读'; break;
-      case 'downloading': btn.textContent = `下载中 ${extra}%`; break;
+      case 'downloading':
+        btn.textContent = extra === 'background' ? '后台下载中' : `下载中 ${extra}%`;
+        break;
       case 'downloaded':  btn.textContent = '✓ 已离线'; btn.title = '已缓存，点击移除'; break;
       case 'error':       btn.textContent = '重试'; btn.title = extra || '下载失败'; break;
     }
@@ -367,7 +369,12 @@ function makeOfflineBtn(book) {
     if (!saved) return false;
 
     if (saved.status === 'downloading') {
-      setState('downloading', progressPercent(saved.done || 0, saved.total || 0));
+      setState(
+        'downloading',
+        saved.backgroundFetchId
+          ? 'background'
+          : progressPercent(saved.done || 0, saved.total || 0)
+      );
       resumeDownload();
       return true;
     }
@@ -388,8 +395,11 @@ function makeOfflineBtn(book) {
 
   async function resumeDownload() {
     try {
-      await Offline.download(book, (done, total) =>
-        setState('downloading', progressPercent(done, total)), {
+      await Offline.download(book, (done, total, details) =>
+        setState(
+          'downloading',
+          details && details.background ? 'background' : progressPercent(done, total)
+        ), {
         showNotification: Offline.notificationPermissionGranted(),
       });
       setState('downloaded');
@@ -426,8 +436,14 @@ function makeOfflineBtn(book) {
     }
     try {
       setState('downloading', 0);
-      const permissionRequest = Offline.requestNotificationPermission();
-      const showNotification = Offline.notificationPermissionGranted();
+      // Native Background Fetch provides its own persistent system UI. Only
+      // request notification permission for the legacy Service Worker path.
+      const useNativeBackground = Offline.backgroundFetchSupported();
+      const permissionRequest = useNativeBackground
+        ? Promise.resolve(false)
+        : Offline.requestNotificationPermission();
+      const showNotification =
+        !useNativeBackground && Offline.notificationPermissionGranted();
       if (!showNotification) {
         permissionRequest.then((granted) => {
           if (granted && btn.dataset.state === 'downloading') {
@@ -435,8 +451,11 @@ function makeOfflineBtn(book) {
           }
         });
       }
-      await Offline.download(book, (done, total) =>
-        setState('downloading', progressPercent(done, total)), { showNotification });
+      await Offline.download(book, (done, total, details) =>
+        setState(
+          'downloading',
+          details && details.background ? 'background' : progressPercent(done, total)
+        ), { showNotification });
       setState('downloaded');
     } catch (err) {
       setState('error', String(err && err.message || err));

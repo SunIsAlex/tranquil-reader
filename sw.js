@@ -8,7 +8,7 @@
    - 用户手动离线下载的书保存在 tranquil-books，不随版本升级删除
    ============================================================ */
 
-const VERSION = 'v32';
+const VERSION = 'v33';
 
 const SHELL_CACHE = `tranquil-shell-${VERSION}`;
 const RUNTIME_CACHE = `tranquil-runtime-${VERSION}`;
@@ -18,6 +18,7 @@ const BOOKS_CACHE = 'tranquil-books';
 const OFFLINE_DOWNLOAD_START = 'OFFLINE_DOWNLOAD_START';
 const OFFLINE_DOWNLOAD_PROGRESS = 'OFFLINE_DOWNLOAD_PROGRESS';
 const OFFLINE_DOWNLOAD_ENABLE_NOTIFICATION = 'OFFLINE_DOWNLOAD_ENABLE_NOTIFICATION';
+const OFFLINE_BACKGROUND_FETCH_PREFIX = 'offline-book:';
 const offlineDownloadJobs = new Map();
 const offlineDownloadNotificationRequests = new Map();
 
@@ -162,6 +163,95 @@ self.addEventListener('message', (event) => {
     bookTitle,
     showNotification
   ));
+});
+
+// Background Fetch is the durable path for large books/PDFs. The browser owns
+// the network transfer, so it can continue after all pages and workers close.
+// Once complete, move the browser-held responses into the persistent book cache.
+self.addEventListener('backgroundfetchsuccess', (event) => {
+  const info = parseOfflineBackgroundFetchId(event.registration.id);
+  if (!info) return;
+
+  event.waitUntil((async () => {
+    try {
+      const copied = await cacheBackgroundFetchRecords(event.registration);
+      if (info.cachedDone + copied < info.total) {
+        throw new Error('部分下载文件未能写入离线缓存');
+      }
+      await broadcastOfflineDownload({
+        backgroundFetchId: event.registration.id,
+        jobId: info.jobId,
+        bookId: info.bookId,
+        status: 'done',
+        done: info.total,
+        total: info.total,
+      });
+      await updateBackgroundFetchUI(event, '离线下载完成');
+    } catch (err) {
+      await broadcastOfflineDownload({
+        backgroundFetchId: event.registration.id,
+        jobId: info.jobId,
+        bookId: info.bookId,
+        status: 'error',
+        done: info.cachedDone,
+        total: info.total,
+        error: `保存离线文件失败：${String(err && err.message || err)}`,
+      });
+      await updateBackgroundFetchUI(event, '离线文件保存失败，请打开应用重试');
+      throw err;
+    }
+  })());
+});
+
+function handleOfflineBackgroundFetchFailure(event) {
+  const info = parseOfflineBackgroundFetchId(event.registration.id);
+  if (!info) return;
+
+  event.waitUntil((async () => {
+    // Preserve any successfully fetched records. The next attempt only asks
+    // for cache misses, giving the fallback path real resource-level resume.
+    const copied = await cacheBackgroundFetchRecords(event.registration, true);
+    await broadcastOfflineDownload({
+      backgroundFetchId: event.registration.id,
+      jobId: info.jobId,
+      bookId: info.bookId,
+      status: 'error',
+      done: Math.min(info.total, info.cachedDone + copied),
+      total: info.total,
+      error: backgroundFetchError(event.registration.failureReason),
+    });
+    await updateBackgroundFetchUI(event, '离线下载未完成，请打开应用重试');
+  })());
+}
+
+// Chromium shipped `backgroundfetchfail`; accept the older documented alias
+// too so the fallback remains harmless across WebView implementations.
+self.addEventListener('backgroundfetchfail', handleOfflineBackgroundFetchFailure);
+self.addEventListener('backgroundfetchfailure', handleOfflineBackgroundFetchFailure);
+
+self.addEventListener('backgroundfetchabort', (event) => {
+  const info = parseOfflineBackgroundFetchId(event.registration.id);
+  if (!info) return;
+
+  event.waitUntil((async () => {
+    const copied = await cacheBackgroundFetchRecords(event.registration, true);
+    await broadcastOfflineDownload({
+      backgroundFetchId: event.registration.id,
+      jobId: info.jobId,
+      bookId: info.bookId,
+      status: 'error',
+      done: Math.min(info.total, info.cachedDone + copied),
+      total: info.total,
+      error: '后台下载已取消',
+    });
+  })());
+});
+
+self.addEventListener('backgroundfetchclick', (event) => {
+  const info = parseOfflineBackgroundFetchId(event.registration.id);
+  if (!info) return;
+
+  event.waitUntil(openOfflineBook(info.bookId));
 });
 
 async function handleNavigation(req) {
@@ -334,6 +424,85 @@ async function staleWhileRevalidate(req, cacheName) {
     .catch(() => null);
 
   return cached || await network || Response.error();
+}
+
+function parseOfflineBackgroundFetchId(id) {
+  if (typeof id !== 'string' || !id.startsWith(OFFLINE_BACKGROUND_FETCH_PREFIX)) {
+    return null;
+  }
+
+  const match =
+    /^offline-book:([^:]+):([^:]+):(\d+):(\d+):(.+)$/.exec(id);
+  if (!match) return null;
+
+  try {
+    return {
+      bookId: decodeURIComponent(match[1]),
+      cachedDone: Number(match[3]) || 0,
+      total: Number(match[4]) || 0,
+      jobId: match[5],
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function cacheBackgroundFetchRecords(registration, bestEffort = false) {
+  const records = await registration.matchAll();
+  const cache = await caches.open(BOOKS_CACHE);
+  let copied = 0;
+
+  for (const record of records) {
+    try {
+      const response = await record.responseReady;
+      if (!response || !response.ok) continue;
+      await cache.put(record.request, response);
+      copied += 1;
+    } catch (err) {
+      if (!bestEffort) throw err;
+      // Failed records stay missing and will be requested by the next resume.
+    }
+  }
+  return copied;
+}
+
+async function updateBackgroundFetchUI(event, title) {
+  try {
+    if (typeof event.updateUI === 'function') {
+      await event.updateUI({ title });
+    }
+  } catch {
+    // Browser-owned download UI is best-effort; cache persistence is primary.
+  }
+}
+
+function backgroundFetchError(reason) {
+  switch (reason) {
+    case 'aborted': return '后台下载已取消';
+    case 'bad-status': return '服务器返回了无效文件';
+    case 'quota-exceeded': return '设备存储空间不足';
+    case 'download-total-exceeded': return '下载文件大小异常';
+    default: return '网络中断，打开应用后可继续下载';
+  }
+}
+
+async function openOfflineBook(bookId) {
+  const target = new URL(
+    `reader.html?book=${encodeURIComponent(bookId)}`,
+    self.registration.scope
+  ).href;
+  const windows = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  });
+
+  for (const client of windows) {
+    if ('focus' in client) {
+      if ('navigate' in client) await client.navigate(target);
+      return client.focus();
+    }
+  }
+  if (self.clients.openWindow) return self.clients.openWindow(target);
 }
 
 async function startOfflineBookDownload(bookId, jobId, urls, bookTitle, showNotification) {
