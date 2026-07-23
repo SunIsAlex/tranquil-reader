@@ -350,6 +350,13 @@ function makeOfflineBtn(book) {
     return Math.max(0, Math.min(100, Math.round((done / total) * 100)));
   }
 
+  function displayedDownloadProgress(done, total, details) {
+    if (details && details.background) {
+      return Number.isFinite(details.percent) ? details.percent : 'background';
+    }
+    return progressPercent(done, total);
+  }
+
   function setState(state, extra) {
     btn.dataset.state = state;
     btn.disabled = (state === 'checking' || state === 'downloading');
@@ -398,7 +405,7 @@ function makeOfflineBtn(book) {
       await Offline.download(book, (done, total, details) =>
         setState(
           'downloading',
-          details && details.background ? 'background' : progressPercent(done, total)
+          displayedDownloadProgress(done, total, details)
         ), {
         showNotification: Offline.notificationPermissionGranted(),
       });
@@ -412,6 +419,13 @@ function makeOfflineBtn(book) {
     navigator.serviceWorker.addEventListener('message', (event) => {
       const msg = event.data || {};
       if (msg.type !== Offline.MSG_PROGRESS || msg.bookId !== book.id) return;
+      const current = Offline.getDownloadState(book.id);
+      if (
+        msg.backgroundFetchId &&
+        current &&
+        current.backgroundFetchId &&
+        msg.backgroundFetchId !== current.backgroundFetchId
+      ) return;
 
       if (msg.status === 'downloading') {
         setState('downloading', progressPercent(msg.done || 0, msg.total || 0));
@@ -454,7 +468,7 @@ function makeOfflineBtn(book) {
       await Offline.download(book, (done, total, details) =>
         setState(
           'downloading',
-          details && details.background ? 'background' : progressPercent(done, total)
+          displayedDownloadProgress(done, total, details)
         ), { showNotification });
       setState('downloaded');
     } catch (err) {

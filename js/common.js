@@ -470,19 +470,31 @@ const Offline = {
         }
       }
 
+      // Jobs created by the previous release omitted downloadTotal, which
+      // makes Chrome's system UI stay at 0‰. Restart those jobs once with a
+      // measured total; already cached files are excluded from the new job.
+      if (background && !(Number(background.downloadTotal) > 0)) {
+        await background.abort();
+        background = null;
+        backgroundFetchId = '';
+      }
+
       if (!background) {
         const jobId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         backgroundFetchId =
           `${scope}${cachedDone}:${urls.length}:${jobId}`;
         const requests = missingUrls.map(url => new URL(url, location.href).href);
-        background = await manager.fetch(backgroundFetchId, requests, {
+        const downloadTotal = await this.measureDownloadTotal(missingUrls);
+        const fetchOptions = {
           title: `离线下载《${book.title || book.name || bookId}》`,
           icons: [{
             src: new URL('icons/icon-192.png', location.href).href,
             sizes: '192x192',
             type: 'image/png',
           }],
-        });
+        };
+        if (downloadTotal > 0) fetchOptions.downloadTotal = downloadTotal;
+        background = await manager.fetch(backgroundFetchId, requests, fetchOptions);
       }
     } catch (err) {
       // Permission denial or an incomplete implementation should not make
@@ -498,7 +510,10 @@ const Offline = {
       total: urls.length,
     });
     if (onProgress) {
-      onProgress(cachedDone, urls.length, { background: true });
+      onProgress(cachedDone, urls.length, {
+        background: true,
+        percent: this.backgroundFetchPercent(background),
+      });
     }
 
     await this.waitForBackgroundFetch(
@@ -510,6 +525,54 @@ const Offline = {
       onProgress
     );
     return true;
+  },
+
+  async measureDownloadTotal(urls) {
+    let nextIndex = 0;
+    let total = 0;
+    let complete = true;
+
+    const measureNext = async () => {
+      while (complete && nextIndex < urls.length) {
+        const index = nextIndex;
+        nextIndex += 1;
+        try {
+          const response = await fetch(urls[index], {
+            method: 'HEAD',
+            cache: 'no-cache',
+          });
+          const length = Number(response.headers.get('content-length'));
+          const encoding = response.headers.get('content-encoding');
+          if (
+            !response.ok ||
+            !Number.isSafeInteger(length) ||
+            length <= 0 ||
+            (encoding && encoding !== 'identity')
+          ) {
+            complete = false;
+            return;
+          }
+          total += length;
+        } catch {
+          complete = false;
+        }
+      }
+    };
+
+    await Promise.all(
+      Array.from(
+        { length: Math.min(6, urls.length) },
+        () => measureNext()
+      )
+    );
+    return complete && Number.isSafeInteger(total) ? total : 0;
+  },
+
+  backgroundFetchPercent(background) {
+    const total = Number(background && background.downloadTotal) || 0;
+    const downloaded = Number(background && background.downloaded) || 0;
+    if (total <= 0) return null;
+    return Math.max(0, Math.min(100, Math.round((downloaded / total) * 100)));
   },
 
   backgroundFetchScope(bookId, urls) {
@@ -569,6 +632,7 @@ const Offline = {
           onProgress(done, total, {
             background: true,
             downloaded: background.downloaded || 0,
+            percent: this.backgroundFetchPercent(background),
           });
         }
         if (background.result === 'success') checkCache();
@@ -798,6 +862,16 @@ const Offline = {
 
   rememberDownloadMessage(msg) {
     if (!msg || !msg.bookId) return;
+
+    const current = this.getDownloadState(msg.bookId);
+    if (
+      msg.backgroundFetchId &&
+      current &&
+      current.backgroundFetchId &&
+      msg.backgroundFetchId !== current.backgroundFetchId
+    ) {
+      return;
+    }
 
     if (msg.status === 'done') {
       this.setDownloadState(msg.bookId, {
