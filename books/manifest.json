@@ -1596,29 +1596,121 @@
       "author": "邢其毅、裴伟伟、徐瑞秋、裴坚",
       "source": "基础有机化学（第4版 ）上册.pdf",
       "parts": [
-        { "title": "第1章 绪论", "pdfUrl": "books/xing-basic-organic-4-upper/01.pdf", "pageCount": 28 },
-        { "title": "第2章 有机化合物的分类、表示方式、命名", "pdfUrl": "books/xing-basic-organic-4-upper/02.pdf", "pageCount": 40 },
-        { "title": "第3章 立体化学（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/03-1.pdf", "pageCount": 22 },
-        { "title": "第3章 立体化学（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/03-2.pdf", "pageCount": 22 },
-        { "title": "第4章 烷烃、自由基取代反应", "pdfUrl": "books/xing-basic-organic-4-upper/04.pdf", "pageCount": 24 },
-        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（1/3）", "pdfUrl": "books/xing-basic-organic-4-upper/05-1.pdf", "pageCount": 27 },
-        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（2/3）", "pdfUrl": "books/xing-basic-organic-4-upper/05-2.pdf", "pageCount": 26 },
-        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（3/3）", "pdfUrl": "books/xing-basic-organic-4-upper/05-3.pdf", "pageCount": 26 },
-        { "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/06-1.pdf", "pageCount": 31 },
-        { "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/06-2.pdf", "pageCount": 31 },
-        { "title": "第7章 醇和醚（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/07-1.pdf", "pageCount": 29 },
-        { "title": "第7章 醇和醚（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/07-2.pdf", "pageCount": 29 },
-        { "title": "第8章 烯烃、炔烃、加成反应（一）（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/08-1.pdf", "pageCount": 30 },
-        { "title": "第8章 烯烃、炔烃、加成反应（一）（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/08-2.pdf", "pageCount": 30 },
-        { "title": "第9章 共轭烯烃、周环反应（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/09-1.pdf", "pageCount": 28 },
-        { "title": "第9章 共轭烯烃、周环反应（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/09-2.pdf", "pageCount": 28 },
-        { "title": "第10章 醛和酮、加成反应（二）（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/10-1.pdf", "pageCount": 34 },
-        { "title": "第10章 醛和酮、加成反应（二）（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/10-2.pdf", "pageCount": 33 },
-        { "title": "第11章 羧酸", "pdfUrl": "books/xing-basic-organic-4-upper/11.pdf", "pageCount": 33 },
-        { "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/12-1.pdf", "pageCount": 30 },
-        { "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/12-2.pdf", "pageCount": 30 },
-        { "title": "第13章 缩合反应（1/2）", "pdfUrl": "books/xing-basic-organic-4-upper/13-1.pdf", "pageCount": 25 },
-        { "title": "第13章 缩合反应（2/2）", "pdfUrl": "books/xing-basic-organic-4-upper/13-2.pdf", "pageCount": 26 }
+        {
+          "title": "第1章 绪论",
+          "pdfUrl": "books/xing-basic-organic-4-upper/01.pdf",
+          "pageCount": 28
+        },
+        {
+          "title": "第2章 有机化合物的分类、表示方式、命名",
+          "pdfUrl": "books/xing-basic-organic-4-upper/02.pdf",
+          "pageCount": 40
+        },
+        {
+          "title": "第3章 立体化学（1/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/03-1.pdf",
+          "pageCount": 22
+        },
+        {
+          "title": "第3章 立体化学（2/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/03-2.pdf",
+          "pageCount": 22
+        },
+        {
+          "title": "第4章 烷烃、自由基取代反应",
+          "pdfUrl": "books/xing-basic-organic-4-upper/04.pdf",
+          "pageCount": 24
+        },
+        {
+          "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（1/3）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/05-1.pdf",
+          "pageCount": 27
+        },
+        {
+          "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（2/3）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/05-2.pdf",
+          "pageCount": 26
+        },
+        {
+          "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱（3/3）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/05-3.pdf",
+          "pageCount": 26
+        },
+        {
+          "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应（1/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/06-1.pdf",
+          "pageCount": 31
+        },
+        {
+          "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应（2/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/06-2.pdf",
+          "pageCount": 31
+        },
+        {
+          "title": "第7章 醇和醚（1/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/07-1.pdf",
+          "pageCount": 29
+        },
+        {
+          "title": "第7章 醇和醚（2/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/07-2.pdf",
+          "pageCount": 29
+        },
+        {
+          "title": "第8章 烯烃、炔烃、加成反应（一）（1/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/08-1.pdf",
+          "pageCount": 30
+        },
+        {
+          "title": "第8章 烯烃、炔烃、加成反应（一）（2/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/08-2.pdf",
+          "pageCount": 30
+        },
+        {
+          "title": "第9章 共轭烯烃、周环反应（1/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/09-1.pdf",
+          "pageCount": 28
+        },
+        {
+          "title": "第9章 共轭烯烃、周环反应（2/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/09-2.pdf",
+          "pageCount": 28
+        },
+        {
+          "title": "第10章 醛和酮、加成反应（二）（1/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/10-1.pdf",
+          "pageCount": 34
+        },
+        {
+          "title": "第10章 醛和酮、加成反应（二）（2/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/10-2.pdf",
+          "pageCount": 33
+        },
+        {
+          "title": "第11章 羧酸",
+          "pdfUrl": "books/xing-basic-organic-4-upper/11.pdf",
+          "pageCount": 33
+        },
+        {
+          "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应（1/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/12-1.pdf",
+          "pageCount": 30
+        },
+        {
+          "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应（2/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/12-2.pdf",
+          "pageCount": 30
+        },
+        {
+          "title": "第13章 缩合反应（1/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/13-1.pdf",
+          "pageCount": 25
+        },
+        {
+          "title": "第13章 缩合反应（2/2）",
+          "pdfUrl": "books/xing-basic-organic-4-upper/13-2.pdf",
+          "pageCount": 26
+        }
       ]
     },
     {
@@ -1629,21 +1721,81 @@
       "author": "邢其毅、裴伟伟、徐瑞秋、裴坚",
       "source": "基础有机化学（第4版）下册.pdf",
       "parts": [
-        { "title": "封面、版权与目录", "pdfUrl": "books/xing-basic-organic-4-lower/00.pdf", "pageCount": 9 },
-        { "title": "第14章 脂肪胺", "pdfUrl": "books/xing-basic-organic-4-lower/14.pdf", "pageCount": 47 },
-        { "title": "第15章 苯、芳烃、芳香性", "pdfUrl": "books/xing-basic-organic-4-lower/15.pdf", "pageCount": 49 },
-        { "title": "第16章 芳环上的取代反应", "pdfUrl": "books/xing-basic-organic-4-lower/16.pdf", "pageCount": 51 },
-        { "title": "第17章 烷基苯衍生物、酚、醌", "pdfUrl": "books/xing-basic-organic-4-lower/17.pdf", "pageCount": 46 },
-        { "title": "第18章 含氮芳香化合物、芳炔", "pdfUrl": "books/xing-basic-organic-4-lower/18.pdf", "pageCount": 43 },
-        { "title": "第19章 杂环化合物", "pdfUrl": "books/xing-basic-organic-4-lower/19.pdf", "pageCount": 54 },
-        { "title": "第20章 糖类化合物", "pdfUrl": "books/xing-basic-organic-4-lower/20.pdf", "pageCount": 35 },
-        { "title": "第21章 氨基酸、多肽、蛋白质以及核酸", "pdfUrl": "books/xing-basic-organic-4-lower/21.pdf", "pageCount": 41 },
-        { "title": "第22章 脂类、萜类和甾族化合物", "pdfUrl": "books/xing-basic-organic-4-lower/22.pdf", "pageCount": 33 },
-        { "title": "第23章 氧化反应", "pdfUrl": "books/xing-basic-organic-4-lower/23.pdf", "pageCount": 33 },
-        { "title": "第24章 重排反应", "pdfUrl": "books/xing-basic-organic-4-lower/24.pdf", "pageCount": 35 },
-        { "title": "第25章 过渡金属催化的有机反应", "pdfUrl": "books/xing-basic-organic-4-lower/25.pdf", "pageCount": 37 },
-        { "title": "第26章 有机合成与逆合成分析", "pdfUrl": "books/xing-basic-organic-4-lower/26.pdf", "pageCount": 39 },
-        { "title": "第27章 化学文献与网络检索", "pdfUrl": "books/xing-basic-organic-4-lower/27.pdf", "pageCount": 66 }
+        {
+          "title": "封面、版权与目录",
+          "pdfUrl": "books/xing-basic-organic-4-lower/00.pdf",
+          "pageCount": 9
+        },
+        {
+          "title": "第14章 脂肪胺",
+          "pdfUrl": "books/xing-basic-organic-4-lower/14.pdf",
+          "pageCount": 47
+        },
+        {
+          "title": "第15章 苯、芳烃、芳香性",
+          "pdfUrl": "books/xing-basic-organic-4-lower/15.pdf",
+          "pageCount": 49
+        },
+        {
+          "title": "第16章 芳环上的取代反应",
+          "pdfUrl": "books/xing-basic-organic-4-lower/16.pdf",
+          "pageCount": 51
+        },
+        {
+          "title": "第17章 烷基苯衍生物、酚、醌",
+          "pdfUrl": "books/xing-basic-organic-4-lower/17.pdf",
+          "pageCount": 46
+        },
+        {
+          "title": "第18章 含氮芳香化合物、芳炔",
+          "pdfUrl": "books/xing-basic-organic-4-lower/18.pdf",
+          "pageCount": 43
+        },
+        {
+          "title": "第19章 杂环化合物",
+          "pdfUrl": "books/xing-basic-organic-4-lower/19.pdf",
+          "pageCount": 54
+        },
+        {
+          "title": "第20章 糖类化合物",
+          "pdfUrl": "books/xing-basic-organic-4-lower/20.pdf",
+          "pageCount": 35
+        },
+        {
+          "title": "第21章 氨基酸、多肽、蛋白质以及核酸",
+          "pdfUrl": "books/xing-basic-organic-4-lower/21.pdf",
+          "pageCount": 41
+        },
+        {
+          "title": "第22章 脂类、萜类和甾族化合物",
+          "pdfUrl": "books/xing-basic-organic-4-lower/22.pdf",
+          "pageCount": 33
+        },
+        {
+          "title": "第23章 氧化反应",
+          "pdfUrl": "books/xing-basic-organic-4-lower/23.pdf",
+          "pageCount": 33
+        },
+        {
+          "title": "第24章 重排反应",
+          "pdfUrl": "books/xing-basic-organic-4-lower/24.pdf",
+          "pageCount": 35
+        },
+        {
+          "title": "第25章 过渡金属催化的有机反应",
+          "pdfUrl": "books/xing-basic-organic-4-lower/25.pdf",
+          "pageCount": 37
+        },
+        {
+          "title": "第26章 有机合成与逆合成分析",
+          "pdfUrl": "books/xing-basic-organic-4-lower/26.pdf",
+          "pageCount": 39
+        },
+        {
+          "title": "第27章 化学文献与网络检索",
+          "pdfUrl": "books/xing-basic-organic-4-lower/27.pdf",
+          "pageCount": 66
+        }
       ]
     },
     {
@@ -1654,34 +1806,722 @@
       "author": "裴伟伟、裴坚",
       "source": "基础有机化学习题解析.pdf",
       "parts": [
-        { "title": "封面、版权、前言与目录", "pdfUrl": "books/xing-basic-organic-4-solutions/00.pdf", "pageCount": 6 },
-        { "title": "第1章 绪论", "pdfUrl": "books/xing-basic-organic-4-solutions/01.pdf", "pageCount": 6 },
-        { "title": "第2章 有机化合物的分类、表示方式、命名", "pdfUrl": "books/xing-basic-organic-4-solutions/02.pdf", "pageCount": 18 },
-        { "title": "第3章 立体化学", "pdfUrl": "books/xing-basic-organic-4-solutions/03.pdf", "pageCount": 17 },
-        { "title": "第4章 烷烃、自由基取代反应", "pdfUrl": "books/xing-basic-organic-4-solutions/04.pdf", "pageCount": 10 },
-        { "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱", "pdfUrl": "books/xing-basic-organic-4-solutions/05.pdf", "pageCount": 27 },
-        { "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应", "pdfUrl": "books/xing-basic-organic-4-solutions/06.pdf", "pageCount": 21 },
-        { "title": "第7章 醇和醚", "pdfUrl": "books/xing-basic-organic-4-solutions/07.pdf", "pageCount": 26 },
-        { "title": "第8章 烯烃、炔烃、加成反应（一）", "pdfUrl": "books/xing-basic-organic-4-solutions/08.pdf", "pageCount": 30 },
-        { "title": "第9章 共轭烯烃、周环反应", "pdfUrl": "books/xing-basic-organic-4-solutions/09.pdf", "pageCount": 24 },
-        { "title": "第10章 醛和酮、加成反应（二）", "pdfUrl": "books/xing-basic-organic-4-solutions/10.pdf", "pageCount": 32 },
-        { "title": "第11章 羧酸", "pdfUrl": "books/xing-basic-organic-4-solutions/11.pdf", "pageCount": 17 },
-        { "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应", "pdfUrl": "books/xing-basic-organic-4-solutions/12.pdf", "pageCount": 24 },
-        { "title": "第13章 缩合反应", "pdfUrl": "books/xing-basic-organic-4-solutions/13.pdf", "pageCount": 29 },
-        { "title": "第14章 脂肪胺", "pdfUrl": "books/xing-basic-organic-4-solutions/14.pdf", "pageCount": 26 },
-        { "title": "第15章 苯、芳烃、芳香性", "pdfUrl": "books/xing-basic-organic-4-solutions/15.pdf", "pageCount": 13 },
-        { "title": "第16章 芳环上的取代反应", "pdfUrl": "books/xing-basic-organic-4-solutions/16.pdf", "pageCount": 20 },
-        { "title": "第17章 烷基苯衍生物、酚、醌", "pdfUrl": "books/xing-basic-organic-4-solutions/17.pdf", "pageCount": 21 },
-        { "title": "第18章 含氮芳香化合物、芳炔", "pdfUrl": "books/xing-basic-organic-4-solutions/18.pdf", "pageCount": 18 },
-        { "title": "第19章 杂环化合物", "pdfUrl": "books/xing-basic-organic-4-solutions/19.pdf", "pageCount": 26 },
-        { "title": "第20章 糖类化合物", "pdfUrl": "books/xing-basic-organic-4-solutions/20.pdf", "pageCount": 17 },
-        { "title": "第21章 氨基酸、多肽、蛋白质以及核酸", "pdfUrl": "books/xing-basic-organic-4-solutions/21.pdf", "pageCount": 12 },
-        { "title": "第22章 脂类、萜类和甾族化合物", "pdfUrl": "books/xing-basic-organic-4-solutions/22.pdf", "pageCount": 16 },
-        { "title": "第23章 氧化反应", "pdfUrl": "books/xing-basic-organic-4-solutions/23.pdf", "pageCount": 6 },
-        { "title": "第24章 重排反应", "pdfUrl": "books/xing-basic-organic-4-solutions/24.pdf", "pageCount": 9 },
-        { "title": "第25章 过渡金属催化的有机反应", "pdfUrl": "books/xing-basic-organic-4-solutions/25.pdf", "pageCount": 5 },
-        { "title": "第26章 有机合成与逆合成分析", "pdfUrl": "books/xing-basic-organic-4-solutions/26.pdf", "pageCount": 8 },
-        { "title": "第27章 化学文献与网络检索", "pdfUrl": "books/xing-basic-organic-4-solutions/27.pdf", "pageCount": 5 }
+        {
+          "title": "封面、版权、前言与目录",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/00.pdf",
+          "pageCount": 6
+        },
+        {
+          "title": "第1章 绪论",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/01.pdf",
+          "pageCount": 6
+        },
+        {
+          "title": "第2章 有机化合物的分类、表示方式、命名",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/02.pdf",
+          "pageCount": 18
+        },
+        {
+          "title": "第3章 立体化学",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/03.pdf",
+          "pageCount": 17
+        },
+        {
+          "title": "第4章 烷烃、自由基取代反应",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/04.pdf",
+          "pageCount": 10
+        },
+        {
+          "title": "第5章 紫外光谱、红外光谱、核磁共振和质谱",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/05.pdf",
+          "pageCount": 27
+        },
+        {
+          "title": "第6章 卤代烃、饱和碳原子上的亲核取代反应、β-消除反应",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/06.pdf",
+          "pageCount": 21
+        },
+        {
+          "title": "第7章 醇和醚",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/07.pdf",
+          "pageCount": 26
+        },
+        {
+          "title": "第8章 烯烃、炔烃、加成反应（一）",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/08.pdf",
+          "pageCount": 30
+        },
+        {
+          "title": "第9章 共轭烯烃、周环反应",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/09.pdf",
+          "pageCount": 24
+        },
+        {
+          "title": "第10章 醛和酮、加成反应（二）",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/10.pdf",
+          "pageCount": 32
+        },
+        {
+          "title": "第11章 羧酸",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/11.pdf",
+          "pageCount": 17
+        },
+        {
+          "title": "第12章 羧酸衍生物、酰基碳上的亲核取代反应",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/12.pdf",
+          "pageCount": 24
+        },
+        {
+          "title": "第13章 缩合反应",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/13.pdf",
+          "pageCount": 29
+        },
+        {
+          "title": "第14章 脂肪胺",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/14.pdf",
+          "pageCount": 26
+        },
+        {
+          "title": "第15章 苯、芳烃、芳香性",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/15.pdf",
+          "pageCount": 13
+        },
+        {
+          "title": "第16章 芳环上的取代反应",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/16.pdf",
+          "pageCount": 20
+        },
+        {
+          "title": "第17章 烷基苯衍生物、酚、醌",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/17.pdf",
+          "pageCount": 21
+        },
+        {
+          "title": "第18章 含氮芳香化合物、芳炔",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/18.pdf",
+          "pageCount": 18
+        },
+        {
+          "title": "第19章 杂环化合物",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/19.pdf",
+          "pageCount": 26
+        },
+        {
+          "title": "第20章 糖类化合物",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/20.pdf",
+          "pageCount": 17
+        },
+        {
+          "title": "第21章 氨基酸、多肽、蛋白质以及核酸",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/21.pdf",
+          "pageCount": 12
+        },
+        {
+          "title": "第22章 脂类、萜类和甾族化合物",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/22.pdf",
+          "pageCount": 16
+        },
+        {
+          "title": "第23章 氧化反应",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/23.pdf",
+          "pageCount": 6
+        },
+        {
+          "title": "第24章 重排反应",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/24.pdf",
+          "pageCount": 9
+        },
+        {
+          "title": "第25章 过渡金属催化的有机反应",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/25.pdf",
+          "pageCount": 5
+        },
+        {
+          "title": "第26章 有机合成与逆合成分析",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/26.pdf",
+          "pageCount": 8
+        },
+        {
+          "title": "第27章 化学文献与网络检索",
+          "pdfUrl": "books/xing-basic-organic-4-solutions/27.pdf",
+          "pageCount": 5
+        }
+      ]
+    },
+    {
+      "id": "konosuba",
+      "version": 1,
+      "title": "为美好的世界献上祝福！",
+      "author": "暁なつめ",
+      "chapters": [
+        {
+          "title": "第1卷 · Prologue (Ah My Useless Goddess)",
+          "file": "001_Prologue (Ah My Useless Goddess).txt"
+        },
+        {
+          "title": "第1卷 · Chapter 1",
+          "file": "002_Chapter 1.txt"
+        },
+        {
+          "title": "第1卷 · Chapter 2",
+          "file": "003_Chapter 2.txt"
+        },
+        {
+          "title": "第1卷 · Chapter 3",
+          "file": "004_Chapter 3.txt"
+        },
+        {
+          "title": "第1卷 · Chapter 4",
+          "file": "005_Chapter 4.txt"
+        },
+        {
+          "title": "第1卷 · Epilogue",
+          "file": "006_Epilogue.txt"
+        },
+        {
+          "title": "第1卷 · Short Story: Megumin the Dragon Slayer",
+          "file": "007_Short Story Megumin the Dragon Slayer.txt"
+        },
+        {
+          "title": "第2卷 · Prologue",
+          "file": "008_Prologue.txt"
+        },
+        {
+          "title": "第2卷 · Chapter 1",
+          "file": "009_Chapter 1.txt"
+        },
+        {
+          "title": "第2卷 · Chapter 2",
+          "file": "010_Chapter 2.txt"
+        },
+        {
+          "title": "第2卷 · Chapter 3",
+          "file": "011_Chapter 3.txt"
+        },
+        {
+          "title": "第2卷 · Chapter 4",
+          "file": "012_Chapter 4.txt"
+        },
+        {
+          "title": "第2卷 · Chapter 5",
+          "file": "013_Chapter 5.txt"
+        },
+        {
+          "title": "第2卷 · Epilogue",
+          "file": "014_Epilogue.txt"
+        },
+        {
+          "title": "第3卷 · Prologue (You're Being Summoned, Darkness)",
+          "file": "015_Prologue (You're Being Summoned, Darkness).txt"
+        },
+        {
+          "title": "第3卷 · Chapter 1",
+          "file": "016_Chapter 1.txt"
+        },
+        {
+          "title": "第3卷 · Chapter 2",
+          "file": "017_Chapter 2.txt"
+        },
+        {
+          "title": "第3卷 · Chapter 3",
+          "file": "018_Chapter 3.txt"
+        },
+        {
+          "title": "第3卷 · Chapter 4",
+          "file": "019_Chapter 4.txt"
+        },
+        {
+          "title": "第3卷 · Epilogue",
+          "file": "020_Epilogue.txt"
+        },
+        {
+          "title": "第3卷 · Short Story: Explosion Is Art",
+          "file": "021_Short Story Explosion Is Art.txt"
+        },
+        {
+          "title": "第4卷 · Prologue (Namakura Quartet)",
+          "file": "022_Prologue (Namakura Quartet).txt"
+        },
+        {
+          "title": "第4卷 · Chapter 1",
+          "file": "023_Chapter 1.txt"
+        },
+        {
+          "title": "第4卷 · Chapter 2",
+          "file": "024_Chapter 2.txt"
+        },
+        {
+          "title": "第4卷 · Chapter 3",
+          "file": "025_Chapter 3.txt"
+        },
+        {
+          "title": "第4卷 · Chapter 4",
+          "file": "026_Chapter 4.txt"
+        },
+        {
+          "title": "第4卷 · Chapter 5",
+          "file": "027_Chapter 5.txt"
+        },
+        {
+          "title": "第4卷 · Epilogue",
+          "file": "028_Epilogue.txt"
+        },
+        {
+          "title": "第4卷 · Short Story: Crimson-Eyed Rookie Killer",
+          "file": "029_Short Story Crimson-Eyed Rookie Killer.txt"
+        },
+        {
+          "title": "第5卷 · Prologue (Let's & Go to the Explosion Village!)",
+          "file": "030_Prologue (Let's & Go to the Explosion Village!).txt"
+        },
+        {
+          "title": "第5卷 · Chapter 1",
+          "file": "031_Chapter 1.txt"
+        },
+        {
+          "title": "第5卷 · Chapter 2",
+          "file": "032_Chapter 2.txt"
+        },
+        {
+          "title": "第5卷 · Chapter 3",
+          "file": "033_Chapter 3.txt"
+        },
+        {
+          "title": "第5卷 · Chapter 4",
+          "file": "034_Chapter 4.txt"
+        },
+        {
+          "title": "第5卷 · Chapter 5",
+          "file": "035_Chapter 5.txt"
+        },
+        {
+          "title": "第5卷 · Chapter 6",
+          "file": "036_Chapter 6.txt"
+        },
+        {
+          "title": "第5卷 · Epilogue + Extra",
+          "file": "037_Epilogue + Extra.txt"
+        },
+        {
+          "title": "第5卷 · Short Story: A Once-in-a-While Explosive Date",
+          "file": "038_Short Story A Once-in-a-While Explosive Date.txt"
+        },
+        {
+          "title": "第6卷 · Prologue (Princess of the Six Flowers)",
+          "file": "039_Prologue (Princess of the Six Flowers).txt"
+        },
+        {
+          "title": "第6卷 · Chapter 1",
+          "file": "040_Chapter 1.txt"
+        },
+        {
+          "title": "第6卷 · Chapter 2",
+          "file": "041_Chapter 2.txt"
+        },
+        {
+          "title": "第6卷 · Chapter 3",
+          "file": "042_Chapter 3.txt"
+        },
+        {
+          "title": "第6卷 · Chapter 4",
+          "file": "043_Chapter 4.txt"
+        },
+        {
+          "title": "第6卷 · Chapter 5",
+          "file": "044_Chapter 5.txt"
+        },
+        {
+          "title": "第6卷 · Chapter 6 + Intermission",
+          "file": "045_Chapter 6 + Intermission.txt"
+        },
+        {
+          "title": "第6卷 · Epilogue",
+          "file": "046_Epilogue.txt"
+        },
+        {
+          "title": "第7卷 · Prologue (The Ten Million Bride)",
+          "file": "047_Prologue (The Ten Million Bride).txt"
+        },
+        {
+          "title": "第7卷 · Chapter 1",
+          "file": "048_Chapter 1.txt"
+        },
+        {
+          "title": "第7卷 · Chapter 2",
+          "file": "049_Chapter 2.txt"
+        },
+        {
+          "title": "第7卷 · Chapter 3",
+          "file": "050_Chapter 3.txt"
+        },
+        {
+          "title": "第7卷 · Chapter 4",
+          "file": "051_Chapter 4.txt"
+        },
+        {
+          "title": "第7卷 · Chapter 5",
+          "file": "052_Chapter 5.txt"
+        },
+        {
+          "title": "第7卷 · Interlude & Epilogue",
+          "file": "053_Interlude & Epilogue.txt"
+        },
+        {
+          "title": "第7卷 · Short Story: The Devil and the Forbidden Book",
+          "file": "054_Short Story The Devil and the Forbidden Book.txt"
+        },
+        {
+          "title": "第7卷 · Short Story: Make a Show of Gratitude Every Now and Then!",
+          "file": "055_Short Story Make a Show of Gratitude Every Now and Then!.txt"
+        },
+        {
+          "title": "第8卷 · Prologue (Axis Cult vs Eris Church!)",
+          "file": "056_Prologue (Axis Cult vs Eris Church!).txt"
+        },
+        {
+          "title": "第8卷 · Chapter 1",
+          "file": "057_Chapter 1.txt"
+        },
+        {
+          "title": "第8卷 · Chapter 2",
+          "file": "058_Chapter 2.txt"
+        },
+        {
+          "title": "第8卷 · Chapter 3",
+          "file": "059_Chapter 3.txt"
+        },
+        {
+          "title": "第8卷 · Chapter 4",
+          "file": "060_Chapter 4.txt"
+        },
+        {
+          "title": "第8卷 · Chapter 5",
+          "file": "061_Chapter 5.txt"
+        },
+        {
+          "title": "第8卷 · Epilogue",
+          "file": "062_Epilogue.txt"
+        },
+        {
+          "title": "第8卷 · Short Story: To Realize a Man's Romance!",
+          "file": "063_Short Story To Realize a Man's Romance!.txt"
+        },
+        {
+          "title": "第9卷 · Prologue (Crimson Destiny)",
+          "file": "064_Prologue (Crimson Destiny).txt"
+        },
+        {
+          "title": "第9卷 · Chapter 1",
+          "file": "065_Chapter 1.txt"
+        },
+        {
+          "title": "第9卷 · Chapter 2",
+          "file": "066_Chapter 2.txt"
+        },
+        {
+          "title": "第9卷 · Chapter 3",
+          "file": "067_Chapter 3.txt"
+        },
+        {
+          "title": "第9卷 · Chapter 4",
+          "file": "068_Chapter 4.txt"
+        },
+        {
+          "title": "第9卷 · Chapter 5",
+          "file": "069_Chapter 5.txt"
+        },
+        {
+          "title": "第9卷 · Epilogue",
+          "file": "070_Epilogue.txt"
+        },
+        {
+          "title": "第9卷 · Short Story: An Occasional Cliché Story",
+          "file": "071_Short Story An Occasional Cliché Story.txt"
+        },
+        {
+          "title": "第9卷 · Short Story: A Certain Chick's Special Move!",
+          "file": "072_Short Story A Certain Chick's Special Move!.txt"
+        },
+        {
+          "title": "第10卷 · Prologue",
+          "file": "073_Prologue.txt"
+        },
+        {
+          "title": "第10卷 · Chapter 1",
+          "file": "074_Chapter 1.txt"
+        },
+        {
+          "title": "第10卷 · Chapter 2",
+          "file": "075_Chapter 2.txt"
+        },
+        {
+          "title": "第10卷 · Chapter 3",
+          "file": "076_Chapter 3.txt"
+        },
+        {
+          "title": "第10卷 · Chapter 4",
+          "file": "077_Chapter 4.txt"
+        },
+        {
+          "title": "第10卷 · Chapter 5",
+          "file": "078_Chapter 5.txt"
+        },
+        {
+          "title": "第10卷 · Epilogue + Side Stories",
+          "file": "079_Epilogue + Side Stories.txt"
+        },
+        {
+          "title": "第11卷 · Prologue",
+          "file": "080_Prologue.txt"
+        },
+        {
+          "title": "第11卷 · Chapter 1",
+          "file": "081_Chapter 1.txt"
+        },
+        {
+          "title": "第11卷 · Chapter 2",
+          "file": "082_Chapter 2.txt"
+        },
+        {
+          "title": "第11卷 · Chapter 3",
+          "file": "083_Chapter 3.txt"
+        },
+        {
+          "title": "第11卷 · Chapter 4",
+          "file": "084_Chapter 4.txt"
+        },
+        {
+          "title": "第11卷 · Chapter 5",
+          "file": "085_Chapter 5.txt"
+        },
+        {
+          "title": "第11卷 · Epilogue",
+          "file": "086_Epilogue.txt"
+        },
+        {
+          "title": "第11卷 · Short Stories (3)",
+          "file": "087_Short Stories (3).txt"
+        },
+        {
+          "title": "第12卷 · Prologue",
+          "file": "088_Prologue.txt"
+        },
+        {
+          "title": "第12卷 · Chapter 1",
+          "file": "089_Chapter 1.txt"
+        },
+        {
+          "title": "第12卷 · Chapter 2",
+          "file": "090_Chapter 2.txt"
+        },
+        {
+          "title": "第12卷 · Chapter 3",
+          "file": "091_Chapter 3.txt"
+        },
+        {
+          "title": "第12卷 · Chapter 4",
+          "file": "092_Chapter 4.txt"
+        },
+        {
+          "title": "第12卷 · Chapter 5",
+          "file": "093_Chapter 5.txt"
+        },
+        {
+          "title": "第12卷 · Chapter 6",
+          "file": "094_Chapter 6.txt"
+        },
+        {
+          "title": "第12卷 · Epilogue + 2 Short Stories",
+          "file": "095_Epilogue + 2 Short Stories.txt"
+        },
+        {
+          "title": "第12卷 · Short Story: The Unbelievably Lucky Silver-Haired Thief",
+          "file": "096_Short Story The Unbelievably Lucky Silver-Haired Thief.txt"
+        },
+        {
+          "title": "第12卷 · Short Story: On a Certain Midsummer's Night",
+          "file": "097_Short Story On a Certain Midsummer's Night.txt"
+        },
+        {
+          "title": "第13卷 · Prologue (A Challenge to This Lich!)",
+          "file": "098_Prologue (A Challenge to This Lich!).txt"
+        },
+        {
+          "title": "第13卷 · Chapter 1",
+          "file": "099_Chapter 1.txt"
+        },
+        {
+          "title": "第13卷 · Chapter 2",
+          "file": "100_Chapter 2.txt"
+        },
+        {
+          "title": "第13卷 · Chapter 3",
+          "file": "101_Chapter 3.txt"
+        },
+        {
+          "title": "第13卷 · Chapter 4",
+          "file": "102_Chapter 4.txt"
+        },
+        {
+          "title": "第13卷 · Chapter 5",
+          "file": "103_Chapter 5.txt"
+        },
+        {
+          "title": "第13卷 · Epilogue",
+          "file": "104_Epilogue.txt"
+        },
+        {
+          "title": "第13卷 · Short Story: A Real Magic Item!",
+          "file": "105_Short Story A Real Magic Item!.txt"
+        },
+        {
+          "title": "第13卷 · Short Story: The Winter Moon Is…",
+          "file": "106_Short Story The Winter Moon Is….txt"
+        },
+        {
+          "title": "第13卷 · Short Story: The Lap Pillow of the False Shopkeeper",
+          "file": "107_Short Story The Lap Pillow of the False Shopkeeper.txt"
+        },
+        {
+          "title": "第14卷 · Prologue",
+          "file": "108_Prologue.txt"
+        },
+        {
+          "title": "第14卷 · Chapter 1",
+          "file": "109_Chapter 1.txt"
+        },
+        {
+          "title": "第14卷 · Chapter 2",
+          "file": "110_Chapter 2.txt"
+        },
+        {
+          "title": "第14卷 · Chapter 3",
+          "file": "111_Chapter 3.txt"
+        },
+        {
+          "title": "第14卷 · Chapter 4",
+          "file": "112_Chapter 4.txt"
+        },
+        {
+          "title": "第14卷 · Chapter 5",
+          "file": "113_Chapter 5.txt"
+        },
+        {
+          "title": "第14卷 · Epilogue",
+          "file": "114_Epilogue.txt"
+        },
+        {
+          "title": "第14卷 · Short Story 1",
+          "file": "115_Short Story 1.txt"
+        },
+        {
+          "title": "第14卷 · Short Story: Gamers",
+          "file": "116_Short Story Gamers.txt"
+        },
+        {
+          "title": "第14卷 · Short Story: Toranora",
+          "file": "117_Short Story Toranora.txt"
+        },
+        {
+          "title": "第15卷 · Prologue",
+          "file": "118_Prologue.txt"
+        },
+        {
+          "title": "第15卷 · Chapter 1",
+          "file": "119_Chapter 1.txt"
+        },
+        {
+          "title": "第15卷 · Chapter 2",
+          "file": "120_Chapter 2.txt"
+        },
+        {
+          "title": "第15卷 · Chapter 3",
+          "file": "121_Chapter 3.txt"
+        },
+        {
+          "title": "第15卷 · Chapter 4",
+          "file": "122_Chapter 4.txt"
+        },
+        {
+          "title": "第15卷 · Chapter 5",
+          "file": "123_Chapter 5.txt"
+        },
+        {
+          "title": "第15卷 · Epilogue",
+          "file": "124_Epilogue.txt"
+        },
+        {
+          "title": "第15卷 · Short Story 1",
+          "file": "125_Short Story 1.txt"
+        },
+        {
+          "title": "第15卷 · Short Story 2",
+          "file": "126_Short Story 2.txt"
+        },
+        {
+          "title": "第15卷 · Short Story 3",
+          "file": "127_Short Story 3.txt"
+        },
+        {
+          "title": "第16卷 · Chapter 1",
+          "file": "128_Chapter 1.txt"
+        },
+        {
+          "title": "第16卷 · Chapter 2",
+          "file": "129_Chapter 2.txt"
+        },
+        {
+          "title": "第16卷 · Chapter 3",
+          "file": "130_Chapter 3.txt"
+        },
+        {
+          "title": "第16卷 · Chapter 4",
+          "file": "131_Chapter 4.txt"
+        },
+        {
+          "title": "第16卷 · Chapter 5 & Epilogue",
+          "file": "132_Chapter 5 & Epilogue.txt"
+        },
+        {
+          "title": "第16卷 · Short Story 1",
+          "file": "133_Short Story 1.txt"
+        },
+        {
+          "title": "第16卷 · Short Story 2 (Toranora/Gamers)",
+          "file": "134_Short Story 2 (ToranoraGamers).txt"
+        },
+        {
+          "title": "第17卷 · Chapter 1",
+          "file": "135_Chapter 1.txt"
+        },
+        {
+          "title": "第17卷 · Chapter 2",
+          "file": "136_Chapter 2.txt"
+        },
+        {
+          "title": "第17卷 · Chapter 3",
+          "file": "137_Chapter 3.txt"
+        },
+        {
+          "title": "第17卷 · Chapter 4",
+          "file": "138_Chapter 4.txt"
+        },
+        {
+          "title": "第17卷 · Epilogue and Afterword",
+          "file": "139_Epilogue and Afterword.txt"
+        },
+        {
+          "title": "第17卷 · Short Story: Extra Special Bonus (Gamers)",
+          "file": "140_Short Story Extra Special Bonus (Gamers).txt"
+        },
+        {
+          "title": "第17卷 · Short Story 2",
+          "file": "141_Short Story 2.txt"
+        },
+        {
+          "title": "第17卷 · Short Story 3",
+          "file": "142_Short Story 3.txt"
+        }
       ]
     }
   ]
