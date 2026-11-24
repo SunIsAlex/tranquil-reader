@@ -49,7 +49,15 @@
 
   <main class="shelf" id="main" tabindex="-1">
     <h1 class="shelf-title">书架</h1>
-    <p class="shelf-sub">静态书库</p>
+    <p class="shelf-sub" id="shelf-sub">静态书库</p>
+    <div class="shelf-controls" id="shelf-controls" hidden>
+      <div class="shelf-search-wrap">
+        <label class="sr-only" for="shelf-search">搜索书名或作者</label>
+        <input id="shelf-search" class="shelf-search" type="search" placeholder="搜索书名或作者…" autocomplete="off" spellcheck="false">
+        <button id="shelf-search-clear" class="shelf-search-clear" type="button" aria-label="清除搜索" hidden>✕</button>
+      </div>
+      <div id="shelf-filters" class="shelf-filters" role="tablist" aria-label="按作者筛选"></div>
+    </div>
     <ul id="book-list" class="book-list" aria-live="polite">
       <li class="empty">正在加载书目……</li>
     </ul>

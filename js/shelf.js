@@ -7,6 +7,11 @@
   if (maybeResumeLastReadOnAppLaunch()) return;
 
   const listEl = document.getElementById('book-list');
+  const subEl = document.getElementById('shelf-sub');
+  const controlsEl = document.getElementById('shelf-controls');
+  const searchEl = document.getElementById('shelf-search');
+  const clearEl = document.getElementById('shelf-search-clear');
+  const filtersEl = document.getElementById('shelf-filters');
   setupShelfSync();
 
   // 安卓浏览器访客：在书架顶部推荐下载 App（与书目加载相互独立）
@@ -27,8 +32,23 @@
     return;
   }
 
+  const offlineSupported = Offline.supported();
+  const offlineControllers = new Map();
+  const pendingOfflineChecks = [];
+
+  if (offlineSupported && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      const msg = event.data || {};
+      if (msg.type !== Offline.MSG_PROGRESS || !msg.bookId) return;
+      const ctrl = offlineControllers.get(msg.bookId);
+      if (ctrl) ctrl.onProgressMessage(msg);
+    });
+  }
+
   listEl.innerHTML = '';
   const frag = document.createDocumentFragment();
+  const cardItems = [];
+
   for (const book of books) {
     const card = document.createElement('li');
     const hasCover = typeof book.cover === 'string' && book.cover.trim();
@@ -39,8 +59,9 @@
     link.href = `reader.html?book=${encodeURIComponent(book.id)}`;
 
     const progress = Store.getProgress(book.id);
+    const hasProgress = Boolean(progress && Number.isInteger(progress.chapter));
     let progressHTML = '';
-    if (progress && Number.isInteger(progress.chapter)) {
+    if (hasProgress) {
       const total = book.chapters ? book.chapters.length : null;
       const at = progress.chapter + 1;
       if (isPDFBook(book)) {
@@ -69,8 +90,8 @@
     side.innerHTML = `<span class="book-meta">${escapeHTML(meta)}</span>`;
 
     // 离线下载按钮（浏览器支持时才显示）。按钮与链接分离，避免 <button> 嵌套在 <a> 中。
-    if (Offline.supported() && Offline.canDownload(book)) {
-      side.appendChild(makeOfflineBtn(book));
+    if (offlineSupported && Offline.canDownload(book)) {
+      side.appendChild(makeOfflineBtn(book, offlineControllers, pendingOfflineChecks));
     }
 
     // 封面与阅读链接分离：
@@ -80,9 +101,183 @@
     card.appendChild(link);
     card.appendChild(side);
     frag.appendChild(card);
+
+    cardItems.push({
+      el: card,
+      titleLower: String(book.title || '').toLowerCase(),
+      author: String(book.author || '佚名').trim() || '佚名',
+      authorLower: String(book.author || '佚名').toLowerCase(),
+      hasProgress,
+    });
   }
+
+  const emptyFilterEl = document.createElement('li');
+  emptyFilterEl.className = 'empty';
+  emptyFilterEl.hidden = true;
+  emptyFilterEl.textContent = '没有找到匹配的书籍。';
+  frag.appendChild(emptyFilterEl);
+
   listEl.appendChild(frag);
+
+  if (pendingOfflineChecks.length) {
+    scheduleShelfIdleTask(() => probeAllOfflineStates(pendingOfflineChecks));
+  }
+
+  setupShelfFiltering({
+    books,
+    cardItems,
+    emptyFilterEl,
+    subEl,
+    controlsEl,
+    searchEl,
+    clearEl,
+    filtersEl,
+  });
 })();
+
+function setupShelfFiltering({
+  books,
+  cardItems,
+  emptyFilterEl,
+  subEl,
+  controlsEl,
+  searchEl,
+  clearEl,
+  filtersEl,
+}) {
+  if (!controlsEl || !searchEl || !clearEl || !filtersEl) {
+    if (subEl) subEl.textContent = `静态书库 · 共 ${books.length} 本`;
+    return;
+  }
+
+  const FILTER_KEY = 'reader.shelfFilter';
+  const QUERY_KEY = 'reader.shelfQuery';
+
+  const authorCounts = new Map();
+  let readingCount = 0;
+  for (const item of cardItems) {
+    if (item.hasProgress) readingCount += 1;
+    authorCounts.set(item.author, (authorCounts.get(item.author) || 0) + 1);
+  }
+
+  const sortedAuthors = [...authorCounts.entries()]
+    .sort((a, b) => b[1] - a[1]);
+
+  const filterOptions = [{ id: 'all', label: `全部 (${books.length})` }];
+  if (readingCount > 0) {
+    filterOptions.push({ id: '__reading__', label: `在读 (${readingCount})` });
+  }
+  for (const [author, count] of sortedAuthors) {
+    filterOptions.push({ id: author, label: `${author} (${count})` });
+  }
+
+  let activeFilter = 'all';
+  let queryText = '';
+  try {
+    const savedFilter = sessionStorage.getItem(FILTER_KEY);
+    if (savedFilter && filterOptions.some(opt => opt.id === savedFilter)) {
+      activeFilter = savedFilter;
+    }
+    const savedQuery = sessionStorage.getItem(QUERY_KEY);
+    if (savedQuery) {
+      queryText = savedQuery;
+      searchEl.value = savedQuery;
+    }
+  } catch { /* ignore storage errors */ }
+
+  const pillButtons = [];
+  filtersEl.innerHTML = '';
+  for (const opt of filterOptions) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'shelf-pill';
+    btn.role = 'tab';
+    btn.dataset.filter = opt.id;
+    btn.textContent = opt.label;
+    btn.setAttribute('aria-selected', String(opt.id === activeFilter));
+    btn.addEventListener('click', () => {
+      activeFilter = opt.id;
+      try { sessionStorage.setItem(FILTER_KEY, activeFilter); } catch { /* ignore */ }
+      for (const p of pillButtons) {
+        p.setAttribute('aria-selected', String(p.dataset.filter === activeFilter));
+      }
+      applyFilter();
+    });
+    pillButtons.push(btn);
+    filtersEl.appendChild(btn);
+  }
+
+  function applyFilter() {
+    const q = queryText.trim().toLowerCase();
+    clearEl.hidden = !queryText;
+
+    let visible = 0;
+    for (const item of cardItems) {
+      let ok = true;
+      if (activeFilter === '__reading__') {
+        ok = item.hasProgress;
+      } else if (activeFilter !== 'all') {
+        ok = item.author === activeFilter;
+      }
+      if (ok && q) {
+        ok = item.titleLower.includes(q) || item.authorLower.includes(q);
+      }
+      item.el.hidden = !ok;
+      if (ok) visible += 1;
+    }
+
+    emptyFilterEl.hidden = visible > 0;
+    if (subEl) {
+      subEl.textContent = (activeFilter === 'all' && !q)
+        ? `静态书库 · 共 ${books.length} 本`
+        : `显示 ${visible} / ${books.length} 本`;
+    }
+  }
+
+  searchEl.addEventListener('input', () => {
+    queryText = searchEl.value;
+    try { sessionStorage.setItem(QUERY_KEY, queryText); } catch { /* ignore */ }
+    applyFilter();
+  });
+
+  clearEl.addEventListener('click', () => {
+    queryText = '';
+    searchEl.value = '';
+    try { sessionStorage.removeItem(QUERY_KEY); } catch { /* ignore */ }
+    applyFilter();
+    searchEl.focus({ preventScroll: true });
+  });
+
+  controlsEl.hidden = false;
+  applyFilter();
+}
+
+async function probeAllOfflineStates(pendingChecks) {
+  let cachedSet = null;
+  try {
+    const cache = await caches.open(Offline.CACHE);
+    const keys = await cache.keys();
+    cachedSet = new Set(keys.map(req => req.url));
+  } catch {
+    cachedSet = null;
+  }
+
+  for (const { book, setState } of pendingChecks) {
+    if (!cachedSet) {
+      setState('idle');
+      continue;
+    }
+    const urls = Offline.urls(book);
+    const downloaded = urls.length > 0 && urls.every(u => {
+      try {
+        return cachedSet.has(new URL(u, location.href).href);
+      } catch {
+        return false;
+      }
+    });
+    setState(downloaded ? 'downloaded' : 'idle');
+  }
+}
 
 
 function setupShelfSync() {
@@ -336,11 +531,11 @@ function maybeShowAppBanner() {
     banner.remove();
   });
 
-  shelf.insertBefore(banner, shelf.querySelector('.book-list'));
+  shelf.insertBefore(banner, shelf.querySelector('.shelf-controls') || shelf.querySelector('.book-list'));
 }
 
 // 为某本书生成“离线下载/移除”按钮，自带状态机与进度显示。
-function makeOfflineBtn(book) {
+function makeOfflineBtn(book, offlineControllers, pendingOfflineChecks) {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'offline-btn';
@@ -387,7 +582,7 @@ function makeOfflineBtn(book) {
     }
 
     if (saved.status === 'done') {
-      // 版本更新后旧缓存不能继续显示为“已离线”，交给 isDownloaded
+      // 版本更新后旧缓存不能继续显示为“已离线”，交给批量缓存检查
       // 使用当前 manifest 中的版本化 URL 重新核验。
       return false;
     }
@@ -415,25 +610,25 @@ function makeOfflineBtn(book) {
     }
   }
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', (event) => {
-      const msg = event.data || {};
-      if (msg.type !== Offline.MSG_PROGRESS || msg.bookId !== book.id) return;
-      const current = Offline.getDownloadState(book.id);
-      if (
-        msg.backgroundFetchId &&
-        current &&
-        current.backgroundFetchId &&
-        msg.backgroundFetchId !== current.backgroundFetchId
-      ) return;
+  if (offlineControllers) {
+    offlineControllers.set(book.id, {
+      onProgressMessage(msg) {
+        const current = Offline.getDownloadState(book.id);
+        if (
+          msg.backgroundFetchId &&
+          current &&
+          current.backgroundFetchId &&
+          msg.backgroundFetchId !== current.backgroundFetchId
+        ) return;
 
-      if (msg.status === 'downloading') {
-        setState('downloading', progressPercent(msg.done || 0, msg.total || 0));
-      } else if (msg.status === 'done') {
-        setState('downloaded');
-      } else if (msg.status === 'error') {
-        setState('error', msg.error || '下载失败');
-      }
+        if (msg.status === 'downloading') {
+          setState('downloading', progressPercent(msg.done || 0, msg.total || 0));
+        } else if (msg.status === 'done') {
+          setState('downloaded');
+        } else if (msg.status === 'error') {
+          setState('error', msg.error || '下载失败');
+        }
+      },
     });
   }
 
@@ -476,12 +671,17 @@ function makeOfflineBtn(book) {
     }
   });
 
-  // 初始状态异步探测：是否已经缓存过
+  // 初始状态异步探测：是否已经缓存过（单次 caches.open().keys() 批量检查）
   setState('checking');
-  scheduleShelfIdleTask(() => {
-    if (applySavedDownloadState()) return;
-    Offline.isDownloaded(book).then(d => setState(d ? 'downloaded' : 'idle'));
-  });
+  if (!applySavedDownloadState()) {
+    if (pendingOfflineChecks) {
+      pendingOfflineChecks.push({ book, setState });
+    } else {
+      scheduleShelfIdleTask(() => {
+        Offline.isDownloaded(book).then(d => setState(d ? 'downloaded' : 'idle'));
+      });
+    }
+  }
   return btn;
 }
 
