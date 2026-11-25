@@ -2,7 +2,7 @@
   "books": [
     {
       "id": "santi-1",
-      "version": 3,
+      "version": 4,
       "title": "三体",
       "author": "刘慈欣",
       "cover": "cover.png",
@@ -179,7 +179,7 @@
     },
     {
       "id": "zhongguo2185",
-      "version": 2,
+      "version": 3,
       "title": "中国2185",
       "author": "刘慈欣",
       "cover": "cover.png",
@@ -246,7 +246,7 @@
     },
     {
       "id": "chaoxinxingjiyuan",
-      "version": 3,
+      "version": 4,
       "title": "超新星纪元",
       "author": "刘慈欣",
       "highlightsFile": "highlights.json",
@@ -547,7 +547,7 @@
     },
     {
       "id": "hongloumeng",
-      "version": 2,
+      "version": 3,
       "title": "红楼梦",
       "author": "曹雪芹、高鹗",
       "chapters": [
@@ -2526,7 +2526,7 @@
     },
     {
       "id": "sf-001-001",
-      "version": 2,
+      "version": 3,
       "title": "宇宙坍缩",
       "author": "刘慈欣",
       "chapters": [
@@ -2538,7 +2538,7 @@
     },
     {
       "id": "sf-001-002",
-      "version": 2,
+      "version": 3,
       "title": "微观尽头",
       "author": "刘慈欣",
       "chapters": [
@@ -2738,7 +2738,7 @@
     },
     {
       "id": "sf-001-006",
-      "version": 1,
+      "version": 2,
       "title": "欢乐颂",
       "author": "刘慈欣",
       "chapters": [
@@ -2750,7 +2750,7 @@
     },
     {
       "id": "sf-001-007",
-      "version": 2,
+      "version": 3,
       "title": "西洋",
       "author": "刘慈欣",
       "chapters": [
@@ -2762,7 +2762,7 @@
     },
     {
       "id": "sf-001-008",
-      "version": 1,
+      "version": 2,
       "title": "微纪元",
       "author": "刘慈欣",
       "chapters": [
@@ -2830,7 +2830,7 @@
     },
     {
       "id": "sf-001-012",
-      "version": 2,
+      "version": 3,
       "title": "鲸歌",
       "author": "刘慈欣",
       "chapters": [
@@ -2842,7 +2842,7 @@
     },
     {
       "id": "sf-001-013",
-      "version": 2,
+      "version": 3,
       "title": "带上她的眼睛",
       "author": "刘慈欣",
       "chapters": [
@@ -2866,7 +2866,7 @@
     },
     {
       "id": "sf-001-015",
-      "version": 2,
+      "version": 3,
       "title": "混沌蝴蝶",
       "author": "刘慈欣",
       "chapters": [
@@ -2914,7 +2914,7 @@
     },
     {
       "id": "sf-001-018",
-      "version": 2,
+      "version": 3,
       "title": "乡村教师",
       "author": "刘慈欣",
       "chapters": [
@@ -2930,7 +2930,7 @@
     },
     {
       "id": "sf-001-019",
-      "version": 2,
+      "version": 3,
       "title": "魔鬼积木",
       "author": "刘慈欣",
       "chapters": [
@@ -2966,7 +2966,7 @@
     },
     {
       "id": "sf-001-020",
-      "version": 2,
+      "version": 3,
       "title": "全频带阻塞干扰（中国版）",
       "author": "刘慈欣",
       "chapters": [
@@ -3014,7 +3014,7 @@
     },
     {
       "id": "sf-001-021",
-      "version": 2,
+      "version": 3,
       "title": "全频带阻塞干扰（俄罗斯版）",
       "author": "刘慈欣",
       "chapters": [
@@ -3050,7 +3050,7 @@
     },
     {
       "id": "sf-001-023",
-      "version": 1,
+      "version": 2,
       "title": "朝闻道（爱因斯坦赤道）",
       "author": "刘慈欣",
       "chapters": [
@@ -3074,7 +3074,7 @@
     },
     {
       "id": "sf-001-025",
-      "version": 1,
+      "version": 2,
       "title": "命运",
       "author": "刘慈欣",
       "chapters": [
@@ -3086,7 +3086,7 @@
     },
     {
       "id": "sf-001-026",
-      "version": 1,
+      "version": 2,
       "title": "球状闪电",
       "author": "刘慈欣",
       "chapters": [
@@ -3178,7 +3178,7 @@
     },
     {
       "id": "sf-001-028",
-      "version": 1,
+      "version": 2,
       "title": "思想者",
       "author": "刘慈欣",
       "chapters": [
@@ -3234,7 +3234,7 @@
     },
     {
       "id": "sf-001-032",
-      "version": 2,
+      "version": 3,
       "title": "镜子",
       "author": "刘慈欣",
       "chapters": [
@@ -3266,7 +3266,7 @@
     },
     {
       "id": "sf-001-033",
-      "version": 1,
+      "version": 2,
       "title": "圆圆的肥皂泡",
       "author": "刘慈欣",
       "chapters": [
@@ -3430,7 +3430,7 @@
     },
     {
       "id": "sf-001-040",
-      "version": 1,
+      "version": 2,
       "title": "时间移民",
       "author": "刘慈欣",
       "chapters": [
@@ -3814,7 +3814,7 @@
     },
     {
       "id": "sf-002-002",
-      "version": 2,
+      "version": 3,
       "title": "沙丘救世主",
       "author": "弗兰克·赫伯特",
       "chapters": [
@@ -4178,7 +4178,7 @@
     },
     {
       "id": "sf-003-001",
-      "version": 1,
+      "version": 2,
       "title": "AL-76号走失记",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4190,7 +4190,7 @@
     },
     {
       "id": "sf-003-002",
-      "version": 1,
+      "version": 2,
       "title": "我，机器人",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4448,7 +4448,7 @@
     },
     {
       "id": "sf-003-005",
-      "version": 2,
+      "version": 3,
       "title": "一只下金蛋的鹅",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4460,7 +4460,7 @@
     },
     {
       "id": "sf-003-006",
-      "version": 2,
+      "version": 3,
       "title": "不朽的诗人",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4472,7 +4472,7 @@
     },
     {
       "id": "sf-003-007",
-      "version": 2,
+      "version": 3,
       "title": "九个明天",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4560,7 +4560,7 @@
     },
     {
       "id": "sf-003-009",
-      "version": 1,
+      "version": 2,
       "title": "人语石",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4572,7 +4572,7 @@
     },
     {
       "id": "sf-003-010",
-      "version": 1,
+      "version": 2,
       "title": "他们那时多有趣",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4584,7 +4584,7 @@
     },
     {
       "id": "sf-003-011",
-      "version": 2,
+      "version": 3,
       "title": "低能儿收容所",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4636,7 +4636,7 @@
     },
     {
       "id": "sf-003-012",
-      "version": 2,
+      "version": 3,
       "title": "假如",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4648,7 +4648,7 @@
     },
     {
       "id": "sf-003-013",
-      "version": 2,
+      "version": 3,
       "title": "力量的感觉",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4660,7 +4660,7 @@
     },
     {
       "id": "sf-003-014",
-      "version": 2,
+      "version": 3,
       "title": "台球",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4672,7 +4672,7 @@
     },
     {
       "id": "sf-003-015",
-      "version": 1,
+      "version": 2,
       "title": "响铃",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4684,7 +4684,7 @@
     },
     {
       "id": "sf-003-016",
-      "version": 1,
+      "version": 2,
       "title": "啊，巴顿，巴顿！",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4712,7 +4712,7 @@
     },
     {
       "id": "sf-003-018",
-      "version": 1,
+      "version": 2,
       "title": "复仇女神",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4888,7 +4888,7 @@
     },
     {
       "id": "sf-003-020",
-      "version": 2,
+      "version": 3,
       "title": "奇妙的航程",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -4996,7 +4996,7 @@
     },
     {
       "id": "sf-003-023",
-      "version": 1,
+      "version": 2,
       "title": "孩子最好的朋友",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5020,7 +5020,7 @@
     },
     {
       "id": "sf-003-025",
-      "version": 1,
+      "version": 2,
       "title": "怪异的谋杀案",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5044,7 +5044,7 @@
     },
     {
       "id": "sf-003-027",
-      "version": 1,
+      "version": 2,
       "title": "换个角度",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5056,7 +5056,7 @@
     },
     {
       "id": "sf-003-028",
-      "version": 2,
+      "version": 3,
       "title": "日暮",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5068,7 +5068,7 @@
     },
     {
       "id": "sf-003-029",
-      "version": 1,
+      "version": 2,
       "title": "星光",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5080,7 +5080,7 @@
     },
     {
       "id": "sf-003-030",
-      "version": 1,
+      "version": 2,
       "title": "最后的问题",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5104,7 +5104,7 @@
     },
     {
       "id": "sf-003-032",
-      "version": 1,
+      "version": 2,
       "title": "格洛里亚的好朋友",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5116,7 +5116,7 @@
     },
     {
       "id": "sf-003-033",
-      "version": 2,
+      "version": 3,
       "title": "死尘",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5160,7 +5160,7 @@
     },
     {
       "id": "sf-003-036",
-      "version": 2,
+      "version": 3,
       "title": "灶神星畔受困记",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5172,7 +5172,7 @@
     },
     {
       "id": "sf-003-037",
-      "version": 2,
+      "version": 3,
       "title": "真爱",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5220,7 +5220,7 @@
     },
     {
       "id": "sf-003-041",
-      "version": 1,
+      "version": 2,
       "title": "第一定律",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5244,7 +5244,7 @@
     },
     {
       "id": "sf-003-043",
-      "version": 2,
+      "version": 3,
       "title": "被遗忘的世界",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5256,7 +5256,7 @@
     },
     {
       "id": "sf-003-044",
-      "version": 2,
+      "version": 3,
       "title": "讣告",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5268,7 +5268,7 @@
     },
     {
       "id": "sf-003-045",
-      "version": 2,
+      "version": 3,
       "title": "讲笑话的人",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5292,7 +5292,7 @@
     },
     {
       "id": "sf-003-047",
-      "version": 2,
+      "version": 3,
       "title": "钥匙",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5308,8 +5308,8 @@
     },
     {
       "id": "sf-003-048",
-      "version": 2,
-      "title": "镜象",
+      "version": 3,
+      "title": "镜像",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
         {
@@ -5320,7 +5320,7 @@
     },
     {
       "id": "sf-003-049",
-      "version": 1,
+      "version": 2,
       "title": "鬼扯",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5344,7 +5344,7 @@
     },
     {
       "id": "sf-003-051",
-      "version": 1,
+      "version": 2,
       "title": "基地（基地三部曲1）",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -5544,7 +5544,7 @@
     },
     {
       "id": "sf-003-052",
-      "version": 1,
+      "version": 2,
       "title": "基地与帝国（基地三部曲2）",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -6800,7 +6800,7 @@
     },
     {
       "id": "sf-003-058",
-      "version": 1,
+      "version": 2,
       "title": "钢穴",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -6960,7 +6960,7 @@
     },
     {
       "id": "sf-003-060",
-      "version": 1,
+      "version": 2,
       "title": "曙光中的机器人",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -6996,7 +6996,7 @@
     },
     {
       "id": "sf-003-061",
-      "version": 1,
+      "version": 2,
       "title": "机器人与帝国",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -7032,7 +7032,7 @@
     },
     {
       "id": "sf-003-062",
-      "version": 2,
+      "version": 3,
       "title": "繁星若尘",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -7212,7 +7212,7 @@
     },
     {
       "id": "sf-003-064",
-      "version": 1,
+      "version": 2,
       "title": "苍穹微石",
       "author": "艾萨克·阿西莫夫",
       "chapters": [
@@ -7496,7 +7496,7 @@
     },
     {
       "id": "sf-004-002",
-      "version": 2,
+      "version": 3,
       "title": "地心游记",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -7676,7 +7676,7 @@
     },
     {
       "id": "sf-004-003",
-      "version": 2,
+      "version": 3,
       "title": "哈特拉斯船长历险记",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -7920,7 +7920,7 @@
     },
     {
       "id": "sf-004-004",
-      "version": 1,
+      "version": 2,
       "title": "八十天环游地球",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -8484,7 +8484,7 @@
     },
     {
       "id": "sf-004-008",
-      "version": 1,
+      "version": 2,
       "title": "绿光",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -8736,7 +8736,7 @@
     },
     {
       "id": "sf-004-011",
-      "version": 1,
+      "version": 2,
       "title": "冰岛怪兽",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -8952,7 +8952,7 @@
     },
     {
       "id": "sf-004-013",
-      "version": 2,
+      "version": 3,
       "title": "昂梯菲尔奇遇记",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -9088,7 +9088,7 @@
     },
     {
       "id": "sf-004-014",
-      "version": 1,
+      "version": 2,
       "title": "机器岛",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -9208,7 +9208,7 @@
     },
     {
       "id": "sf-004-015",
-      "version": 2,
+      "version": 3,
       "title": "大木筏",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -9536,7 +9536,7 @@
     },
     {
       "id": "sf-004-018",
-      "version": 2,
+      "version": 3,
       "title": "格兰特船长的儿女",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -9676,7 +9676,7 @@
     },
     {
       "id": "sf-004-019",
-      "version": 2,
+      "version": 3,
       "title": "海底两万里",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -9872,7 +9872,7 @@
     },
     {
       "id": "sf-004-020",
-      "version": 2,
+      "version": 3,
       "title": "神秘岛",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -10116,7 +10116,7 @@
     },
     {
       "id": "sf-004-021",
-      "version": 1,
+      "version": 2,
       "title": "从地球到月球",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -10236,7 +10236,7 @@
     },
     {
       "id": "sf-004-022",
-      "version": 2,
+      "version": 3,
       "title": "环绕月球",
       "author": "儒勒·凡尔纳",
       "chapters": [
@@ -10552,7 +10552,7 @@
     },
     {
       "id": "sf-006-002",
-      "version": 2,
+      "version": 3,
       "title": "太阳的故事",
       "author": "雷·布拉德伯里",
       "chapters": [
@@ -10564,7 +10564,7 @@
     },
     {
       "id": "sf-006-003",
-      "version": 1,
+      "version": 2,
       "title": "弄巧成拙",
       "author": "雷·布拉德伯里",
       "chapters": [
@@ -10600,7 +10600,7 @@
     },
     {
       "id": "sf-006-006",
-      "version": 1,
+      "version": 2,
       "title": "杀“妻”",
       "author": "雷·布拉德伯里",
       "chapters": [
@@ -10624,7 +10624,7 @@
     },
     {
       "id": "sf-006-008",
-      "version": 1,
+      "version": 2,
       "title": "湖",
       "author": "雷·布拉德伯里",
       "chapters": [
@@ -10660,7 +10660,7 @@
     },
     {
       "id": "sf-006-011",
-      "version": 2,
+      "version": 3,
       "title": "火箭飞行员",
       "author": "雷·布拉德伯里",
       "chapters": [
@@ -10720,7 +10720,7 @@
     },
     {
       "id": "sf-006-016",
-      "version": 1,
+      "version": 2,
       "title": "马里奥纳特公司的机器人",
       "author": "雷·布拉德伯里",
       "chapters": [
@@ -10732,7 +10732,7 @@
     },
     {
       "id": "sf-006-017",
-      "version": 2,
+      "version": 3,
       "title": "冰霜与烈火",
       "author": "雷·布拉德伯里",
       "chapters": [
@@ -11064,7 +11064,7 @@
     },
     {
       "id": "sf-007-001",
-      "version": 2,
+      "version": 3,
       "title": "安德的游戏",
       "author": "奥森·斯科特·卡德",
       "chapters": [
@@ -11132,7 +11132,7 @@
     },
     {
       "id": "sf-007-002",
-      "version": 1,
+      "version": 2,
       "title": "死者代言人",
       "author": "奥森·斯科特·卡德",
       "chapters": [
@@ -11300,7 +11300,7 @@
     },
     {
       "id": "sf-007-004",
-      "version": 2,
+      "version": 3,
       "title": "安德的影子",
       "author": "奥森·斯科特·卡德",
       "chapters": [
@@ -11408,7 +11408,7 @@
     },
     {
       "id": "sf-007-005",
-      "version": 2,
+      "version": 3,
       "title": "霸主的影子",
       "author": "奥森·斯科特·卡德",
       "chapters": [
@@ -11648,7 +11648,7 @@
     },
     {
       "id": "sf-009-001",
-      "version": 1,
+      "version": 2,
       "title": "不朽的机器",
       "author": "迈克尔·斯万维克",
       "chapters": [
@@ -11660,7 +11660,7 @@
     },
     {
       "id": "sf-009-002",
-      "version": 1,
+      "version": 2,
       "title": "暴龙谐谑曲",
       "author": "迈克尔·斯万维克",
       "chapters": [
@@ -11708,7 +11708,7 @@
     },
     {
       "id": "sf-010-001",
-      "version": 2,
+      "version": 3,
       "title": "亚当回归",
       "author": "王晋康",
       "chapters": [
@@ -11720,7 +11720,7 @@
     },
     {
       "id": "sf-010-002",
-      "version": 1,
+      "version": 2,
       "title": "天火",
       "author": "王晋康",
       "chapters": [
@@ -11732,7 +11732,7 @@
     },
     {
       "id": "sf-010-003",
-      "version": 1,
+      "version": 2,
       "title": "魔鬼梦幻",
       "author": "王晋康",
       "chapters": [
@@ -11744,7 +11744,7 @@
     },
     {
       "id": "sf-010-004",
-      "version": 2,
+      "version": 3,
       "title": "黑匣子里的爱情",
       "author": "王晋康",
       "chapters": [
@@ -11812,7 +11812,7 @@
     },
     {
       "id": "sf-010-009",
-      "version": 1,
+      "version": 2,
       "title": "斯芬克司之谜",
       "author": "王晋康",
       "chapters": [
@@ -12156,7 +12156,7 @@
     },
     {
       "id": "sf-011-001",
-      "version": 1,
+      "version": 2,
       "title": "挽救计划",
       "author": "安迪·威尔",
       "chapters": [
